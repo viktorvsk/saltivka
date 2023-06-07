@@ -21,17 +21,21 @@ gem "sidekiq", "~> 7"
 gem "dry-validation"
 gem "jbuilder"
 
-
 group :development, :test do
   gem "debug", platforms: %i[mri mingw x64_mingw]
+  gem "dotenv-rails"
+  gem "factory_bot_rails"
+  gem "ffaker"
 end
 
 group :development do
   gem "web-console"
+  gem "standardrb", require: false
 end
 
 group :test do
   gem "capybara"
   gem "selenium-webdriver"
   gem "webdrivers"
+  gem "simplecov", require: false
 end

@@ -6,6 +6,7 @@ ruby "3.2.2"
 gem "rails", "~> 7.0.5"
 gem "turbo-rails"
 gem "stimulus-rails"
+gem "jbuilder"
 
 gem "bootsnap", require: false
 
@@ -18,8 +19,8 @@ gem "pg", "~> 1.1"
 gem "redis", "~> 5.0"
 gem "sidekiq", "~> 7"
 
-gem "dry-validation"
-gem "jbuilder"
+gem "bip-schnorr"
+gem "json_schemer"
 
 group :development, :test do
   gem "debug", platforms: %i[mri mingw x64_mingw]

@@ -3,7 +3,7 @@ class Event < ApplicationRecord
     rel = all.select(:id)
 
     filter_set.each do |key, value|
-      rel = rel.where(kind: value.to_i) if key == "kinds"
+      rel = rel.where(kind: value) if key == "kinds"
       rel = rel.where("id ILIKE ANY (VALUES ?)", value.map { |id| "(#{id}%)" }) if key == "ids"
       rel = rel.where("pubkey ILIKE ANY (VALUES ?)", value.map { |author| "(#{author}%)" }) if key == "authors"
 

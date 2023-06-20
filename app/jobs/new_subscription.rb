@@ -3,8 +3,16 @@ class NewSubscription
   sidekiq_options queue: "nostr"
 
   def perform(connection_id, subscription_id, filters)
-    filters = JSON.parse(filters)
+    filters = begin
+      JSON.parse(filters)
+    rescue
+      return
+    end
+    return if connection_id.blank? || subscription_id.blank?
+
     pubsub_id = "#{connection_id}:#{subscription_id}"
+
+    filters = [{}] if filters.blank?
 
     union = filters.map { |filter_set| Event.by_nostr_filters(filter_set).to_sql }.join("\nUNION\n")
 

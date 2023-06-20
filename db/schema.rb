@@ -17,7 +17,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_06_08_131555) do
   create_table "events", id: { type: :string, limit: 64 }, force: :cascade do |t|
     t.string "pubkey", limit: 64, null: false
     t.integer "kind", null: false
-    t.jsonb "tags", default: "[]"
+    t.jsonb "tags", default: []
     t.text "content"
     t.string "sig", limit: 128, null: false
     t.datetime "created_at"

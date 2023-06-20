@@ -1,11 +1,11 @@
 class RedisPubsubListener
-  attr_reader :channels, :redis_thread, :redis, :callback
+  attr_reader :channels, :redis_thread, :redis
 
-  def initialize(callback)
+  def initialize(server_events_handler)
     @channels = []
-    @redis = Redis.new
+    @redis = Redis.new(url: ENV["REDIS_URL"])
     @redis_thread = nil
-    @callback = callback
+    @server_events_handler = server_events_handler
   end
 
   def remove_channel(pubsub_id)
@@ -34,7 +34,11 @@ class RedisPubsubListener
     end
 
     @redis_thread = Thread.new do
-      redis.subscribe(channels) { |on| callback.call(on) }
+      redis.subscribe(channels) do |on|
+        on.message do |channel, event|
+          @server_events_handler.call(channel, event)
+        end
+      end
     end
   end
 end

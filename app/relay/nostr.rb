@@ -124,7 +124,7 @@ module Nostr
                 type: "array",
                 prefixItems: {
                   type: "string",
-                  enum: %w[e p],
+                  enum: %w[e p], # TODO: should we allow "unknown" tags?
                   minLength: 1,
                   maxLength: 1
                 },

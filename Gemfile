@@ -7,6 +7,7 @@ gem "rails", "~> 7.0.5"
 gem "turbo-rails"
 gem "stimulus-rails"
 gem "jbuilder"
+gem "rack-cors"
 
 gem "bootsnap", require: false
 

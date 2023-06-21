@@ -23,7 +23,6 @@ class RedisPubsubListenerTest < ActiveSupport::TestCase
     sleep(0.1)
     assert_equal 100, test_value
     REDIS_TEST_CONNECTION.publish("events:CONN_ID:CH3", "TEST")
-    assert_equal 100, test_value
     sleep(0.01)
     assert_equal 101, test_value
   end

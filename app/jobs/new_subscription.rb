@@ -20,9 +20,9 @@ class NewSubscription
     ids = Event.find_by_sql(union).pluck(:id)
 
     Event.where(id: ids).find_each do |event|
-      REDIS.publish("events:#{pubsub_id}", event.to_json)
+      REDIS.publish("events:#{pubsub_id}:found_event", event.to_json)
     end
 
-    REDIS.publish("events:#{pubsub_id}", "EOSE")
+    REDIS.publish("events:#{pubsub_id}:found_end", "EOSE")
   end
 end

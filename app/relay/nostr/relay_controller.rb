@@ -4,14 +4,13 @@ module Nostr
   class RelayController
     include Nostr::Nips::Nip1
 
-    attr_reader :ws_sender, :listener_service, :redis
+    attr_reader :redis, :connection_id
 
     COMMANDS = %w[REQ CLOSE EVENT]
 
-    def initialize(ws_sender:, listener_service:, redis:)
-      @ws_sender = ws_sender
-      @listener_service = listener_service
+    def initialize(redis:)
       @redis = redis
+      @connection_id = SecureRandom.hex
     end
 
     def perform(event_data)
@@ -27,38 +26,21 @@ module Nostr
           send(controller_action, nostr_event)
         else
           error = Presenters::Errors.new(contract_result.errors.to_h)
-          notice!("error: #{error}")
+          yield notice!("error: #{error}") if block_given?
         end
       else
         error = Presenters::Errors.new(command: %(unexpected command: '#{command}'))
-        notice!("error: #{error}")
+        yield notice!("error: #{error}") if block_given?
       end
     rescue JSON::ParserError
       error = Presenters::Errors.new(json: %(malformed JSON))
-      notice!("error: #{error}")
-    end
-
-    def terminate(_event)
-      listener_service.unsubscribe
-      clean_connections_data
+      yield notice!("error: #{error}") if block_given?
     end
 
     private
 
-    def clean_connections_data
-      redis.multi do
-        connection_subscriptions = redis.smembers("client_reqs:#{connection_id}")
-        redis.del("client_reqs:#{connection_id}")
-        redis.hdel("subscriptions", connection_subscriptions.map { |req| "#{connection_id}:#{req}" }) if connection_subscriptions.present?
-      end
-    end
-
     def notice!(text)
-      ws_sender.call(["NOTICE", text].to_json)
-    end
-
-    def connection_id
-      @connection_id ||= SecureRandom.hex
+      ["NOTICE", text].to_json
     end
 
     def sidekiq_pusher

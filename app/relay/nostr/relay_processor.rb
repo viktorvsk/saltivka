@@ -1,21 +1,16 @@
 module Nostr
   class RelayProcessor
-    def initialize(ws_sender)
-      @ws_sender = ws_sender
-    end
+    def self.call(channel, event)
+      _namespace, _connection_id, subscription_id, command = channel.split(":")
 
-    def call(channel, event)
-      subscription_id = channel.split(":").last
-
-      response = if event === "EOSE"
+      case command.upcase
+      when "FOUND_END"
         ["EOSE", subscription_id].to_json
-      else
+      when "FOUND_EVENT"
         ["EVENT", subscription_id, JSON.parse(event)].to_json
+      when "OK"
+        event # NIP-20
       end
-
-      @ws_sender.call(response)
-
-      response
     end
   end
 end

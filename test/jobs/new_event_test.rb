@@ -6,6 +6,6 @@ class NewEventTest < ActiveSupport::TestCase
 
   test "basic" do
     REDIS_TEST_CONNECTION.hset("subscriptions", "CONN_ID:SUBID", "[{\"kinds\": [555]}]")
-    NewEvent.perform_sync(build(:event, kind: 555).to_json)
+    NewEvent.perform_sync("CONN_ID", build(:event, kind: 555).to_json)
   end
 end

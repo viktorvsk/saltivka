@@ -21,9 +21,10 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
 
     subject do
       @ws_sender.expect(:call, nil, [["NOTICE", "error: #{@expected_error}"].to_json]) if @expected_error
-      result = Nostr::RelayController.new(ws_sender: @ws_sender, listener_service: @listener_service, redis: REDIS_TEST_CONNECTION).perform(@nostr_event)
+      result = Nostr::RelayController.new(redis: REDIS_TEST_CONNECTION).perform(@nostr_event) do |notice|
+        @ws_sender.call(notice)
+      end
       @ws_sender.verify
-      @listener_service.verify
       @pusher_mock&.verify
 
       result
@@ -53,7 +54,6 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
       describe "NIP-01" do
         describe "REQ" do
           it "saves connection_id and subscription_id to redis, adds channel to pubsub listener and adds NewSubscription to Sidekiq queue" do
-            @listener_service.expect(:add_channel, nil, ["CONN_ID:SUBID"])
             @nostr_event = ["REQ", "SUBID", {}].to_json
 
             @pusher_mock = @sidekiq_pusher_mock_for.call("NewSubscription", ["CONN_ID", "SUBID", "[{}]"])
@@ -68,8 +68,6 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
           end
 
           it "filters Events by kinds" do
-            @listener_service.expect(:add_channel, nil, ["CONN_ID:SUBID"])
-
             filters = {"kinds" => [1]}
             @nostr_event = ["REQ", "SUBID", filters].to_json
 
@@ -117,7 +115,6 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
           end
 
           it "removes redis data and unsubscribes from one service" do
-            @listener_service.expect(:remove_channel, nil, ["CONN_ID:XYZ123"])
             @nostr_event = ["CLOSE", "XYZ123"].to_json
 
             SecureRandom.stub(:hex, @random_connection_id) do
@@ -147,9 +144,11 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
           describe "with valid Event data" do
             it "pushes Event to Sidekiq" do
               @nostr_event = ["EVENT", JSON.parse(@valid_event)].to_json
-              @pusher_mock = @sidekiq_pusher_mock_for.call("NewEvent", [JSON.parse(@valid_event).to_json])
+              @pusher_mock = @sidekiq_pusher_mock_for.call("NewEvent", ["CONN_ID", JSON.parse(@valid_event).to_json])
               Sidekiq::Client.stub(:push, @pusher_mock) do
-                subject
+                SecureRandom.stub(:hex, @random_connection_id) do
+                  subject
+                end
               end
             end
           end
@@ -198,22 +197,6 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
             end
           end
         end
-      end
-    end
-
-    describe "#terminate" do
-      it "unsibscribes from pubsub and removes data from redis" do
-        REDIS_TEST_CONNECTION.sadd("client_reqs:CONN_ID", "ABC123")
-
-        @listener_service.expect(:unsubscribe, nil)
-
-        SecureRandom.stub(:hex, @random_connection_id) do
-          Nostr::RelayController.new(ws_sender: @ws_sender, listener_service: @listener_service, redis: REDIS_TEST_CONNECTION).terminate(nil)
-        end
-
-        assert_empty REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID")
-        assert_nil REDIS_TEST_CONNECTION.get("client_reqs:CONN_ID")
-        assert_empty REDIS_TEST_CONNECTION.hkeys("subscriptions")
       end
     end
   end

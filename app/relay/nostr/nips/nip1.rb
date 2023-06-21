@@ -12,7 +12,6 @@ module Nostr
           redis.sadd("client_reqs:#{connection_id}", subscription_id)
           redis.hset("subscriptions", pubsub_id, filters_json_string)
         end
-        listener_service.add_channel(pubsub_id)
         sidekiq_pusher.call("NewSubscription", [connection_id, subscription_id, filters_json_string])
       end
 
@@ -24,11 +23,10 @@ module Nostr
           redis.del("client_reqs:#{connection_id}")
           redis.hdel("subscriptions", pubsub_id)
         end
-        listener_service.remove_channel(pubsub_id)
       end
 
       def event_command(nostr_event)
-        sidekiq_pusher.call("NewEvent", [nostr_event.first.to_json])
+        sidekiq_pusher.call("NewEvent", [connection_id, nostr_event.first.to_json])
       end
     end
   end

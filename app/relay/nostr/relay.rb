@@ -2,32 +2,37 @@ Nostr::Relay = lambda do |env|
   if Faye::WebSocket.websocket?(env)
     ws = Faye::WebSocket.new(env) # standard websocket connection object
 
-    # We use this lambda to minimize what Controller may have access to
-    ws_sender = lambda do |string|
-      ws.send(string)
+    redis = Redis.new(url: ENV["REDIS_URL"])
+
+    controller = Nostr::RelayController.new(redis: REDIS)
+    connection_id = controller.connection_id
+
+    redis_thread = Thread.new do
+      redis.psubscribe("events:#{connection_id}:*") do |on|
+        on.pmessage do |pattern, channel, event|
+          Rails.logger.warn([channel, event])
+          response = Nostr::RelayProcessor.call(channel, event)
+          ws.send(response)
+        end
+      end
     end
-
-    # Server side events logic
-    server_events_handler = Nostr::RelayProcessor.new(ws_sender)
-
-    # Simple object that controles Redis connection in a separate thread and
-    # allows adding or removing channels (subscriptions) that are listened to
-    listener_service = RedisPubsubListener.new(server_events_handler)
-
-    relay_context = {
-      ws_sender: ws_sender,
-      listener_service: listener_service,
-      redis: REDIS
-    }
-    controller = Nostr::RelayController.new(**relay_context)
 
     # Client side events logic
     ws.on :message do |event|
-      controller.perform(event.data)
+      controller.perform(event.data) do |notice|
+        ws.send(notice)
+      end
     end
 
     ws.on :close do |event|
-      controller.terminate(event)
+      redis.unsubscribe if redis.subscribed?
+      redis_thread.exit
+      redis.multi do
+        connection_subscriptions = redis.smembers("client_reqs:#{connection_id}")
+        redis.del("client_reqs:#{connection_id}")
+        redis.hdel("subscriptions", connection_subscriptions.map { |req| "#{connection_id}:#{req}" }) if connection_subscriptions.present?
+      end
+      redis_thread = nil
       ws = nil
     end
 

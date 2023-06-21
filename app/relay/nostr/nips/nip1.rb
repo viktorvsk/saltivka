@@ -28,7 +28,7 @@ module Nostr
       end
 
       def event_command(nostr_event)
-        sidekiq_pusher.call("NewEvent", nostr_event)
+        sidekiq_pusher.call("NewEvent", [nostr_event.first.to_json])
       end
     end
   end

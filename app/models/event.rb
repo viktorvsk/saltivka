@@ -34,8 +34,8 @@ class Event < ApplicationRecord
         )", value.map { |t| "#{t}%" })
       end
 
-      rel = rel.where("created_at >= ?", value) if key == "since"
-      rel = rel.where("created_at <= ?", value) if key == "until"
+      rel = rel.where("created_at >= ?", Time.at(value)) if key == "since"
+      rel = rel.where("created_at <= ?", Time.at(value)) if key == "until"
     end
 
     filter_limit = if filter_set["limit"].to_i > 0

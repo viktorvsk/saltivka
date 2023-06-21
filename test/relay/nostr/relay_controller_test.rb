@@ -147,7 +147,7 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
           describe "with valid Event data" do
             it "pushes Event to Sidekiq" do
               @nostr_event = ["EVENT", JSON.parse(@valid_event)].to_json
-              @pusher_mock = @sidekiq_pusher_mock_for.call("NewEvent", [JSON.parse(@valid_event)])
+              @pusher_mock = @sidekiq_pusher_mock_for.call("NewEvent", [JSON.parse(@valid_event).to_json])
               Sidekiq::Client.stub(:push, @pusher_mock) do
                 subject
               end

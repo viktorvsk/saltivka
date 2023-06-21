@@ -12,9 +12,11 @@ class NewSubscription
 
     pubsub_id = "#{connection_id}:#{subscription_id}"
 
+    # TODO: this should never happen due to Nostr::NormalizedEvent
+    # but let it stay here if normalization is removed one day
     filters = [{}] if filters.blank?
 
-    union = filters.map { |filter_set| Event.by_nostr_filters(filter_set).to_sql }.join("\nUNION\n")
+    union = filters.map { |filter_set| "(#{Event.by_nostr_filters(filter_set).to_sql})" }.join("\nUNION\n")
 
     ids = Event.find_by_sql(union).pluck(:id)
 

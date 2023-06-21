@@ -2,8 +2,10 @@ class NewEvent
   include Sidekiq::Worker
   sidekiq_options queue: "nostr"
 
-  def perform(event)
-    event = Event.create(JSON.parse(event))
+  def perform(event_json)
+    event_params = JSON.parse(event_json)
+    event_params["created_at"] = Time.at(event_params["created_at"])
+    event = Event.create(event_params)
 
     # TODO: Bloom filters
     REDIS.hgetall("subscriptions").each do |connection_with_subscription_id, filters|

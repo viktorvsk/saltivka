@@ -10,7 +10,7 @@ module Nostr
       response = if event === "EOSE"
         ["EOSE", subscription_id].to_json
       else
-        ["EVENT", subscription_id, event].to_json
+        ["EVENT", subscription_id, JSON.parse(event)].to_json
       end
 
       @ws_sender.call(response)

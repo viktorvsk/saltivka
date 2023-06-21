@@ -10,11 +10,10 @@ class NewSubscription
     end
     return if connection_id.blank? || subscription_id.blank?
 
-    pubsub_id = "#{connection_id}:#{subscription_id}"
+    filters = [{}] if filters.blank? # this shouldn't happen but still
+    filters = [filters] unless filters.is_a?(Array) # this shouldn't happen but still
 
-    # TODO: this should never happen due to Nostr::NormalizedEvent
-    # but let it stay here if normalization is removed one day
-    filters = [{}] if filters.blank?
+    pubsub_id = "#{connection_id}:#{subscription_id}"
 
     union = filters.map { |filter_set| "(#{Event.by_nostr_filters(filter_set).to_sql})" }.join("\nUNION\n")
 

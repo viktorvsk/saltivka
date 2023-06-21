@@ -54,9 +54,9 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
         describe "REQ" do
           it "saves connection_id and subscription_id to redis, adds channel to pubsub listener and adds NewSubscription to Sidekiq queue" do
             @listener_service.expect(:add_channel, nil, ["CONN_ID:SUBID"])
-            @nostr_event = ["REQ", "SUBID", []].to_json
+            @nostr_event = ["REQ", "SUBID", {}].to_json
 
-            @pusher_mock = @sidekiq_pusher_mock_for.call("NewSubscription", ["CONN_ID", "SUBID", "[]"])
+            @pusher_mock = @sidekiq_pusher_mock_for.call("NewSubscription", ["CONN_ID", "SUBID", "[{}]"])
             Sidekiq::Client.stub(:push, @pusher_mock) do
               SecureRandom.stub(:hex, @random_connection_id) do
                 subject
@@ -64,16 +64,16 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
             end
 
             assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"]
-            assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => "[]"}
+            assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => "[{}]"}
           end
 
           it "filters Events by kinds" do
             @listener_service.expect(:add_channel, nil, ["CONN_ID:SUBID"])
 
-            filters = [{"kinds" => [1]}]
+            filters = {"kinds" => [1]}
             @nostr_event = ["REQ", "SUBID", filters].to_json
 
-            @pusher_mock = @sidekiq_pusher_mock_for.call("NewSubscription", ["CONN_ID", "SUBID", filters.to_json])
+            @pusher_mock = @sidekiq_pusher_mock_for.call("NewSubscription", ["CONN_ID", "SUBID", [filters].to_json])
             Sidekiq::Client.stub(:push, @pusher_mock) do
               SecureRandom.stub(:hex, @random_connection_id) do
                 subject
@@ -81,31 +81,31 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
             end
 
             assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"]
-            assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => filters.to_json}
+            assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => [filters].to_json}
           end
 
           describe "with invalid args" do
-            it "responds with error given too many" do
-              @expected_error = %(root is invalid: error_type=maxItems)
+            it "responds with error given multiple filters of invalid type" do
+              @expected_error = %(property '/1' is not of type: object; property '/2' is not of type: object)
               @nostr_event = ["REQ", "SUBID", [], "UNKNOWN ARG"].to_json
               subject
             end
 
             it "responds with error when some filter sets are invalid" do
-              @expected_error = %(property '/1/0' is not of type: object)
-              @nostr_event = ["REQ", "SUBID", [1]].to_json
+              @expected_error = %(property '/1' is not of type: object)
+              @nostr_event = ["REQ", "SUBID", 1].to_json
               subject
             end
 
             it "responds with error when some filter sets values are invalid" do
-              @expected_error = %(property '/1/0/kinds/0' is not of type: integer)
-              @nostr_event = ["REQ", "SUBID", [{kinds: [{}]}]].to_json
+              @expected_error = %(property '/1/kinds/0' is not of type: integer)
+              @nostr_event = ["REQ", "SUBID", {kinds: [{}]}].to_json
               subject
             end
 
             it "responds with error when filters/until < filters/since" do
               @expected_error = %(when both specified, until has always to be after since)
-              @nostr_event = ["REQ", "SUBID", [{until: 2.days.ago.to_i, since: 1.day.ago.to_i}]].to_json
+              @nostr_event = ["REQ", "SUBID", {until: 2.days.ago.to_i, since: 1.day.ago.to_i}].to_json
               subject
             end
           end

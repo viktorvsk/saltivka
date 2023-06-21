@@ -10,7 +10,7 @@ module Nostr
 
         def validate_dependent(nostr_event)
           # we are confident its exactly filters here because we run this validation only if schema is correct
-          filters = nostr_event.last
+          filters = nostr_event[1..]
 
           filters.each_with_index do |filter_set, index|
             if filter_set["since"].present? && filter_set["until"].present?

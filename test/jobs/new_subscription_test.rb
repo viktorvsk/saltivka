@@ -27,6 +27,15 @@ class NewSubscriptionTest < ActiveSupport::TestCase
     redis_publisher.verify
   end
 
+  test "works with filter_set instead of filters" do
+    redis_publisher = Minitest::Mock.new
+    redis_publisher.expect(:call, nil, ["events:CONN_ID:SUBID", @event.to_json])
+    redis_publisher.expect(:call, nil, ["events:CONN_ID:SUBID", "EOSE"])
+
+    REDIS.stub(:publish, redis_publisher) { NewSubscription.perform_sync("CONN_ID", "SUBID", {kinds: [0]}.to_json) }
+    redis_publisher.verify
+  end
+
   test "works with empty filter_set" do
     redis_publisher = Minitest::Mock.new
     redis_publisher.expect(:call, nil, ["events:CONN_ID:SUBID", @event.to_json])

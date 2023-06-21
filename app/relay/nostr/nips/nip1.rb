@@ -4,8 +4,8 @@ module Nostr
       private
 
       def req_command(nostr_event)
-        subscription_id, filters = nostr_event
-        filters_json_string = filters.to_json
+        subscription_id, filters = nostr_event.first, nostr_event[1..]
+        filters_json_string = filters.to_json # only Array of filter_sets (filters) should be stored in Redis
         pubsub_id = "#{connection_id}:#{subscription_id}"
 
         redis.multi do

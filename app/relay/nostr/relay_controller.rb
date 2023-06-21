@@ -15,6 +15,7 @@ module Nostr
     end
 
     def perform(event_data)
+      Rails.logger.debug(event_data)
       nostr_event = JSON.parse(event_data)
       command = nostr_event.shift
       if command.present? && command.upcase.in?(COMMANDS)

@@ -10,6 +10,6 @@ class Nostr::RelayProcessorTest < ActiveSupport::TestCase
   end
 
   test "handles EVENT" do
-    assert_equal ["EVENT", "SUBID", {id: "HEX"}].to_json, @subject.call("CONN_ID:SUBID", {id: "HEX"})
+    assert_equal ["EVENT", "SUBID", {id: "HEX"}].to_json, @subject.call("CONN_ID:SUBID", {id: "HEX"}.to_json)
   end
 end

@@ -33,6 +33,8 @@ class RedisPubsubListener
       return
     end
 
+    loop { redis.subscribed? ? redo : break }
+
     @redis_thread = Thread.new do
       redis.subscribe(channels) do |on|
         on.message do |channel, event|

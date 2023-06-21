@@ -4,6 +4,7 @@ class Event < ApplicationRecord
   AVAILABLE_FILTERS = %w[kinds ids authors #e #p since until]
 
   validates :pubkey, :kind, :sig, presence: true
+  validates :id, uniqueness: true
   validates :id, :pubkey, length: {is: 64}
   validates :sig, length: {is: 128}
   validate :tags_must_be_array

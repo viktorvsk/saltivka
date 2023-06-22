@@ -7,14 +7,14 @@ class NewEvent
     event_params["created_at"] = Time.at(event_params["created_at"])
     event = Event.new(event_params)
 
-    if event.save
+    if (event.kinda?(:ephemeral) && event.valid?) || event.save
       # TODO: Bloom filters
       REDIS.hgetall("subscriptions").each do |pubsub_id, filters|
         matches = JSON.parse(filters).any? { |filter_set| event.matches_nostr_filter_set?(filter_set) }
         REDIS.publish("events:#{pubsub_id}:found_event", event.to_json) if matches
       end
 
-      REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.id, true, ""].to_json)
+      REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.id, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16
     else
       Rails.logger.info(event.errors.to_json)
 

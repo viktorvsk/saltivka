@@ -10,8 +10,6 @@ module Nostr
       validate :tags_must_be_array
       validate :id_must_match_payload
       validate :sig_must_match_payload
-
-      before_create :process_metadata_event_nip_1
     end
 
     class_methods do
@@ -126,12 +124,6 @@ module Nostr
       ]
 
       errors.add(:sig, "must match payload") unless Schnorr.valid_sig?(*schnorr_params)
-    end
-
-    def process_metadata_event_nip_1
-      return unless kind === 0
-
-      Event.where(pubkey: pubkey, kind: 0).where("created_at < ?", created_at).destroy_all
     end
   end
 end

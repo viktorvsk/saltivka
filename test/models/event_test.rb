@@ -24,7 +24,7 @@ class EventTest < ActiveSupport::TestCase
   end
 
   test "Single event matching filter_set" do
-    event_with_tags = create(:event, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
+    event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
     assert_equal true, @event.matches_nostr_filter_set?({"ids" => ["bf84a73"]})
     assert_equal true, @event.matches_nostr_filter_set?({"authors" => ["a19f19f"]})
     assert_equal false, @event.matches_nostr_filter_set?({"authors" => ["_a19f19f"]})
@@ -44,16 +44,13 @@ class EventTest < ActiveSupport::TestCase
   # Here we test a use case where we have implemented new filter
   # added it to AVAILABLE FILTERS but for some reason missed to handle it
   test "edge filter" do
-    original = Event::AVAILABLE_FILTERS
-    Event.send(:remove_const, :AVAILABLE_FILTERS)
-    Event.const_set(:AVAILABLE_FILTERS, %w[kinds ids authors #e #p since until edge_filter])
-    assert_equal false, build(:event).matches_nostr_filter_set?({"edge_filter" => 2.hour.ago.to_i})
-    Event.send(:remove_const, :AVAILABLE_FILTERS)
-    Event.const_set(:AVAILABLE_FILTERS, original)
+    RELAY_CONFIG.stub(:available_filters, %w[kinds ids authors #e #p since until edge_filter]) do
+      assert_equal false, build(:event).matches_nostr_filter_set?({"edge_filter" => 2.hour.ago.to_i})
+    end
   end
 
   test "Find Events mathcing filter_set in database" do
-    event_with_tags = create(:event, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
+    event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
 
     assert_equal 2, Event.by_nostr_filters({}).count
     assert_equal 1, Event.by_nostr_filters({limit: 1}).count

@@ -3,7 +3,7 @@ module Nostr
     def self.call(channel, event)
       _namespace, _connection_id, subscription_id, command = channel.split(":")
 
-      case command.upcase
+      response = case command.upcase
       when "FOUND_END"
         ["EOSE", subscription_id].to_json
       when "FOUND_EVENT"
@@ -11,6 +11,9 @@ module Nostr
       when "OK"
         event # NIP-20
       end
+
+      Rails.logger.info("[Nostr::RelayProcessor] response=#{response}")
+      response
     end
   end
 end

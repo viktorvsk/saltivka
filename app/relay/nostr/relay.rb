@@ -10,7 +10,6 @@ Nostr::Relay = lambda do |env|
     redis_thread = Thread.new do
       redis.psubscribe("events:#{connection_id}:*") do |on|
         on.pmessage do |pattern, channel, event|
-          Rails.logger.warn([channel, event])
           response = Nostr::RelayProcessor.call(channel, event)
           ws.send(response)
         end
@@ -25,6 +24,7 @@ Nostr::Relay = lambda do |env|
     end
 
     ws.on :close do |event|
+      Rails.logger.info("[T E R M I N A T I N G] connection_id=#{connection_id}")
       redis.unsubscribe if redis.subscribed?
       redis_thread.exit
       redis.multi do

@@ -67,6 +67,7 @@ module Nostr
       }
     },
     minItems: 2
+    # maxLength: 100 # TODO: set max filters configurable
   }.to_json)
 
   CLOSE_SCHEMA = JSONSchemer.schema({
@@ -143,5 +144,78 @@ module Nostr
     ],
     minItems: 1,
     maxItems: 1
+  }.to_json)
+
+  # TODO: refactor later because its completely similar to REQ schema
+  # except for `id`
+  COUNT_SCHEMA = JSONSchemer.schema({
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    id: "nostr/nips/01/commands/client/COUNT/",
+    type: "array",
+    items: [
+      {type: "string", minLength: 1, maxLength: 64, id: "subscription_id"},
+      {"$ref": "#/definitions/filter_set"}
+    ],
+    additionalItems: {
+      "$ref": "#/definitions/filter_set"
+    },
+    definitions: {
+      filter_set: {
+        type: "object",
+        id: "filters/",
+        properties: {
+          ids: {
+            type: :array,
+            id: :ids,
+            items: {
+              type: :string,
+              minLength: 1,
+              maxLength: 64
+            }
+          },
+          authors: {
+            type: :array,
+            id: :authors,
+            items: {
+              type: :string,
+              minLength: 1,
+              maxLength: 64
+            }
+          },
+          kinds: {
+            type: "array",
+            id: "kinds",
+            minLength: 1,
+            items: {type: "integer", minimum: 0}
+          },
+
+          limit: {
+            type: :integer,
+            minimum: 1,
+            id: :limit
+          },
+          "#e": {
+            type: :array,
+            id: :tagged_events,
+            items: {
+              type: :string,
+              minLength: 1,
+              maxLength: 64
+            }
+          },
+          "#p": {
+            type: :array,
+            id: :tagged_pubkeys,
+            items: {
+              type: :string,
+              minLength: 1,
+              maxLength: 64
+            }
+          }
+        }
+      }
+    },
+    minItems: 2
+    # maxLength: 100 # TODO: set max filters configurable
   }.to_json)
 end

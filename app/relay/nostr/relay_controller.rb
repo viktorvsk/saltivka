@@ -3,10 +3,11 @@ require "schnorr"
 module Nostr
   class RelayController
     include Nostr::Nips::Nip1
+    include Nostr::Nips::Nip45
 
     attr_reader :redis, :connection_id
 
-    COMMANDS = %w[REQ CLOSE EVENT]
+    COMMANDS = %w[REQ CLOSE EVENT COUNT]
 
     def initialize(redis:)
       @redis = redis

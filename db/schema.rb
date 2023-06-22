@@ -10,9 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_06_08_131555) do
+ActiveRecord::Schema[7.0].define(version: 2023_06_21_222645) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "delete_events", force: :cascade do |t|
+    t.string "event_id", limit: 64, null: false
+    t.string "pubkey", limit: 64, null: false
+    t.datetime "created_at"
+    t.index ["event_id", "pubkey"], name: "index_delete_events_on_event_id_and_pubkey", unique: true
+  end
 
   create_table "events", id: { type: :string, limit: 64 }, force: :cascade do |t|
     t.string "pubkey", limit: 64, null: false

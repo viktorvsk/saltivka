@@ -20,6 +20,8 @@ class NewEvent
 
       if event.errors[:id].include?("has already been taken")
         REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.id, false, "duplicate: this event is already present in the database"].to_json)
+      elsif event.errors[:id].any? { |error_text| error_text.to_s =~ /PoW difficulty must be at least/ }
+        REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.id, false, "pow: min difficulty must be #{RELAY_CONFIG.min_pow}, got #{event.pow_difficulty}"].to_json)
       else
         REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.id, false, "error: #{event.errors.full_messages.join(", ")}"].to_json)
       end

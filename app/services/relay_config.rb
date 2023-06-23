@@ -18,4 +18,8 @@ class RelayConfig
   def created_at_in_future
     ENV.fetch("CREATED_AT_IN_FUTURE", 3.months.to_i).to_i
   end
+
+  def min_pow
+    ENV.fetch("MIN_POW", 0)
+  end
 end

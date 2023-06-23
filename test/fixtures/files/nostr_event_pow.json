@@ -1,0 +1,15 @@
+{
+  "content": "mined message pow 20",
+  "created_at": 1660682196,
+  "id": "00000566c20b887f766c29941b38d87f1d02e5073b5b5e4310dc5648ffd0be32",
+  "kind": 1,
+  "pubkey": "1c6b3be353041dd9e09bb568a4a92344e240b39ef5eb390f5e9e821273f0ae6f",
+  "sig": "25639fbae08fe2817fe5eeb142d1136df2299a99a4976414bca6a8be242bfd264ba90d5c6fe269e72719af9a95a18783826196cf217f04c781ea5df1afff9fbc",
+  "tags": [
+    [
+      "nonce",
+      "3351025",
+      "20"
+    ]
+  ]
+}

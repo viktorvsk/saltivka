@@ -66,4 +66,16 @@ class EventTest < ActiveSupport::TestCase
     assert_equal 1, Event.by_nostr_filters({"#p" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]}).count
     assert_equal 0, Event.by_nostr_filters({"#p" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"]}).count
   end
+
+  test "PoW difficulty NIP-13" do
+    with_pow = JSON.parse(File.read(Rails.root.join("test", "fixtures", "files", "nostr_event_pow.json")))
+    event_with_pow = with_pow.merge("created_at" => Time.at(with_pow["created_at"]))
+
+    assert_equal true, Event.new(event_with_pow).valid?
+    assert_equal true, @event.valid?
+    RELAY_CONFIG.stub(:min_pow, 1) do
+      assert_equal true, Event.new(event_with_pow).valid?
+      assert_equal false, @event.valid?
+    end
+  end
 end

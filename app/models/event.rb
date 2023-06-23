@@ -21,6 +21,8 @@ class Event < ApplicationRecord
       %w[contact_list protocol_reserved replaceable]
     when 5
       %w[delete_event protocol_reserved]
+    when 41
+      %w[channel_metadata replaceable protocol_reserved]
     when 0...1000
       %w[protocol_reserved]
     when 1000...10000

@@ -20,7 +20,7 @@ module Nostr
             id: :ids,
             items: {
               type: :string,
-              minLength: 1,
+              minLength: RELAY_CONFIG.min_prefix,
               maxLength: 64
             }
           },
@@ -29,7 +29,7 @@ module Nostr
             id: :authors,
             items: {
               type: :string,
-              minLength: 1,
+              minLength: RELAY_CONFIG.min_prefix,
               maxLength: 64
             }
           },
@@ -50,7 +50,7 @@ module Nostr
             id: :tagged_events,
             items: {
               type: :string,
-              minLength: 1,
+              minLength: RELAY_CONFIG.min_prefix, # Not part of NIP-11 but it doesn't make sense
               maxLength: 64
             }
           },
@@ -59,15 +59,15 @@ module Nostr
             id: :tagged_pubkeys,
             items: {
               type: :string,
-              minLength: 1,
+              minLength: RELAY_CONFIG.min_prefix, # Not part of NIP-11 but it doesn't make sense
               maxLength: 64
             }
           }
         }
       }
     },
-    minItems: 2
-    # maxLength: 100 # TODO: set max filters configurable
+    minItems: 2,
+    maxLength: RELAY_CONFIG.max_filters + 2
   }.to_json)
 
   CLOSE_SCHEMA = JSONSchemer.schema({
@@ -92,7 +92,8 @@ module Nostr
         properties: {
           content: {
             type: "string",
-            id: "content"
+            id: "content",
+            maxLength: RELAY_CONFIG.max_content_length
           },
           created_at: {
             type: "intger",
@@ -136,7 +137,8 @@ module Nostr
                 },
                 minLength: 2
               }
-            ]
+            ],
+            maxItems: RELAY_CONFIG.max_event_tags
           }
         },
         required: %w[content created_at id kind pubkey sig tags]
@@ -215,7 +217,7 @@ module Nostr
         }
       }
     },
-    minItems: 2
-    # maxLength: 100 # TODO: set max filters configurable
+    minItems: 2,
+    maxLength: RELAY_CONFIG.max_filters + 2
   }.to_json)
 end

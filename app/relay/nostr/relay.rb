@@ -38,6 +38,6 @@ Nostr::Relay = lambda do |env|
 
     ws.rack_response # async
   else
-    [200, {"Content-Type" => "text/plain"}, ["Hello"]]
+    [200, {"Content-Type" => "application/json"}, [Nostr::Nips::Nip11.call.to_json]]
   end
 end

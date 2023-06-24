@@ -2,7 +2,7 @@ require "test_helper"
 
 class Nostr::RelayTest < ActiveSupport::TestCase
   test "sample non-websocket request" do
-    assert_equal [200, {"Content-Type" => "text/plain"}, ["Hello"]], Nostr::Relay.call({})
+    assert_equal [200, {"Content-Type" => "application/json"}, [Nostr::Nips::Nip11.call.to_json]], Nostr::Relay.call({})
   end
 
   test "websocket request" do

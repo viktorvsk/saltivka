@@ -42,7 +42,7 @@ module Nostr
         end
 
         filter_limit = if filter_set["limit"].to_i > 0
-          [filter_set["limit"].to_i, RELAY_CONFIG.max_filter_limit.to_i].min
+          [filter_set["limit"].to_i, RELAY_CONFIG.max_limit].min
         else
           RELAY_CONFIG.default_filter_limit
         end

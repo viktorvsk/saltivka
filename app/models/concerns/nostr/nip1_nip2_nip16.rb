@@ -12,6 +12,7 @@ module Nostr
       return unless kinda?(:replaceable)
 
       Event.joins(:author).where(authors: {pubkey: author.pubkey}, kind: kind).where("created_at < ?", created_at).destroy_all
+      # TODO: Remove event with the same created_at but "bigger" sha256
     end
   end
 end

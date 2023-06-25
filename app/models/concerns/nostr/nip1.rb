@@ -22,7 +22,7 @@ module Nostr
       def init_searchable_tags
         tags.each do |tag|
           tag_name = tag.first
-          next unless tag_name.size === 1
+          next unless tag_name.size === 1 # NIP-12 populate searchable filters for every single letter tag
           tag_values = tag[1..]
           tag_values = [""] if tag_values.blank?
           tag_values.each do |tag_value|
@@ -32,7 +32,7 @@ module Nostr
       end
 
       def matches_nostr_filter_set?(filter_set)
-        filter_set.slice(*RELAY_CONFIG.available_filters).all? do |filter_type, filter_value|
+        filter_set.transform_keys(&:downcase).slice(*RELAY_CONFIG.available_filters).all? do |filter_type, filter_value|
           case filter_type
           when "kinds"
             kind.in?(filter_value)
@@ -40,16 +40,11 @@ module Nostr
             filter_value.any? { |prefix| event_digest.sha256.starts_with?(prefix) }
           when "authors"
             filter_value.any? { |prefix| author.pubkey.starts_with?(prefix) }
-          when "#e"
+          when /\A#[a-z]\Z/
+            # NIP-12 search single letter filters
             filter_value.any? do |prefix|
               searchable_tags.any? do |t|
-                t.name == "e" && t.value.starts_with?(prefix)
-              end
-            end
-          when "#p"
-            filter_value.any? do |prefix|
-              searchable_tags.any? do |t|
-                t.name == "p" && t.value.starts_with?(prefix)
+                t.name == filter_type.last && t.value.starts_with?(prefix)
               end
             end
           when "since"

@@ -39,7 +39,14 @@ module Nostr
           when "ids"
             filter_value.any? { |prefix| event_digest.sha256.starts_with?(prefix) }
           when "authors"
-            filter_value.any? { |prefix| author.pubkey.starts_with?(prefix) }
+            filter_value.any? do |prefix|
+              return true if author.pubkey.starts_with?(prefix)
+
+              delegation_tag = tags.find { |k, v| k === "delegation" }
+              return false unless delegation_tag
+              delegation_pubkety = [1..].flatten.second
+              return delegation_pubkety.starts_with?(prefix)
+            end
           when /\A#[a-z]\Z/
             # NIP-12 search single letter filters
             filter_value.any? do |prefix|
@@ -126,7 +133,11 @@ module Nostr
           end
 
           if key == "authors"
-            rel = rel.joins(:author).where("authors.pubkey ILIKE ANY (ARRAY[?])", value.map { |author| "#{author}%" })
+            # NIP-26
+            authors_to_search = value.map { |author| "#{author}%" }
+            rel = rel.joins(:author)
+              .joins("LEFT JOIN searchable_tags ON searchable_tags.event_id = events.id AND searchable_tags.name = 'delegation'")
+              .where("(authors.pubkey ILIKE ANY (ARRAY[:values])) OR (searchable_tags.value ILIKE ANY (ARRAY[:values]))", values: authors_to_search)
           end
 
           if key == "#e"

@@ -11,7 +11,7 @@ module Nostr
     def process_replaceable_nip_1_nip_2_nip_16
       return unless kinda?(:replaceable)
 
-      Event.where(pubkey: pubkey, kind: kind).where("created_at < ?", created_at).destroy_all
+      Event.joins(:author).where(authors: {pubkey: author.pubkey}, kind: kind).where("created_at < ?", created_at).destroy_all
     end
   end
 end

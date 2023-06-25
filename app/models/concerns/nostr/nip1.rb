@@ -3,13 +3,119 @@ module Nostr
     extend ActiveSupport::Concern
 
     included do
-      validates :pubkey, :kind, :sig, presence: true
-      validates :id, uniqueness: true
-      validates :id, :pubkey, length: {is: 64}
-      validates :sig, length: {is: 128}
+      validates :kind, presence: true
       validate :tags_must_be_array
       validate :id_must_match_payload
       validate :sig_must_match_payload
+
+      belongs_to :author, autosave: true
+      belongs_to :event_digest, autosave: true
+      has_many :searchable_tags, autosave: true
+
+      before_create :init_searchable_tags
+
+      delegate :pubkey, to: :author, allow_nil: true
+      delegate :sha256, :schnorr, :pow_difficulty, to: :event_digest, allow_nil: true
+
+      validates_associated :event_digest, :author, :searchable_tags
+
+      def init_searchable_tags
+        tags.each do |tag|
+          tag_name = tag.first
+          next unless tag_name.size === 1
+          tag_values = tag[1..]
+          tag_values = [""] if tag_values.blank?
+          tag_values.each do |tag_value|
+            searchable_tags.new(name: tag_name, value: tag_value)
+          end
+        end
+      end
+
+      def matches_nostr_filter_set?(filter_set)
+        filter_set.slice(*RELAY_CONFIG.available_filters).all? do |filter_type, filter_value|
+          case filter_type
+          when "kinds"
+            kind.in?(filter_value)
+          when "ids"
+            filter_value.any? { |prefix| event_digest.sha256.starts_with?(prefix) }
+          when "authors"
+            filter_value.any? { |prefix| author.pubkey.starts_with?(prefix) }
+          when "#e"
+            filter_value.any? do |prefix|
+              searchable_tags.any? do |t|
+                t.name == "e" && t.value.starts_with?(prefix)
+              end
+            end
+          when "#p"
+            filter_value.any? do |prefix|
+              searchable_tags.any? do |t|
+                t.name == "p" && t.value.starts_with?(prefix)
+              end
+            end
+          when "since"
+            created_at.to_i >= filter_value
+          when "until"
+            created_at.to_i <= filter_value
+          else
+            Rails.logger.warn("Unhandled available filter: #{filter_type}")
+            false
+          end
+        end
+      end
+
+      def to_nostr_serialized
+        [
+          0,
+          pubkey,
+          created_at.to_i,
+          kind,
+          tags,
+          content.to_s
+        ]
+      end
+
+      def as_json(options = nil)
+        {
+          kind:,
+          content:,
+          pubkey:,
+          created_at: created_at.to_i,
+          id: sha256,
+          sig: schnorr,
+          tags: tags
+        }
+      end
+
+      def pubkey=(value)
+        (author || build_author).pubkey = value
+      end
+
+      def digest_and_sig=(arr)
+        event_sha256, event_schnorr = arr
+
+        build_event_digest(sha256: event_sha256)
+        event_digest.build_sig(schnorr: event_schnorr)
+      end
+
+      private
+
+      def tags_must_be_array
+        errors.add(:tags, "must be an array") unless tags.is_a?(Array)
+      end
+
+      def id_must_match_payload
+        errors.add(:id, "must match payload") unless Digest::SHA256.hexdigest(JSON.dump(to_nostr_serialized)) === sha256
+      end
+
+      def sig_must_match_payload
+        schnorr_params = [
+          [sha256].pack("H*"),
+          [pubkey].pack("H*"),
+          [schnorr].pack("H*")
+        ]
+
+        errors.add(:sig, "must match payload") unless Schnorr.valid_sig?(*schnorr_params)
+      end
     end
 
     class_methods do
@@ -19,22 +125,21 @@ module Nostr
 
         filter_set.select { |key, value| value.present? }.each do |key, value|
           rel = rel.where(kind: value) if key == "kinds"
-          rel = rel.where("id ILIKE ANY (ARRAY[?])", value.map { |id| "#{id}%" }) if key == "ids"
-          rel = rel.where("pubkey ILIKE ANY (ARRAY[?])", value.map { |author| "#{author}%" }) if key == "authors"
+
+          if key == "ids"
+            rel = rel.joins(:event_digest).where("event_digests.sha256 ILIKE ANY (ARRAY[?])", value.map { |id| "#{id}%" })
+          end
+
+          if key == "authors"
+            rel = rel.joins(:author).where("authors.pubkey ILIKE ANY (ARRAY[?])", value.map { |author| "#{author}%" })
+          end
 
           if key == "#e"
-            rel = rel.where("EXISTS (
-              SELECT 1
-              FROM jsonb_array_elements(tags) AS arr
-              WHERE arr->>0 = 'e' AND (arr->>1 ILIKE ANY (ARRAY[?]))
-            )", value.map { |t| "#{t}%" })
+            rel = rel.joins(:searchable_tags).where("searchable_tags.name = 'e' AND searchable_tags.value ILIKE ANY (ARRAY[?])", value.map { |t| "#{t}%" })
           end
+
           if key == "#p"
-            rel = rel.where("EXISTS (
-              SELECT 1
-              FROM jsonb_array_elements(tags) AS arr
-              WHERE arr->>0 = 'p' AND (arr->>1 ILIKE ANY (ARRAY[?]))
-            )", value.map { |t| "#{t}%" })
+            rel = rel.joins(:searchable_tags).where("searchable_tags.name = 'p' AND searchable_tags.value ILIKE ANY (ARRAY[?])", value.map { |t| "#{t}%" })
           end
 
           rel = rel.where("created_at >= ?", Time.at(value)) if key == "since"
@@ -49,81 +154,6 @@ module Nostr
 
         rel.limit(filter_limit)
       end
-    end
-
-    def matches_nostr_filter_set?(filter_set)
-      filter_set.slice(*RELAY_CONFIG.available_filters).all? do |filter_type, filter_value|
-        case filter_type
-        when "kinds"
-          kind.in?(filter_value)
-        when "ids"
-          filter_value.any? { |prefix| id.starts_with?(prefix) }
-        when "authors"
-          filter_value.any? { |prefix| pubkey.starts_with?(prefix) }
-        when "#e"
-          filter_value.any? do |prefix|
-            tags.any? do |t|
-              t[0] == "e" && t[1].starts_with?(prefix)
-            end
-          end
-        when "#p"
-          filter_value.any? do |prefix|
-            tags.any? do |t|
-              t[0] == "p" && t[1].starts_with?(prefix)
-            end
-          end
-        when "since"
-          created_at.to_i >= filter_value
-        when "until"
-          created_at.to_i <= filter_value
-        else
-          Rails.logger.warn("Unhandled available filter: #{filter_type}")
-          false
-        end
-      end
-    end
-
-    def to_nostr_serialized
-      [
-        0,
-        pubkey,
-        created_at.to_i,
-        kind,
-        tags,
-        content.to_s
-      ]
-    end
-
-    def as_json(options = nil)
-      {
-        content:,
-        created_at: created_at.to_i,
-        id:,
-        kind:,
-        pubkey:,
-        sig:,
-        tags:
-      }
-    end
-
-    private
-
-    def tags_must_be_array
-      errors.add(:tags, "must be an array") unless tags.is_a?(Array)
-    end
-
-    def id_must_match_payload
-      errors.add(:id, "must match payload") unless Digest::SHA256.hexdigest(JSON.dump(to_nostr_serialized)) === id
-    end
-
-    def sig_must_match_payload
-      schnorr_params = [
-        [id].pack("H*"),
-        [pubkey].pack("H*"),
-        [sig].pack("H*")
-      ]
-
-      errors.add(:sig, "must match payload") unless Schnorr.valid_sig?(*schnorr_params)
     end
   end
 end

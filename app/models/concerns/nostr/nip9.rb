@@ -5,6 +5,7 @@ module Nostr
     included do
       validate :validate_deleted_event_tags_nip_9, if: proc { |event| event.kind === 5 }
       before_create :process_delete_event_nip_9
+      # TODO: prevent events of any kind from saving if they are listed in deleted
     end
 
     private

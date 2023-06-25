@@ -10,24 +10,50 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_06_21_222645) do
+ActiveRecord::Schema[7.0].define(version: 2023_06_24_143008) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  create_table "delete_events", force: :cascade do |t|
-    t.string "event_id", limit: 64, null: false
+  create_table "authors", force: :cascade do |t|
     t.string "pubkey", limit: 64, null: false
-    t.datetime "created_at"
-    t.index ["event_id", "pubkey"], name: "index_delete_events_on_event_id_and_pubkey", unique: true
   end
 
-  create_table "events", id: { type: :string, limit: 64 }, force: :cascade do |t|
-    t.string "pubkey", limit: 64, null: false
+  create_table "delete_events", force: :cascade do |t|
+    t.bigint "author_id", null: false
+    t.bigint "event_digest_id", null: false
+    t.index ["event_digest_id", "author_id"], name: "index_delete_events_on_event_digest_id_and_author_id", unique: true
+  end
+
+  create_table "event_digests", force: :cascade do |t|
+    t.string "sha256", limit: 64, null: false
+  end
+
+  create_table "events", force: :cascade do |t|
     t.integer "kind", null: false
     t.jsonb "tags", default: []
     t.text "content"
-    t.string "sig", limit: 128, null: false
     t.datetime "created_at"
+    t.bigint "author_id", null: false
+    t.bigint "event_digest_id", null: false
+    t.index ["author_id"], name: "index_events_on_author_id"
+    t.index ["event_digest_id"], name: "index_events_on_event_digest_id"
   end
 
+  create_table "searchable_tags", id: false, force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "name", limit: 1, null: false
+    t.string "value", limit: 128, null: false
+    t.index ["event_id"], name: "index_searchable_tags_on_event_id"
+  end
+
+  create_table "sigs", primary_key: "event_digest_id", force: :cascade do |t|
+    t.string "schnorr", limit: 128, null: false
+  end
+
+  add_foreign_key "delete_events", "authors"
+  add_foreign_key "delete_events", "event_digests"
+  add_foreign_key "events", "authors"
+  add_foreign_key "events", "event_digests"
+  add_foreign_key "searchable_tags", "events"
+  add_foreign_key "sigs", "event_digests"
 end

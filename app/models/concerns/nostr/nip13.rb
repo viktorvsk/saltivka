@@ -8,7 +8,7 @@ module Nostr
 
     def pow_difficulty
       @pow_difficulty ||= begin
-        binary_id = [id].pack("H*").unpack1("B*")
+        binary_id = [sha256].pack("H*").unpack1("B*")
         zeroes = binary_id.gsub(/^(0+)?.*/, '\1')
         zeroes.length
       end
@@ -18,7 +18,7 @@ module Nostr
 
     def proof_of_work_nip13
       if RELAY_CONFIG.min_pow > pow_difficulty
-        errors.add(:id, "PoW difficulty must be at least #{RELAY_CONFIG.min_pow}, got #{pow_difficulty}")
+        errors.add(:sha256, "PoW difficulty must be at least #{RELAY_CONFIG.min_pow}, got #{pow_difficulty}")
       end
     end
   end

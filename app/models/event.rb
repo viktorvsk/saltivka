@@ -3,7 +3,6 @@ class Event < ApplicationRecord
   include Nostr::Nip1
   include Nostr::Nip1Nip2Nip16
   include Nostr::Nip9
-  include Nostr::Nip13
   include Nostr::Nip22
 
   # NIP-01 NIP-02 NIP-16 NIP-33

@@ -8,8 +8,9 @@ class NewEvent
     event_params["digest_and_sig"] = [event_params.delete("id"), event_params.delete("sig")]
 
     event = Event.new(event_params)
+    should_fanout_without_save = event.kinda?(:ephemeral) && event.valid?
 
-    if (event.kinda?(:ephemeral) && event.valid?) || event.save
+    if should_fanout_without_save || event.save
       # TODO: Bloom filters
       REDIS.hgetall("subscriptions").each do |pubsub_id, filters|
         matches = JSON.parse(filters).any? { |filter_set| event.matches_nostr_filter_set?(filter_set) }
@@ -25,7 +26,7 @@ class NewEvent
       elsif event.errors[:"event_digest.sha256"].any? { |error_text| error_text.to_s =~ /PoW difficulty must be at least/ }
         REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, false, "pow: min difficulty must be #{RELAY_CONFIG.min_pow}, got #{event.pow_difficulty}"].to_json)
       else
-        REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, false, "error: #{event.errors.full_messages.join(", ")}"].to_json)
+        REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, false, "error: #{event.errors.full_messages.join(", ")}"].to_json) # TODO: errors presenter
       end
     end
 

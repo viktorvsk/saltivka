@@ -11,6 +11,10 @@ class RelayConfig
     ENV.fetch("NIP_42_challenge_window_seconds", 600).to_i
   end
 
+  def fast_auth_window_seconds
+    ENV.fetch("NIP_43_fast_auth_window_seconds", 60).to_i
+  end
+
   def default_filter_limit
     ENV.fetch("DEFAULT_FILTER_LIMIT", 100)
   end

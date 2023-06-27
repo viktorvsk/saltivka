@@ -7,6 +7,22 @@ Nostr::Relay = lambda do |env|
     controller = Nostr::RelayController.new(redis: REDIS)
     connection_id = controller.connection_id
 
+    auth_event_2242 = CGI.unescape(CGI.parse(URI.parse(ws.url).query.to_s)["authorization"].first.to_s)
+    if auth_event_2242.present?
+      # NIP-43
+      pubkey, errors = Nostr::Nips::Nip43.call(auth_event_2242)
+      if errors.present?
+        ws.send(["NOTICE", "error: #{errors.join(", ")}"].to_json)
+      else
+        REDIS.hset("authentications", connection_id, pubkey)
+        # TODO: consider handling multiple connections with the same event ID
+      end
+    else
+      # NIP-42
+      REDIS.sadd("connections", connection_id)
+      ws.send(["AUTH", connection_id].to_json)
+    end
+
     redis_thread = Thread.new do
       redis.psubscribe("events:#{connection_id}:*") do |on|
         on.pmessage do |pattern, channel, event|
@@ -15,10 +31,6 @@ Nostr::Relay = lambda do |env|
         end
       end
     end
-
-    # NIP-42
-    REDIS.sadd("connections", connection_id)
-    ws.send(["AUTH", connection_id].to_json)
 
     # Client side events logic
     ws.on :message do |event|

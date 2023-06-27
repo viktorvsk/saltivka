@@ -1,5 +1,5 @@
 class Event < ApplicationRecord
-  KNOWN_KINDS_TYPES = %w[set_metadata text_note recommend_server delete_event protocol_reserved replaceable ephemeral]
+  KNOWN_KINDS_TYPES = %w[set_metadata text_note recommend_server delete_event protocol_reserved replaceable ephemeral private]
   include Nostr::Nip1
   include Nostr::Nip1Nip2Nip16
   include Nostr::Nip9
@@ -30,6 +30,8 @@ class Event < ApplicationRecord
       %w[regular]
     when 10000...20000
       %w[replaceable]
+    when 22242
+      %w[ephemeral private]
     when 20000...30000
       %w[ephemeral]
     when 30000...40000

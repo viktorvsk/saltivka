@@ -3,6 +3,14 @@ class RelayConfig
     ENV.fetch("MAX_FILTER_LIMIT", 1000)
   end
 
+  def self_url
+    ENV.fetch("SELF_URL", "ws://localhost:3000")
+  end
+
+  def challenge_window_seconds
+    ENV.fetch("NIP_42_challenge_window_seconds", 600).to_i
+  end
+
   def default_filter_limit
     ENV.fetch("DEFAULT_FILTER_LIMIT", 100)
   end

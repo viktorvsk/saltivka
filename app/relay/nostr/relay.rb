@@ -16,6 +16,10 @@ Nostr::Relay = lambda do |env|
       end
     end
 
+    # NIP-42
+    REDIS.sadd("connections", connection_id)
+    ws.send(["AUTH", connection_id].to_json)
+
     # Client side events logic
     ws.on :message do |event|
       controller.perform(event.data) do |notice|

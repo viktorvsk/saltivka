@@ -6,20 +6,23 @@ class Nostr::RelayTest < ActiveSupport::TestCase
   end
 
   test "websocket request" do
-    ws_mock = Minitest::Mock.new
-    # ws_mock.expect(:send, nil)
-    ws_mock.expect(:rack_response, nil)
-    ws_mock.expect(:on, nil, [:message])
-    ws_mock.expect(:on, nil, [:close])
+    SecureRandom.stub(:hex, "CONN_ID") do
+      ws_mock = Minitest::Mock.new
+      # ws_mock.expect(:send, nil)
+      ws_mock.expect(:rack_response, nil)
+      ws_mock.expect(:send, nil, [["AUTH", "CONN_ID"].to_json])
+      ws_mock.expect(:on, nil, [:message])
+      ws_mock.expect(:on, nil, [:close])
 
-    Faye::WebSocket.stub(:new, ws_mock) do
-      Nostr::Relay.call({
-        "HTTP_CONNECTION" => "upgrade",
-        "HTTP_UPGRADE" => "websocket",
-        "REQUEST_METHOD" => "GET"
-      })
+      Faye::WebSocket.stub(:new, ws_mock) do
+        Nostr::Relay.call({
+          "HTTP_CONNECTION" => "upgrade",
+          "HTTP_UPGRADE" => "websocket",
+          "REQUEST_METHOD" => "GET"
+        })
+      end
+
+      ws_mock.verify
     end
-
-    ws_mock.verify
   end
 end

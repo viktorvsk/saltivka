@@ -11,10 +11,18 @@ class NewEvent
     should_fanout_without_save = event.kinda?(:ephemeral) && event.valid?
 
     if should_fanout_without_save || event.save
-      # TODO: Bloom filters
-      REDIS.hgetall("subscriptions").each do |pubsub_id, filters|
-        matches = JSON.parse(filters).any? { |filter_set| event.matches_nostr_filter_set?(filter_set) }
-        REDIS.publish("events:#{pubsub_id}:found_event", event.to_json) if matches
+
+
+      if event.kinda?(:private)
+        if event.kind === 22242 # NIP-42
+          REDIS.hset("authentications", connection_id, event.pubkey)
+        end
+      else
+        # TODO: Bloom filters
+        REDIS.hgetall("subscriptions").each do |pubsub_id, filters|
+          matches = JSON.parse(filters).any? { |filter_set| event.matches_nostr_filter_set?(filter_set) }
+          REDIS.publish("events:#{pubsub_id}:found_event", event.to_json) if matches
+        end
       end
 
       REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16

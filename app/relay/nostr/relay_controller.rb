@@ -14,7 +14,7 @@ module Nostr
       @connection_id = SecureRandom.hex
     end
 
-    def perform(event_data)
+    def perform(event_data, &block)
       Rails.logger.info(event_data)
       nostr_event = JSON.parse(event_data)
       command = nostr_event.shift
@@ -24,18 +24,18 @@ module Nostr
         contract_result = contract.call(nostr_event)
         if contract_result.success?
           controller_action = "#{command.downcase}_command"
-          send(controller_action, nostr_event)
+          send(controller_action, nostr_event, block)
         else
           error = Presenters::Errors.new(contract_result.errors.to_h)
-          yield notice!("error: #{error}") if block_given?
+          block.call notice!("error: #{error}")
         end
       else
         error = Presenters::Errors.new(command: %(unexpected command: '#{command}'))
-        yield notice!("error: #{error}") if block_given?
+        block.call notice!("error: #{error}")
       end
     rescue JSON::ParserError
       error = Presenters::Errors.new(json: %(malformed JSON))
-      yield notice!("error: #{error}") if block_given?
+      block.call notice!("error: #{error}")
     end
 
     private

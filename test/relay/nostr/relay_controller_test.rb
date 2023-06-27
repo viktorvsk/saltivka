@@ -67,6 +67,18 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
             assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => "[{}]"}
           end
 
+          it "fails when filters exceed maximum" do
+            REDIS_TEST_CONNECTION.sadd("client_reqs:CONN_ID", "OTHER_SUBID")
+
+            @nostr_event = ["REQ", "SUBID", {}].to_json
+            @expected_error = %(Reached maximum of 1 subscriptions)
+            RELAY_CONFIG.stub(:max_subscriptions, 1) do
+              SecureRandom.stub(:hex, @random_connection_id) do
+                subject
+              end
+            end
+          end
+
           it "filters Events by kinds" do
             filters = {"kinds" => [1]}
             @nostr_event = ["REQ", "SUBID", filters].to_json

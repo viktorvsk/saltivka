@@ -3,7 +3,7 @@ module Nostr
     extend ActiveSupport::Concern
 
     included do
-      validate :challenge_event_nip42, , if: proc { |event| event.kind === 22242 }
+      validate :challenge_event_nip42, if: proc { |event| event.kind === 22242 }
     end
 
     private

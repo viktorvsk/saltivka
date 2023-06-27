@@ -13,6 +13,7 @@ class Nostr::RelayTest < ActiveSupport::TestCase
       ws_mock.expect(:send, nil, [["AUTH", "CONN_ID"].to_json])
       ws_mock.expect(:on, nil, [:message])
       ws_mock.expect(:on, nil, [:close])
+      ws_mock.expect(:url, "ws://localhost:3000", [])
 
       Faye::WebSocket.stub(:new, ws_mock) do
         Nostr::Relay.call({

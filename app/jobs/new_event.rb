@@ -12,7 +12,6 @@ class NewEvent
 
     if should_fanout_without_save || event.save
 
-
       if event.kinda?(:private)
         if event.kind === 22242 # NIP-42
           REDIS.hset("authentications", connection_id, event.pubkey)
@@ -21,11 +20,29 @@ class NewEvent
         # TODO: Bloom filters
         REDIS.hgetall("subscriptions").each do |pubsub_id, filters|
           matches = JSON.parse(filters).any? { |filter_set| event.matches_nostr_filter_set?(filter_set) }
-          REDIS.publish("events:#{pubsub_id}:found_event", event.to_json) if matches
+          next unless matches
+          if event.kind === 4
+            subscriber_connection_id = pubsub_id.split(":").first
+            subscriber_pubkey = REDIS.hget("authentications", subscriber_connection_id)
+            event_p_tag = event.tags.find { |t| t.first == "p" }
+            if event_p_tag.present?
+              receiver_pubkey = event_p_tag.second
+              if receiver_pubkey === subscriber_pubkey
+                REDIS.publish("events:#{pubsub_id}:found_event", event.to_json)
+              else
+                next
+              end
+            else
+              # TODO: process invalid kind 4 event
+              next
+            end
+          else
+            REDIS.publish("events:#{pubsub_id}:found_event", event.to_json)
+          end
         end
-      end
 
-      REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16
+        REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16
+      end
     else
       Rails.logger.info(event.errors.to_json)
 

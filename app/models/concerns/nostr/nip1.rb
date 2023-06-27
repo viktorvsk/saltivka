@@ -121,12 +121,28 @@ module Nostr
     end
 
     class_methods do
-      def by_nostr_filters(filter_set)
+      def by_nostr_filters(filter_set, subscriber_pubkey = nil)
         rel = all.select(:id).order(created_at: :desc)
         filter_set.stringify_keys!
 
+        unless filter_set["kinds"].present?
+          rel = rel.where.not(kind: 4)
+        end
+
         filter_set.select { |key, value| value.present? }.each do |key, value|
-          rel = rel.where(kind: value) if key == "kinds"
+          value = Array.wrap(value)
+          if key == "kinds"
+            if value.include?(4)
+              value.delete(4)
+              rel = if subscriber_pubkey.present?
+                rel.where("events.kind IN (:kinds) OR (events.kind = 4 AND (authors.pubkey = :pubkey OR (searchable_tags.name = 'p' AND searchable_tags.value = :pubkey)))", kinds: value, pubkey: subscriber_pubkey)
+              else
+                rel.where(kind: value)
+              end
+            else
+              rel = rel.where(kind: value)
+            end
+          end
 
           if key == "ids"
             rel = rel.joins(:event_digest).where("event_digests.sha256 ILIKE ANY (ARRAY[?])", value.map { |id| "#{id}%" })

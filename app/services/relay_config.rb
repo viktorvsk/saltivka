@@ -20,6 +20,7 @@ class RelayConfig
   end
 
   def available_filters
+    # TODO: support capital letters for NIP-12
     ENV.fetch("AVAILABLE_FILTERS", "kinds ids authors #e #p since until #a #b #c #d #f #g #h #i #j #k #l #m #n #o #q #r #s #t #u #v #w #x #y #z").split(" ")
   end
 

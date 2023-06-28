@@ -175,12 +175,9 @@ module Nostr
               .where(where_clause, values: authors_to_search)
           end
 
-          if key == "#e"
-            rel = rel.joins(:searchable_tags).where("searchable_tags.name = 'e' AND searchable_tags.value ILIKE ANY (ARRAY[?])", value.map { |t| "#{t}%" })
-          end
-
-          if key == "#p"
-            rel = rel.joins(:searchable_tags).where("searchable_tags.name = 'p' AND searchable_tags.value ILIKE ANY (ARRAY[?])", value.map { |t| "#{t}%" })
+          if /\A#[a-z]\Z/.match?(key)
+            # NIP-12 + #e #p #d
+            rel = rel.joins(:searchable_tags).where("searchable_tags.name = '#{key.last}' AND searchable_tags.value ILIKE ANY (ARRAY[?])", value.map { |t| "#{t}%" })
           end
 
           rel = rel.where("created_at >= ?", Time.at(value)) if key == "since"

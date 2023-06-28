@@ -25,6 +25,10 @@ class NewEvent
             subscriber_connection_id = pubsub_id.split(":").first
             subscriber_pubkey = REDIS.hget("authentications", subscriber_connection_id)
             event_p_tag = event.tags.find { |t| t.first == "p" }
+            # We don't have to send this event to author because only subscriptions
+            # with matching filters should receive it
+            # We also don't have to do anything regarding delegation because
+            # delegation is only about publishing events and not receiving
             if event_p_tag.present?
               receiver_pubkey = event_p_tag.second
               if receiver_pubkey === subscriber_pubkey

@@ -22,8 +22,10 @@ module Nostr
       def init_searchable_tags
         tags.each do |tag|
           tag_name = tag.first
-          next unless tag_name.size === 1 # NIP-12 populate searchable filters for every single letter tag
-          tag_values = tag[1..]
+          satisfies_nip_12 = tag_name.size > 1 # NIP-12 populate searchable filters for every single letter tag
+          satisfies_nip_26 = tag_name != "delegation" # indexes delegation pubkey for search
+          next if !satisfies_nip_12 && !satisfies_nip_26
+          tag_values = satisfies_nip_26 ? [tag.second] : tag[1..]
           tag_values = [""] if tag_values.blank?
           tag_values.each do |tag_value|
             searchable_tags.new(name: tag_name, value: tag_value)
@@ -35,6 +37,9 @@ module Nostr
         filter_set.transform_keys(&:downcase).slice(*RELAY_CONFIG.available_filters).all? do |filter_type, filter_value|
           case filter_type
           when "kinds"
+            # We don't check relation between the subscriber authenticated pubkey
+            # and event's pubkey or p tag or delegation because this will be
+            # check right before sending event to listeners if it matches their filters
             kind.in?(filter_value)
           when "ids"
             filter_value.any? { |prefix| event_digest.sha256.starts_with?(prefix) }
@@ -42,10 +47,10 @@ module Nostr
             filter_value.any? do |prefix|
               return true if author.pubkey.starts_with?(prefix)
 
+              # NIP-26
               delegation_tag = tags.find { |k, v| k === "delegation" }
               return false unless delegation_tag
-              delegation_pubkety = [1..].flatten.second
-              return delegation_pubkety.starts_with?(prefix)
+              return delegation_tag.second.starts_with?(prefix)
             end
           when /\A#[a-z]\Z/
             # NIP-12 search single letter filters
@@ -89,7 +94,7 @@ module Nostr
       end
 
       def pubkey=(value)
-        (author || build_author).pubkey = value
+        self.author = Author.where(pubkey: value).first_or_initialize
       end
 
       def digest_and_sig=(arr)
@@ -122,7 +127,7 @@ module Nostr
 
     class_methods do
       def by_nostr_filters(filter_set, subscriber_pubkey = nil)
-        rel = all.select(:id).order(created_at: :desc)
+        rel = all.distinct(:id).order(created_at: :desc)
         filter_set.stringify_keys!
 
         unless filter_set["kinds"].present?
@@ -130,12 +135,18 @@ module Nostr
         end
 
         filter_set.select { |key, value| value.present? }.each do |key, value|
-          value = Array.wrap(value)
           if key == "kinds"
+            value = Array.wrap(value)
             if value.include?(4)
               value.delete(4)
               rel = if subscriber_pubkey.present?
-                rel.where("events.kind IN (:kinds) OR (events.kind = 4 AND (authors.pubkey = :pubkey OR (searchable_tags.name = 'p' AND searchable_tags.value = :pubkey)))", kinds: value, pubkey: subscriber_pubkey)
+                where_clause = <<~SQL
+                  events.kind IN (:kinds) OR
+                    (
+                      events.kind = 4 AND (authors.pubkey = :pubkey OR delegation_or_p_tags.value = :pubkey)
+                    )
+                SQL
+                rel.joins("LEFT JOIN searchable_tags AS delegation_or_p_tags ON delegation_or_p_tags.event_id = events.id AND delegation_or_p_tags.name IN ('p', 'delegation')").where(where_clause, kinds: value, pubkey: subscriber_pubkey)
               else
                 rel.where(kind: value)
               end
@@ -151,9 +162,17 @@ module Nostr
           if key == "authors"
             # NIP-26
             authors_to_search = value.map { |author| "#{author}%" }
+            where_clause = <<~SQL
+              (
+                authors.pubkey ILIKE ANY (ARRAY[:values])) OR
+                  (
+                    delegation_tags.value ILIKE ANY (ARRAY[:values]
+                  )
+              )
+            SQL
             rel = rel.joins(:author)
-              .joins("LEFT JOIN searchable_tags ON searchable_tags.event_id = events.id AND searchable_tags.name = 'delegation'")
-              .where("(authors.pubkey ILIKE ANY (ARRAY[:values])) OR (searchable_tags.value ILIKE ANY (ARRAY[:values]))", values: authors_to_search)
+              .joins("LEFT JOIN searchable_tags AS delegation_tags ON delegation_tags.event_id = events.id AND delegation_tags.name = 'delegation'")
+              .where(where_clause, values: authors_to_search)
           end
 
           if key == "#e"

@@ -45,7 +45,7 @@ class NewEvent
           end
         end
 
-        REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16
+        REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16/NIP-20
       end
     else
       Rails.logger.info(event.errors.to_json)

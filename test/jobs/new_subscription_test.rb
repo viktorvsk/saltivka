@@ -32,7 +32,7 @@ class NewSubscriptionTest < ActiveSupport::TestCase
     redis_publisher.expect(:call, nil, ["events:CONN_ID:SUBID:found_event", @event.to_json])
     redis_publisher.expect(:call, nil, ["events:CONN_ID:SUBID:found_end", "EOSE"])
 
-    REDIS.stub(:publish, redis_publisher) { NewSubscription.perform_sync("CONN_ID", "SUBID", {kinds: [0]}.to_json) }
+    REDIS.stub(:publish, redis_publisher) { NewSubscription.perform_sync("CONN_ID", "SUBID", {kinds: [0], authors: ["a19f19f"]}.to_json) }
     redis_publisher.verify
   end
 

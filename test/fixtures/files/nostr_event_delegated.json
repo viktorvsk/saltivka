@@ -1,0 +1,16 @@
+{
+  "kind": 1,
+  "content": "",
+  "pubkey": "09cd08d416b78dd3e1d6c00c9e14087d803df6360fbf0acdb30106ca042ee81e",
+  "created_at": 1687863812,
+  "id": "93dac3d8774fb454b0d2c8192639eb6617fe3931c7a1493bde28a87292f3988b",
+  "sig": "38510c32f01fc45a1c35adb9a73ca016bc34be24b84cabd10b24d27d7182c5d63342c44fa564a98dc1c318e4236e487199484d6bd1fe46a54ecaca09477f371c",
+  "tags": [
+    [
+      "delegation",
+      "8e0d3d3eb2881ec137a11debe736a9086715a8c8beeeda615780064d68bc25dd",
+      "kind=1&created_at>1680000800&created_at<1687949586",
+      "d890dc2d9706f0bfeba01a2a67a2b35790ac75dc6b8908dc3cd2a0d1cdf649100c9e4472477819773a3658aa152e6b7a70d6d88e238995de0155c7b1f8623804"
+    ]
+  ]
+}

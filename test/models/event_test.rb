@@ -25,41 +25,81 @@ class EventTest < ActiveSupport::TestCase
 
   test "Single event matching filter_set" do
     event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
-    assert_equal true, @event.matches_nostr_filter_set?({"ids" => ["bf84a73"]})
-    assert_equal true, @event.matches_nostr_filter_set?({"authors" => ["a19f19f"]})
-    assert_equal false, @event.matches_nostr_filter_set?({"authors" => ["_a19f19f"]})
 
-    assert_equal true, event_with_tags.matches_nostr_filter_set?({"#e" => ["bf84a"]})
-    assert_equal true, event_with_tags.matches_nostr_filter_set?({"#p" => ["a19f19"]})
-    assert_equal false, event_with_tags.matches_nostr_filter_set?({"#e" => ["a19f19"]})
+    parsed_json = JSON.parse(File.read(Rails.root.join(*%w[test fixtures files nostr_event_delegated.json])))
+    delegated_event_params = parsed_json.merge("digest_and_sig" => [parsed_json.delete("id"), parsed_json.delete("sig")], "created_at" => Time.at(parsed_json["created_at"]))
+    delegated_event = Event.new(delegated_event_params)
 
-    assert_equal true, build(:event, kind: 4).matches_nostr_filter_set?({"kinds" => [4]})
-    assert_equal false, build(:event, kind: 3).matches_nostr_filter_set?({"kinds" => [4]})
-    assert_equal false, build(:event, kind: 4, created_at: 1.hour.ago).matches_nostr_filter_set?({"kinds" => [4], "until" => 2.days.ago.to_i})
-    assert_equal true, build(:event, kind: 4, created_at: 1.day.ago).matches_nostr_filter_set?({"kinds" => [4], "until" => 2.hour.ago.to_i})
-    assert_equal true, build(:event, created_at: 1.hour.ago).matches_nostr_filter_set?({"since" => 2.days.ago.to_i})
-    assert_equal false, build(:event, created_at: 1.day.ago).matches_nostr_filter_set?({"since" => 2.hour.ago.to_i})
+    assert delegated_event.matches_nostr_filter_set?({"authors" => ["8e0d3d"]})
+    assert delegated_event.matches_nostr_filter_set?({"authors" => ["09cd08d"]})
+
+    assert @event.matches_nostr_filter_set?({"ids" => ["bf84a73"]})
+    assert @event.matches_nostr_filter_set?({"authors" => ["a19f19f"]})
+    refute @event.matches_nostr_filter_set?({"authors" => ["_a19f19f"]})
+
+    assert event_with_tags.matches_nostr_filter_set?({"#e" => ["bf84a"]})
+    assert event_with_tags.matches_nostr_filter_set?({"#p" => ["a19f19"]})
+    refute event_with_tags.matches_nostr_filter_set?({"#e" => ["a19f19"]})
+
+    assert build(:event, kind: 4).matches_nostr_filter_set?({"kinds" => [4]})
+    refute build(:event, kind: 3).matches_nostr_filter_set?({"kinds" => [4]})
+    refute build(:event, kind: 4, created_at: 1.hour.ago).matches_nostr_filter_set?({"kinds" => [4], "until" => 2.days.ago.to_i})
+    assert build(:event, kind: 4, created_at: 1.day.ago).matches_nostr_filter_set?({"kinds" => [4], "until" => 2.hour.ago.to_i})
+    assert build(:event, created_at: 1.hour.ago).matches_nostr_filter_set?({"since" => 2.days.ago.to_i})
+    refute build(:event, created_at: 1.day.ago).matches_nostr_filter_set?({"since" => 2.hour.ago.to_i})
   end
 
   # Here we test a use case where we have implemented new filter
   # added it to AVAILABLE FILTERS but for some reason missed to handle it
   test "edge filter" do
     RELAY_CONFIG.stub(:available_filters, %w[kinds ids authors #e #p since until edge_filter]) do
-      assert_equal false, build(:event).matches_nostr_filter_set?({"edge_filter" => 2.hour.ago.to_i})
+      refute build(:event).matches_nostr_filter_set?({"edge_filter" => 2.hour.ago.to_i})
     end
+  end
+
+  test "NIP-26: valid delegation event" do
+    parsed_json = JSON.parse(File.read(Rails.root.join(*%w[test fixtures files nostr_event_delegated.json])))
+    event_params = parsed_json.merge("digest_and_sig" => [parsed_json.delete("id"), parsed_json.delete("sig")], "created_at" => Time.at(parsed_json["created_at"]))
+    event = Event.new(event_params)
+
+    assert event.valid?
+  end
+
+  test "NIP-26: invalid delegation" do
+    too_old_event = build(:event, :delegated_event, kind: 1, created_at: 1.year.ago)
+    too_new_event = build(:event, :delegated_event, kind: 1, created_at: 1.day.from_now)
+    invalid_kind_event = build(:event, :delegated_event, kind: 1001, created_at: 1.day.ago)
+    invalid_delegation_pubkey_event = build(:event, tags: [["delegation", "INVALID", "", ""]])
+
+    refute too_old_event.valid?
+    refute too_new_event.valid?
+    refute invalid_kind_event.valid?
+    refute invalid_delegation_pubkey_event.valid?
+
+    assert_includes too_old_event.errors[:tags], %('delegation' created_at < event created_at minimum)
+    assert_includes too_new_event.errors[:tags], %('delegation' created_at > event created_at maximum)
+    assert_includes invalid_kind_event.errors[:tags], %('delegation' kind doesn't allow kind 1001)
+    assert_includes invalid_delegation_pubkey_event.errors[:tags], %('delegation' pubkey must be a valid 64 characters hex)
   end
 
   test "Find Events mathcing filter_set in database" do
     event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
 
-    assert_equal 2, Event.by_nostr_filters({}).count
+    parsed_json = JSON.parse(File.read(Rails.root.join(*%w[test fixtures files nostr_event_delegated.json])))
+    event_params = parsed_json.merge("digest_and_sig" => [parsed_json.delete("id"), parsed_json.delete("sig")], "created_at" => Time.at(parsed_json["created_at"]))
+    Event.create!(event_params)
+
+    assert_equal 1, Event.by_nostr_filters({"authors" => ["09cd08d"]}).to_a.size
+    assert_equal 1, Event.by_nostr_filters({"authors" => ["8e0d3"]}).to_a.size
+
+    assert_equal 3, Event.by_nostr_filters({}).count
     assert_equal 1, Event.by_nostr_filters({limit: 1}).count
     assert_equal 1, Event.by_nostr_filters({kinds: 0}).count
     assert_equal 2, Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95", event_with_tags.pubkey.first(5)]}).count
     assert_equal ((event_with_tags.pubkey == "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95") ? 2 : 1), Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9"]}).count
     assert_equal 2, Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f", event_with_tags.event_digest.sha256.first(5)]}).count
     assert_equal 1, Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"]}).count
-    assert_equal 2, Event.by_nostr_filters({"ids" => []}).count
+    assert_equal 3, Event.by_nostr_filters({"ids" => []}).count
     assert_equal 0, Event.by_nostr_filters({"ids" => ["INVALID"]}).count
     assert_equal 0, Event.by_nostr_filters({"#e" => ["s"]}).count
     assert_equal 1, Event.by_nostr_filters({"#e" => ["b"]}).count
@@ -74,11 +114,11 @@ class EventTest < ActiveSupport::TestCase
       "digest_and_sig" => [with_pow.delete("id"), with_pow.delete("sig")]
     })
 
-    assert_equal true, Event.new(event_with_pow).valid?
-    assert_equal true, @event.valid?
+    assert Event.new(event_with_pow).valid?
+    assert @event.valid?
     RELAY_CONFIG.stub(:min_pow, 1) do
-      assert_equal true, Event.new(event_with_pow).valid?
-      assert_equal false, @event.valid?
+      assert Event.new(event_with_pow).valid?
+      refute @event.valid?
     end
   end
 end

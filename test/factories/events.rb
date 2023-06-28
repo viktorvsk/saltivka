@@ -6,9 +6,6 @@ FactoryBot.define do
     content { "" }
     created_at { Time.now }
 
-    # TODO: control whos fake credentials to use in order to control keys assigned
-    # TODO: generate ID and SIG for alice/bob/etc trait events
-
     trait :delegated_event do
       tags { [["delegation", NIP_26_TAG[:pk], NIP_26_TAG[:conditions], NIP_26_TAG[:sig]]] }
     end

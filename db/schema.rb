@@ -41,7 +41,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_06_24_143008) do
 
   create_table "searchable_tags", id: false, force: :cascade do |t|
     t.bigint "event_id", null: false
-    t.string "name", limit: 1, null: false
+    t.string "name", limit: 64, null: false
     t.string "value", limit: 128, null: false
     t.index ["event_id"], name: "index_searchable_tags_on_event_id"
   end

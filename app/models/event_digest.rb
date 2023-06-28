@@ -3,6 +3,7 @@ class EventDigest < ApplicationRecord
 
   has_one :sig, autosave: true, dependent: :destroy
   has_one :event, dependent: :destroy
+  has_one :author, through: :event
   validates :sha256, presence: true, length: {is: 64}, uniqueness: true
   delegate :schnorr, to: :sig
   validates_associated :sig

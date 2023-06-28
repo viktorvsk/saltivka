@@ -35,7 +35,7 @@ class Event < ApplicationRecord
     when 20000...30000
       %w[ephemeral]
     when 30000...40000
-      %w[parameterized replaceable]
+      %w[parameterized_replaceable]
     else
       %w[unknown]
     end

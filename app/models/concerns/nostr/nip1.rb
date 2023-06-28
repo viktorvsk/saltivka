@@ -10,7 +10,7 @@ module Nostr
 
       belongs_to :author, autosave: true
       belongs_to :event_digest, autosave: true
-      has_many :searchable_tags, autosave: true, dependent: :destroy
+      has_many :searchable_tags, autosave: true, dependent: :delete_all
 
       before_create :init_searchable_tags
 

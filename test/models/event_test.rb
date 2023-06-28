@@ -175,6 +175,14 @@ class EventTest < ActiveSupport::TestCase
     assert e2.new_record?
   end
 
+  test "NIP-16: ephemeral events not saved" do
+    kind = [rand(20000...30000), 20000, 29999].sample
+    event = build(:event, kind: kind)
+    assert event.kinda?(:ephemeral)
+    refute event.save
+    assert_includes event.errors[:kind], "must not be ephemeral"
+  end
+
   test "PoW difficulty NIP-13" do
     with_pow = JSON.parse(File.read(Rails.root.join("test", "fixtures", "files", "nostr_event_pow.json")))
     event_with_pow = with_pow.merge({

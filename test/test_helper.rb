@@ -28,7 +28,7 @@ NIP_26_TAG = {
 class ActiveSupport::TestCase
   include FactoryBot::Syntax::Methods
   # Run tests in parallel with specified workers
-  
+
   # TODO: doesn't work with 50+ tests for some reason
   # parallelize(workers: :number_of_processors)
 

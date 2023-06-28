@@ -4,6 +4,8 @@ module Nostr
 
     included do
       before_validation :process_replaceable_nip_1_nip_2_nip_16, if: ->(event) { event.kinda?(:replaceable) }
+
+      before_save :must_not_be_ephemeral_nip16
       validate :must_be_newer_than_existing_replaceable_nip16, if: ->(event) { event.kinda?(:replaceable) }
     end
 
@@ -12,6 +14,14 @@ module Nostr
     def process_replaceable_nip_1_nip_2_nip_16
       EventDigest.joins(:author, :event).where(authors: {pubkey: author.pubkey}, events: {kind: kind}).where("events.created_at < ?", created_at).destroy_all
       EventDigest.joins(:author, :event).where(authors: {pubkey: author.pubkey}, events: {kind: kind, created_at: created_at}).where("event_digests.sha256 > ?", sha256).destroy_all
+    end
+
+    def must_not_be_ephemeral_nip16
+      return unless kinda?(:ephemeral)
+
+      errors.add(:kind, "must not be ephemeral")
+
+      throw(:abort)
     end
 
     def must_be_newer_than_existing_replaceable_nip16

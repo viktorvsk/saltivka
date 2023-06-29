@@ -22,27 +22,18 @@ class NewEvent
           matches = JSON.parse(filters).any? { |filter_set| event.matches_nostr_filter_set?(filter_set) }
           next unless matches
           if event.kind === 4
+            event_p_tag = event.tags.find { |t| t.first == "p" }
+            next unless event_p_tag.present? # TODO: process invalid kind 4 event
             subscriber_connection_id = pubsub_id.split(":").first
             subscriber_pubkey = REDIS.hget("authentications", subscriber_connection_id)
-            event_p_tag = event.tags.find { |t| t.first == "p" }
             # We don't have to send this event to author because only subscriptions
             # with matching filters should receive it
             # We also don't have to do anything regarding delegation because
             # delegation is only about publishing events and not receiving
-            if event_p_tag.present?
-              receiver_pubkey = event_p_tag.second
-              if receiver_pubkey === subscriber_pubkey
-                REDIS.publish("events:#{pubsub_id}:found_event", event.to_json)
-              else
-                next
-              end
-            else
-              # TODO: process invalid kind 4 event
-              next
-            end
-          else
-            REDIS.publish("events:#{pubsub_id}:found_event", event.to_json)
+            next if event_p_tag.second != subscriber_pubkey
           end
+
+          REDIS.publish("events:#{pubsub_id}:found_event", event.to_json)
         end
 
         REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16/NIP-20

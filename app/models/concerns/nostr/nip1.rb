@@ -143,14 +143,20 @@ module Nostr
             value = Array.wrap(value)
             if value.include?(4)
               value.delete(4)
+              next if value.blank? && subscriber_pubkey.blank?
+
               rel = if subscriber_pubkey.present?
-                where_clause = <<~SQL
-                  events.kind IN (:kinds) OR
-                    (
-                      events.kind = 4 AND (authors.pubkey = :pubkey OR delegation_or_p_tags.value = :pubkey)
-                    )
-                SQL
-                rel.joins("LEFT JOIN searchable_tags AS delegation_or_p_tags ON delegation_or_p_tags.event_id = events.id AND delegation_or_p_tags.name IN ('p', 'delegation')").where(where_clause, kinds: value, pubkey: subscriber_pubkey)
+                if value.present?
+                  where_clause = <<~SQL
+                    events.kind IN (:kinds) OR
+                      (
+                        events.kind = 4 AND (authors.pubkey = :pubkey OR delegation_or_p_tags.value = :pubkey)
+                      )
+                  SQL
+                  rel.joins(:author).joins("LEFT JOIN searchable_tags AS delegation_or_p_tags ON delegation_or_p_tags.event_id = events.id AND delegation_or_p_tags.name IN ('p', 'delegation')").where(where_clause, kinds: value, pubkey: subscriber_pubkey)
+                else
+                  rel.joins(:author).joins("LEFT JOIN searchable_tags AS delegation_or_p_tags ON delegation_or_p_tags.event_id = events.id AND delegation_or_p_tags.name IN ('p', 'delegation')").where("events.kind = 4 AND (authors.pubkey = :pubkey OR delegation_or_p_tags.value = :pubkey)", pubkey: subscriber_pubkey)
+                end
               else
                 rel.where(kind: value)
               end

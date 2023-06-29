@@ -21,8 +21,8 @@ module Nostr
         ]
 
         delegated_kinds = condition_string.scan(/kind=(\d{1,})/)
-        min_created_at = condition_string.scan(/created_at>(\d{1,})/).flatten.first.to_i
-        max_created_at = condition_string.scan(/created_at<(\d{1,})/).flatten.first.to_i
+        min_created_at = condition_string.scan(/created_at>(\d{1,})/).flatten.first&.to_i
+        max_created_at = condition_string.scan(/created_at<(\d{1,})/).flatten.first&.to_i
 
         if delegated_kinds && !kind.to_s.in?(delegated_kinds.flatten)
           errors.add(:tags, "'delegation' kind doesn't allow kind #{kind}")

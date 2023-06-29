@@ -57,6 +57,17 @@ class EventTest < ActiveSupport::TestCase
     end
   end
 
+  test "kind detector" do
+    kind2_event = build(:event, kind: 2)
+    auth_event = build(:event, kind: 22242)
+    unknown_event = build(:event, kind: 100_000)
+    assert kind2_event.kinda?(:recommend_server)
+    assert kind2_event.kinda?(:protocol_reserved)
+    assert auth_event.kinda?(:ephemeral)
+    assert auth_event.kinda?(:private)
+    assert unknown_event.kinda?(:unknown)
+  end
+
   test "NIP-26: valid delegation event" do
     parsed_json = JSON.parse(File.read(Rails.root.join(*%w[test fixtures files nostr_event_delegated.json])))
     event_params = parsed_json.merge("digest_and_sig" => [parsed_json.delete("id"), parsed_json.delete("sig")], "created_at" => Time.at(parsed_json["created_at"]))

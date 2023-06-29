@@ -103,4 +103,8 @@ class RelayConfig
   def max_message_length
     ENV.fetch("NIP_11_max_message_length", 16384).to_i
   end
+
+  def mailer_default_from
+    ENV.fetch("MAILER_DEFAULT_FROM", "admin@localhost")
+  end
 end

@@ -21,5 +21,6 @@ class CountRequest
     count = Event.from("(#{union}) AS t").count
 
     REDIS.publish("events:#{pubsub_id}:count", count.to_s)
+    count
   end
 end

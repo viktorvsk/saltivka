@@ -1,5 +1,5 @@
 class Event < ApplicationRecord
-  KNOWN_KINDS_TYPES = %w[set_metadata text_note recommend_server delete_event protocol_reserved replaceable ephemeral private parameterized_replaceable]
+  KNOWN_KINDS_TYPES = %w[set_metadata text_note recommend_server delete_event protocol_reserved replaceable ephemeral private parameterized_replaceable unknown]
   include Nostr::Nip1
   include Nostr::Nip1Nip2Nip16
   include Nostr::Nip9

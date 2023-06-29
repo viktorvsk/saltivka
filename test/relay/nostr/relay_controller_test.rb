@@ -4,7 +4,6 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
   describe Nostr::RelayController do
     before do
       @ws_sender = Minitest::Mock.new
-      @listener_service = Minitest::Mock.new
       @random_connection_id = "CONN_ID"
       @sidekiq_pusher_mock_for = lambda do |klass, args|
         sidekiq_pusher = Minitest::Mock.new

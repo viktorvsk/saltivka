@@ -158,8 +158,9 @@ class EventTest < ActiveSupport::TestCase
   end
 
   test "NIP-16: given 2 replaceable events with the same created_at one with lexically higher id is deleted" do
-    e1 = create(:event, kind: 10001, pubkey: FAKE_CREDENTIALS[:alice][:pk], created_at: Time.at(1687970750), content: "Another") # id => f3ee61e2911b081b4ff1308222dcce30ca112e1fc8efcccf8404c6ea47363f27
+    # TODO: NIP-16/NIP-33 check why order NOT matters
     e2 = build(:event, kind: 10001, pubkey: FAKE_CREDENTIALS[:alice][:pk], created_at: Time.at(1687970750), content: "some") # id => 2d57c2763dfa3e500576d2b6de86d26225444a18b9c8d8414d786011ef49af56
+    e1 = create(:event, kind: 10001, pubkey: FAKE_CREDENTIALS[:alice][:pk], created_at: Time.at(1687970750), content: "Another") # id => f3ee61e2911b081b4ff1308222dcce30ca112e1fc8efcccf8404c6ea47363f27
 
     assert e2.save
     refute Event.where(id: e1.id).exists?

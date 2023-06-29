@@ -20,13 +20,16 @@ module Nostr
       validates_associated :event_digest, :author, :searchable_tags
 
       def init_searchable_tags
+        if kinda?(:parameterized_replaceable) && tags.none? { |t| t.first === "d" }
+          searchable_tags.new(name: "d", value: "")
+        end
         tags.each do |tag|
           tag_name = tag.first
           satisfies_nip_12 = tag_name.size > 1 # NIP-12 populate searchable filters for every single letter tag
           satisfies_nip_26 = tag_name != "delegation" # indexes delegation pubkey for search
           next if !satisfies_nip_12 && !satisfies_nip_26
           tag_values = satisfies_nip_26 ? [tag.second] : tag[1..]
-          tag_values = [""] if tag_values.blank?
+          tag_values = [""] if tag_values.compact.blank?
           tag_values.each do |tag_value|
             searchable_tags.new(name: tag_name, value: tag_value)
           end
@@ -45,7 +48,7 @@ module Nostr
             filter_value.any? { |prefix| event_digest.sha256.starts_with?(prefix) }
           when "authors"
             filter_value.any? do |prefix|
-              return true if author.pubkey.starts_with?(prefix)
+              return true if pubkey.starts_with?(prefix)
 
               # NIP-26
               delegation_tag = tags.find { |k, v| k === "delegation" }
@@ -94,7 +97,8 @@ module Nostr
       end
 
       def pubkey=(value)
-        self.author = Author.where(pubkey: value).first_or_initialize
+        self.author ||= Author.where(pubkey: value).first
+        self.author || build_author(pubkey: value)
       end
 
       def digest_and_sig=(arr)

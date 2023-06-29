@@ -17,8 +17,10 @@ module Nostr
         errors.add(:tags, "'relay' must equal to #{self_url_host}")
       end
 
-      unless REDIS.sismember("connections", challenge_tag.second.to_s)
-        errors.add(:tags, "'challenge' is invalid")
+      if challenge_tag
+        unless REDIS.sismember("connections", challenge_tag.second.to_s)
+          errors.add(:tags, "'challenge' is invalid")
+        end
       end
 
       if created_at.before?(RELAY_CONFIG.challenge_window_seconds.seconds.ago)

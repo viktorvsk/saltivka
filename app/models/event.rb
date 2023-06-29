@@ -7,6 +7,7 @@ class Event < ApplicationRecord
   include Nostr::Nip26
   include Nostr::Nip33
   include Nostr::Nip40
+  include Nostr::Nip42
 
   # NIP-01 NIP-02 NIP-16 NIP-33
   def kinda?(event_type)

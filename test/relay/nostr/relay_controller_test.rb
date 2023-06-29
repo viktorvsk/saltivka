@@ -210,6 +210,22 @@ class Nostr::RelayControllerTest < ActiveSupport::TestCase
           end
         end
       end
+
+      describe "NIP-45" do
+        it "pushes event to Sidekiq" do
+          @nostr_event = ["COUNT", "SUBID", {}].to_json
+
+          @pusher_mock = @sidekiq_pusher_mock_for.call("CountRequest", ["CONN_ID", "SUBID", "[{}]"])
+          Sidekiq::Client.stub(:push, @pusher_mock) do
+            SecureRandom.stub(:hex, @random_connection_id) do
+              subject
+            end
+          end
+
+          assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), []
+          assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {}
+        end
+      end
     end
   end
 end

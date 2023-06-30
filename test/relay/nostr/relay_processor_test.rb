@@ -19,4 +19,8 @@ class Nostr::RelayProcessorTest < ActiveSupport::TestCase
   test "handles EVENT" do
     assert_equal ["EVENT", "SUBID", {id: "HEX"}].to_json, Nostr::RelayProcessor.call("events:CONN_ID:SUBID:found_event", {id: "HEX"}.to_json)
   end
+
+  test "handles NOTICE" do
+    assert_equal ["NOTICE", "message"].to_json, Nostr::RelayProcessor.call("events:CONN_ID:_:notice", "message")
+  end
 end

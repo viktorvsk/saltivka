@@ -12,6 +12,8 @@ module Nostr
         event # NIP-20
       when "COUNT"
         ["COUNT", subscription_id, {count: event.to_i}].to_json
+      when "NOTICE"
+        ["NOTICE", event].to_json
       end
 
       Rails.logger.info("[Nostr::RelayProcessor] response=#{response}")

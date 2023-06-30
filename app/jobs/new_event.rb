@@ -14,7 +14,11 @@ class NewEvent
 
       if event.kinda?(:private)
         if event.kind === 22242 # NIP-42
-          REDIS.hset("authentications", connection_id, event.pubkey)
+          if RELAY_CONFIG.restrict_change_auth_pubkey && REDIS.hexists("authentications", connection_id)
+            REDIS.publish("events:#{connection_id}:_:notice", "This connection is already authenticated. To authenticate another pubkey please open new connection")
+          else
+            REDIS.hset("authentications", connection_id, event.pubkey)
+          end
         end
       else
         # TODO: Bloom filters

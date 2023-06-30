@@ -14,17 +14,23 @@ module Nostr
       self_url_host = URI.parse(RELAY_CONFIG.self_url).host
 
       unless URI.parse(relay_tag.second.to_s).host === self_url_host
-        errors.add(:tags, "'relay' must equal to #{self_url_host}")
+        errors.add(:tags, "'relay' must equal to #{RELAY_CONFIG.self_url}")
       end
 
       if challenge_tag
         unless REDIS.sismember("connections", challenge_tag.second.to_s)
           errors.add(:tags, "'challenge' is invalid")
         end
+      else
+        errors.add(:tags, "'challenge' is missing")
       end
 
       if created_at.before?(RELAY_CONFIG.challenge_window_seconds.seconds.ago)
         errors.add(:created_at, "is too old, must be within #{RELAY_CONFIG.challenge_window_seconds} seconds")
+      end
+
+      if created_at.future?
+        errors.add(:created_at, "must not be in future")
       end
     end
   end

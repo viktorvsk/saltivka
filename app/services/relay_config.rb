@@ -15,6 +15,11 @@ class RelayConfig
     ENV.fetch("NIP_43_fast_auth_window_seconds", 60).to_i
   end
 
+  def restrict_change_auth_pubkey
+    val = ENV.fetch("NIP-42_restrict_change_auth_pubkey", false)
+    ActiveRecord::Type::Boolean.new.cast(val)
+  end
+
   def default_filter_limit
     ENV.fetch("DEFAULT_FILTER_LIMIT", 100)
   end

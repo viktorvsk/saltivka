@@ -110,6 +110,6 @@ class RelayConfig
   end
 
   def mailer_default_from
-    ENV.fetch("MAILER_DEFAULT_FROM", "admin@localhost")
+    ENV.fetch("MAILER_DEFAULT_FROM", "admin@nostr.localhost")
   end
 end

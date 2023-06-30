@@ -5,6 +5,7 @@ Nostr::Relay = lambda do |env|
     redis_subscriber = Redis.new(url: ENV["REDIS_URL"])
 
     controller = Nostr::RelayController.new(redis: REDIS)
+    relay_processor = Nostr::RelayProcessor.new(ws: ws)
     connection_id = controller.connection_id
     REDIS.sadd("connections", connection_id)
 
@@ -13,15 +14,7 @@ Nostr::Relay = lambda do |env|
     redis_thread = Thread.new do
       redis_subscriber.psubscribe("events:#{connection_id}:*") do |on|
         on.pmessage do |pattern, channel, event|
-          _namespace, _connection_id, _subscription_id, command = channel.split(":")
-
-          if command.upcase === "TERMINATE"
-            code, reason = JSON.parse(event)
-            ws.close(code, reason)
-          else
-            response = Nostr::RelayProcessor.call(channel, event)
-            ws.send(response)
-          end
+          relay_processor.call(channel, event)
         end
       end
     end

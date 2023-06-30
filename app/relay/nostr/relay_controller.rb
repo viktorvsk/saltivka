@@ -48,7 +48,7 @@ module Nostr
         redis.del("client_reqs:#{connection_id}")
         redis.srem("connections", connection_id)
         redis.hdel("connections_authenticators", connection_id)
-        redis.hdel("subscriptions", pubsub_ids) if pubsub_ids
+        redis.hdel("subscriptions", pubsub_ids) if pubsub_ids.present?
         redis.call("SET", "events22242:#{event22242_id}", "", "KEEPTTL")
       end
     end

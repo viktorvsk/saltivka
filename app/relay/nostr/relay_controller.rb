@@ -38,6 +38,21 @@ module Nostr
       block.call notice!("error: #{error}")
     end
 
+    def terminate(_event)
+      Rails.logger.info("[TERMINATING] connection_id=#{connection_id}")
+
+      redis.multi do
+        pubsub_ids = redis.smembers("client_reqs:#{connection_id}").map { |req| "#{connection_id}:#{req}" }
+        event22242_id = redis.hget("connections_authenticators", connection_id)
+
+        redis.del("client_reqs:#{connection_id}")
+        redis.srem("connections", connection_id)
+        redis.hdel("connections_authenticators", connection_id)
+        redis.hdel("subscriptions", pubsub_ids) if pubsub_ids
+        redis.call("SET", "events22242:#{event22242_id}", "", "KEEPTTL")
+      end
+    end
+
     private
 
     def notice!(text)

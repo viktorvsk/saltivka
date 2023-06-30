@@ -14,6 +14,7 @@ module Nostr
         when "JSON"
           errors.to_json
         when "TEXT"
+          # TODO: handle different types, now only hash is supported
           errors.values.join("; ")
         end
       end

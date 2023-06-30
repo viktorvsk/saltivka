@@ -101,6 +101,8 @@ module Nostr
         self.author || build_author(pubkey: value)
       end
 
+      # TODO: consider implementing it as 2 separate virtual attributes
+      # id= and sig= in order to enable simply Event.new(nostr_serialized_json)
       def digest_and_sig=(arr)
         event_sha256, event_schnorr = arr
 

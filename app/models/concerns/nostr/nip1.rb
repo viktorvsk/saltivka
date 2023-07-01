@@ -23,16 +23,16 @@ module Nostr
         if kinda?(:parameterized_replaceable) && tags.none? { |t| t.first === "d" }
           searchable_tags.new(name: "d", value: "")
         end
-        tags.each do |tag|
-          tag_name = tag.first
+        tags.map { |t| t[..1] }.uniq { |tag| tag.sort.join }.each do |tag|
+          tag_name, tag_value = tag
+          tag_value_too_long = tag_value && tag.second.size > RELAY_CONFIG.max_searchable_tag_value_length
+          next if tag_value_too_long
           satisfies_nip_12 = tag_name.size > 1 # NIP-12 populate searchable filters for every single letter tag
           satisfies_nip_26 = tag_name != "delegation" # indexes delegation pubkey for search
           next if !satisfies_nip_12 && !satisfies_nip_26
-          tag_values = satisfies_nip_26 ? [tag.second] : tag[1..]
-          tag_values = [""] if tag_values.compact.blank?
-          tag_values.each do |tag_value|
-            searchable_tags.new(name: tag_name, value: tag_value)
-          end
+          tag_value ||= ""
+
+          searchable_tags.new(name: tag_name, value: tag_value)
         end
       end
 

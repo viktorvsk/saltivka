@@ -63,7 +63,7 @@ class Nip33Test < ActiveSupport::TestCase
     higher_id_event = build(:event, kind: 30000, tags: [["d", ""]], content: "B", created_at: Time.at(1687996745), pubkey: FAKE_CREDENTIALS[:alice][:pk]) # id => e7fa021e4516df70554c9b3c5d303732498b8488ef80931cfdfe48a6104fd399
 
     refute higher_id_event.save
-    assert_includes higher_id_event.errors[:"event_digest.sha256"], "has already been taken"
+    assert_includes higher_id_event.errors[:sha256], "has already been taken"
     assert lower_id_event.reload.persisted?
   end
 
@@ -72,7 +72,7 @@ class Nip33Test < ActiveSupport::TestCase
     older_event = build(:event, kind: 30000, pubkey: event.pubkey, created_at: 2.days.ago)
 
     refute older_event.save
-    assert_includes older_event.errors[:"event_digest.sha256"], "has already been taken"
+    assert_includes older_event.errors[:sha256], "has already been taken"
     assert event.reload.persisted?
   end
 

@@ -14,16 +14,18 @@ FactoryBot.define do
       if event.pubkey.blank?
         _random_fake_signer_name, credentials = FAKE_CREDENTIALS.to_a.sample
         event.pubkey = credentials[:pk]
-        event_digest = Digest::SHA256.hexdigest(JSON.dump(event.to_nostr_serialized))
-        sig = Schnorr.sign([event_digest].pack("H*"), [credentials[:sk]].pack("H*")).encode.unpack1("H*")
+        sha256 = Digest::SHA256.hexdigest(JSON.dump(event.to_nostr_serialized))
+        sig = Schnorr.sign([sha256].pack("H*"), [credentials[:sk]].pack("H*")).encode.unpack1("H*")
 
-        event.digest_and_sig = [event_digest, sig]
+        event.sha256 = sha256
+        event.sig = sig
       elsif event.pubkey.in?(FAKE_CREDENTIALS.values.map(&:values).flatten)
         sk = FAKE_CREDENTIALS.find { |user, credentials| credentials[:pk] == event.pubkey }.last[:sk]
-        event_digest = Digest::SHA256.hexdigest(JSON.dump(event.to_nostr_serialized))
-        sig = Schnorr.sign([event_digest].pack("H*"), [sk].pack("H*")).encode.unpack1("H*")
+        sha256 = Digest::SHA256.hexdigest(JSON.dump(event.to_nostr_serialized))
+        sig = Schnorr.sign([sha256].pack("H*"), [sk].pack("H*")).encode.unpack1("H*")
 
-        event.digest_and_sig = [event_digest, sig]
+        event.sha256 = sha256
+        event.sig = sig
       end
     end
   end

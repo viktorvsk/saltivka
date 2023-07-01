@@ -4,15 +4,16 @@ class EventTest < ActiveSupport::TestCase
   setup do
     sk = "945e01e37662430162121b804d3645a86d97df9d256917d86735d0eb219393eb"
     pk = "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"
-    event_digest = "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"
-    sig = Schnorr.sign([event_digest].pack("H*"), [sk].pack("H*")).encode.unpack1("H*")
+    sha256 = "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"
+    sig = Schnorr.sign([sha256].pack("H*"), [sk].pack("H*")).encode.unpack1("H*")
     event_params = {
       created_at: Time.at(1687183979),
       kind: 0,
       tags: [],
       content: "",
       pubkey: pk,
-      digest_and_sig: [event_digest, sig]
+      sha256: sha256,
+      sig: sig
     }
 
     @event = Event.create!(event_params)
@@ -27,7 +28,7 @@ class EventTest < ActiveSupport::TestCase
     event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
 
     parsed_json = JSON.parse(File.read(Rails.root.join(*%w[test fixtures files nostr_event_delegated.json])))
-    delegated_event_params = parsed_json.merge("digest_and_sig" => [parsed_json.delete("id"), parsed_json.delete("sig")], "created_at" => Time.at(parsed_json["created_at"]))
+    delegated_event_params = parsed_json.merge("sha256" => parsed_json.delete("id"), "created_at" => Time.at(parsed_json["created_at"]))
     delegated_event = Event.new(delegated_event_params)
 
     assert delegated_event.matches_nostr_filter_set?({"authors" => ["8e0d3d"]})
@@ -70,7 +71,7 @@ class EventTest < ActiveSupport::TestCase
 
   test "NIP-26: valid delegation event" do
     parsed_json = JSON.parse(File.read(Rails.root.join(*%w[test fixtures files nostr_event_delegated.json])))
-    event_params = parsed_json.merge("digest_and_sig" => [parsed_json.delete("id"), parsed_json.delete("sig")], "created_at" => Time.at(parsed_json["created_at"]))
+    event_params = parsed_json.merge("sha256" => parsed_json.delete("id"), "created_at" => Time.at(parsed_json["created_at"]))
     event = Event.new(event_params)
 
     assert event.valid?
@@ -97,7 +98,7 @@ class EventTest < ActiveSupport::TestCase
     event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
 
     parsed_json = JSON.parse(File.read(Rails.root.join(*%w[test fixtures files nostr_event_delegated.json])))
-    event_params = parsed_json.merge("digest_and_sig" => [parsed_json.delete("id"), parsed_json.delete("sig")], "created_at" => Time.at(parsed_json["created_at"]))
+    event_params = parsed_json.merge("sha256" => parsed_json.delete("id"), "created_at" => Time.at(parsed_json["created_at"]))
     Event.create!(event_params)
 
     assert_equal 1, Event.by_nostr_filters({"authors" => ["09cd08d"]}).to_a.size
@@ -108,7 +109,7 @@ class EventTest < ActiveSupport::TestCase
     assert_equal 1, Event.by_nostr_filters({kinds: 0}).count
     assert_equal 2, Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95", event_with_tags.pubkey.first(5)]}).count
     assert_equal ((event_with_tags.pubkey == "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95") ? 2 : 1), Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9"]}).count
-    assert_equal 2, Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f", event_with_tags.event_digest.sha256.first(5)]}).count
+    assert_equal 2, Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f", event_with_tags.sha256.first(5)]}).count
     assert_equal 1, Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"]}).count
     assert_equal 3, Event.by_nostr_filters({"ids" => []}).count
     assert_equal 0, Event.by_nostr_filters({"ids" => ["INVALID"]}).count
@@ -165,7 +166,7 @@ class EventTest < ActiveSupport::TestCase
     refute e2.save
     assert e1.reload.persisted?
     assert e2.new_record?
-    assert_includes e2.errors[:"event_digest.sha256"], "has already been taken"
+    assert_includes e2.errors[:sha256], "has already been taken"
   end
 
   test "NIP-16: given 2 replaceable events with the same created_at one with lexically higher id is deleted" do
@@ -199,7 +200,8 @@ class EventTest < ActiveSupport::TestCase
     with_pow = JSON.parse(File.read(Rails.root.join("test", "fixtures", "files", "nostr_event_pow.json")))
     event_with_pow = with_pow.merge({
       "created_at" => Time.at(with_pow["created_at"]),
-      "digest_and_sig" => [with_pow.delete("id"), with_pow.delete("sig")]
+      "sha256" => with_pow.delete("id"),
+      "sig" => with_pow.delete("sig")
     })
 
     assert Event.new(event_with_pow).valid?

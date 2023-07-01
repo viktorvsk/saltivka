@@ -1,4 +1,4 @@
 FactoryBot.define do
-  factory :event_digest do
+  factory :searchable_tag do
   end
 end

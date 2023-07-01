@@ -29,13 +29,13 @@ class Nip43Test < ActiveSupport::TestCase
 
     test "validates ID" do
       event = build(:event, kind: 22242, tags: [["relay", "http://localhost"]], created_at: 10.seconds.ago)
-      event.event_digest.sha256 = "INVALID"
+      event.sha256 = "INVALID"
       assert_equal [nil, ["Id is invalid", "Signature is invalid"]], Nostr::Nips::Nip43.call(event.as_json.stringify_keys)
     end
 
     test "validates signature" do
       event = build(:event, kind: 22242, tags: [["relay", "http://localhost"]], created_at: 10.seconds.ago)
-      event.event_digest.sig.schnorr = "INVALID"
+      event.sig = "INVALID"
       assert_equal [nil, ["Signature is invalid"]], Nostr::Nips::Nip43.call(event.as_json.stringify_keys)
     end
   end

@@ -22,7 +22,7 @@ class NewEventTest < ActiveSupport::TestCase
     REDIS.stub(:publish, publish_mock) do
       NewEvent.perform_sync("CONN_ID", event.to_json)
     end
-    refute EventDigest.where(sha256: event.sha256).exists?
+    refute Event.where(sha256: event.sha256).exists?
     publish_mock.verify
   end
 

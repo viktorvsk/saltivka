@@ -5,7 +5,7 @@ class NewEvent
   def perform(connection_id, event_json)
     event_params = JSON.parse(event_json)
     event_params["created_at"] = Time.at(event_params["created_at"])
-    event_params["digest_and_sig"] = [event_params.delete("id"), event_params.delete("sig")]
+    event_params["sha256"] = event_params.delete("id")
 
     event = Event.new(event_params)
     should_fanout_without_save = event.kinda?(:ephemeral) && event.valid?
@@ -42,9 +42,9 @@ class NewEvent
 
         REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16/NIP-20
       end
-    elsif event.errors[:"event_digest.sha256"].include?("has already been taken") || event.errors[:"event_digest.sig.schnorr"].include?("has already been taken")
+    elsif event.errors[:sha256].include?("has already been taken") || event.errors[:sig].include?("has already been taken")
       REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, false, "duplicate: this event is already present in the database"].to_json)
-    elsif event.errors[:"event_digest.sha256"].any? { |error_text| error_text.to_s =~ /PoW difficulty must be at least/ }
+    elsif event.errors[:sha256].any? { |error_text| error_text.to_s =~ /PoW difficulty must be at least/ }
       REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, false, "pow: min difficulty must be #{RELAY_CONFIG.min_pow}, got #{event.pow_difficulty}"].to_json)
     elsif event.errors[:"author.pubkey"].include?("has already been taken") || event.author.errors[:pubkey].include?("has already been taken")
       NewEvent.perform_async(connection_id, event_json)
@@ -54,5 +54,7 @@ class NewEvent
     end
 
     event
+  rescue ActiveRecord::RecordNotUnique => e
+    REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, false, "duplicate: this event is already present in the database"].to_json)
   end
 end

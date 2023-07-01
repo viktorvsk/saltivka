@@ -11,7 +11,7 @@ module Nostr
     private
 
     def must_not_store_deleted_event
-      event_was_deleted = DeleteEvent.joins(:author, :event_digest).where(authors: {pubkey: pubkey}, event_digests: {sha256: sha256}).exists?
+      event_was_deleted = DeleteEvent.joins(:author).where(authors: {pubkey: pubkey}, sha256: sha256).exists?
       errors.add(:id, "is already listed as deleted") if event_was_deleted
     end
 
@@ -33,13 +33,12 @@ module Nostr
       events_ids_to_delete = tags.select { |tag| tag.first === "e" && tag.last =~ /\A[0-9a-f]{64}\Z/ }.map(&:last)
       events_ids_to_delete.each do |id_to_delete|
         ApplicationRecord.transaction do
-          event_digest = EventDigest.where(sha256: id_to_delete).first_or_create!
-          author = Author.where(pubkey: pubkey).first_or_create!
-          DeleteEvent.where(author: author, event_digest: event_digest).first_or_create!
+          author = Author.create_or_find_by!(pubkey: pubkey)
+          DeleteEvent.create_or_find_by!(author: author, sha256: id_to_delete)
         end
       end
 
-      Event.joins(:author, :event_digest).where(authors: {pubkey: pubkey}, event_digests: {sha256: events_ids_to_delete}).where.not(kind: 5).destroy_all
+      Event.joins(:author).where(authors: {pubkey: pubkey}, sha256: events_ids_to_delete).where.not(kind: 5).destroy_all
     end
   end
 end

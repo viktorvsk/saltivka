@@ -1,7 +1,6 @@
 class DeleteEvent < ApplicationRecord
   belongs_to :author
-  belongs_to :event_digest
-  validates :event_digest, uniqueness: {scope: [:author]}
+  validates :sha256, uniqueness: {scope: [:author]}, length: {is: 64}
 
-  scope :by_pubkey_and_sha256, ->(pubkey, sha256) { joins(:author, :event_digest).where(authors: {pubkey: pubkey}, event_digests: {sha256: sha256}) }
+  scope :by_pubkey_and_sha256, ->(pubkey, sha256) { joins(:author).where(authors: {pubkey: pubkey}, sha256: sha256) }
 end

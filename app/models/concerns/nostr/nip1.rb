@@ -7,17 +7,17 @@ module Nostr
       validate :tags_must_be_array
       validate :id_must_match_payload
       validate :sig_must_match_payload
+      validates :sig, presence: true, length: {is: 128}
+      validates :sha256, presence: true, length: {is: 64}
 
       belongs_to :author, autosave: true
-      belongs_to :event_digest, autosave: true
       has_many :searchable_tags, autosave: true, dependent: :delete_all
 
       before_create :init_searchable_tags
 
       delegate :pubkey, to: :author, allow_nil: true
-      delegate :sha256, :schnorr, :pow_difficulty, to: :event_digest, allow_nil: true
 
-      validates_associated :event_digest, :author, :searchable_tags
+      validates_associated :author
 
       def init_searchable_tags
         if kinda?(:parameterized_replaceable) && tags.none? { |t| t.first === "d" }
@@ -45,7 +45,7 @@ module Nostr
             # check right before sending event to listeners if it matches their filters
             kind.in?(filter_value)
           when "ids"
-            filter_value.any? { |prefix| event_digest.sha256.starts_with?(prefix) }
+            filter_value.any? { |prefix| sha256.starts_with?(prefix) }
           when "authors"
             filter_value.any? do |prefix|
               return true if pubkey.starts_with?(prefix)
@@ -89,9 +89,9 @@ module Nostr
           kind:,
           content:,
           pubkey:,
+          sig:,
           created_at: created_at.to_i,
           id: sha256,
-          sig: schnorr,
           tags: tags
         }
       end
@@ -99,15 +99,6 @@ module Nostr
       def pubkey=(value)
         self.author ||= Author.where(pubkey: value).first
         self.author || build_author(pubkey: value)
-      end
-
-      # TODO: consider implementing it as 2 separate virtual attributes
-      # id= and sig= in order to enable simply Event.new(nostr_serialized_json)
-      def digest_and_sig=(arr)
-        event_sha256, event_schnorr = arr
-
-        build_event_digest(sha256: event_sha256)
-        event_digest.build_sig(schnorr: event_schnorr)
       end
 
       private
@@ -124,7 +115,7 @@ module Nostr
         schnorr_params = [
           [sha256].pack("H*"),
           [pubkey].pack("H*"),
-          [schnorr].pack("H*")
+          [sig].pack("H*")
         ]
 
         errors.add(:sig, "must match payload") unless Schnorr.valid_sig?(*schnorr_params)
@@ -168,7 +159,7 @@ module Nostr
           end
 
           if key == "ids"
-            rel = rel.joins(:event_digest).where("event_digests.sha256 ILIKE ANY (ARRAY[?])", value.map { |id| "#{id}%" })
+            rel = rel.where("events.sha256 ILIKE ANY (ARRAY[?])", value.map { |id| "#{id}%" })
           end
 
           if key == "authors"

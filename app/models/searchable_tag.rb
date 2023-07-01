@@ -1,5 +1,5 @@
 class SearchableTag < ApplicationRecord
   belongs_to :event
-  validates :name, presence: true, length: {maximum: 64}
+  validates :name, presence: true
   validates :value, presence: true
 end

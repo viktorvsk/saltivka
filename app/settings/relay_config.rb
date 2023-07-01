@@ -3,6 +3,10 @@ class RelayConfig
     ENV.fetch("MAX_FILTER_LIMIT", 1000)
   end
 
+  def max_searchable_tag_value_length
+    ENV.fetch("NIP-12_max_searchable_tag_value_length", 1000).to_i
+  end
+
   def self_url
     ENV.fetch("SELF_URL", "ws://localhost:3000")
   end

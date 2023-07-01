@@ -3,7 +3,7 @@ class CreateSearchableTags < ActiveRecord::Migration[7.0]
     create_table :searchable_tags, id: false do |t|
       t.references :event, index: true, foreign_key: true, null: false
       t.string :name, null: false, limit: 64
-      t.string :value, null: false, limit: 128
+      t.string :value, null: false
     end
   end
 end

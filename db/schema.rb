@@ -28,7 +28,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_06_24_143008) do
   create_table "events", force: :cascade do |t|
     t.integer "kind", null: false
     t.jsonb "tags", default: []
-    t.text "content"
+    t.binary "content"
     t.bigint "author_id", null: false
     t.string "sha256", limit: 64, null: false
     t.string "sig", limit: 128, null: false

@@ -12,6 +12,7 @@
 /tmp/*
 !/log/.keep
 !/tmp/.keep
+!/demo/docker/.keep
 
 # Ignore pidfiles, but keep the directory.
 /tmp/pids/*
@@ -33,3 +34,7 @@
 .env.test
 .env.development
 /coverage
+
+*.DS_Store
+
+/demo/docker/pg-data

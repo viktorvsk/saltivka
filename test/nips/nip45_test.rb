@@ -1,6 +1,6 @@
 require "test_helper"
 
-class CountRequestTest < ActiveSupport::TestCase
+class Nip45Test < ActiveSupport::TestCase
   test "works with empty filters array" do
     create(:event, kind: 123)
     redis_publisher = Minitest::Mock.new

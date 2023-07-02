@@ -2,7 +2,7 @@ Nostr::Relay = lambda do |env|
   if Faye::WebSocket.websocket?(env)
     ws = Faye::WebSocket.new(env) # standard websocket connection object
 
-    redis_subscriber = Redis.new(url: ENV["REDIS_URL"])
+    redis_subscriber = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
 
     controller = Nostr::RelayController.new(redis: REDIS)
     relay_processor = Nostr::RelayProcessor.new(ws: ws)

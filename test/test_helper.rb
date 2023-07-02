@@ -11,7 +11,7 @@ require "rails/test_help"
 require "minitest/spec"
 require "minitest/mock"
 
-REDIS_TEST_CONNECTION = Redis.new(url: ENV["REDIS_URL"])
+REDIS_TEST_CONNECTION = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
 FAKE_CREDENTIALS = {
   alice: {pk: "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95", sk: "945e01e37662430162121b804d3645a86d97df9d256917d86735d0eb219393eb"},
   bob: {pk: "bd3981deb0bf16fb8829d4b07f665fbed0c87697f9e370181ed7b74cff87885e", sk: "332c404ad2deabc1420f7da627227585ea4f2d1565c16ddd3d23caf0ca424322"},

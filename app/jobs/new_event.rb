@@ -54,7 +54,7 @@ class NewEvent
     end
 
     event
-  rescue ActiveRecord::RecordNotUnique => e
+  rescue ActiveRecord::RecordNotUnique => _e
     REDIS.publish("events:#{connection_id}:_:ok", ["OK", event.sha256, false, "duplicate: this event is already present in the database"].to_json)
   end
 end

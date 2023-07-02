@@ -1,48 +1,25 @@
 class RelayConfig
-  def max_limit
-    ENV.fetch("MAX_FILTER_LIMIT", 1000)
+  def default_format
+    # TODO: another option is JSON [WIP]
+    ENV.fetch("DEFAULT_ERRORS_FORMAT", "TEXT")
   end
 
-  def max_searchable_tag_value_length
-    ENV.fetch("NIP-12_max_searchable_tag_value_length", 1000).to_i
-  end
-
-  def self_url
-    ENV.fetch("SELF_URL", "ws://localhost:3000")
-  end
-
-  def challenge_window_seconds
-    ENV.fetch("NIP_42_challenge_window_seconds", 600).to_i
-  end
-
-  def fast_auth_window_seconds
-    ENV.fetch("NIP_43_fast_auth_window_seconds", 60).to_i
-  end
-
-  def restrict_change_auth_pubkey
-    val = ENV.fetch("NIP-42_restrict_change_auth_pubkey", false)
-    ActiveRecord::Type::Boolean.new.cast(val)
+  def mailer_default_from
+    ENV.fetch("MAILER_DEFAULT_FROM", "admin@nostr.localhost")
   end
 
   def default_filter_limit
-    ENV.fetch("DEFAULT_FILTER_LIMIT", 100)
+    ENV.fetch("DEFAULT_FILTER_LIMIT", 100).to_i
   end
 
   def available_filters
-    # TODO: support capital letters for NIP-12
-    ENV.fetch("AVAILABLE_FILTERS", "kinds ids authors #e #p since until #a #b #c #d #f #g #h #i #j #k #l #m #n #o #q #r #s #t #u #v #w #x #y #z").split(" ")
+    nip_1_default_filters = "kinds ids authors #e #p since until"
+    nip_12_tags = "#a #b #c #d #f #g #h #i #j #k #l #m #n #o #q #r #s #t #u #v #w #x #y #z #A #B #C #D #E #F #G #H #I #J #K #L #M #N #O #P #Q #R #S #T #U #V #W #X #Y #Z"
+    ENV.fetch("NIP_1_12_AVAILABLE_FILTERS", "#{nip_1_default_filters} #{nip_12_tags}").to_s.split(" ")
   end
 
-  def created_at_in_past
-    ENV.fetch("CREATED_AT_IN_PAST", 1.year.to_i).to_i
-  end
-
-  def created_at_in_future
-    ENV.fetch("CREATED_AT_IN_FUTURE", 3.months.to_i).to_i
-  end
-
-  def min_pow
-    ENV.fetch("MIN_POW", 0)
+  def max_limit
+    ENV.fetch("NIP_11_MAX_FILTER_LIMIT", 1000).to_i
   end
 
   def relay_name
@@ -74,15 +51,15 @@ class RelayConfig
   end
 
   def relay_countries
-    ENV.fetch("NIP_11_relay_countries", "UK UA US")
+    ENV.fetch("NIP_11_relay_countries", "UK UA US").to_s.split(" ")
   end
 
   def language_tags
-    ENV.fetch("NIP_11_language_tags", "en en-419")
+    ENV.fetch("NIP_11_language_tags", "en en-419").to_s.split(" ")
   end
 
   def tags
-    ENV.fetch("NIP_11_tags", "")
+    ENV.fetch("NIP_11_tags", "").to_s.split(" ")
   end
 
   def posting_policy_url
@@ -113,7 +90,36 @@ class RelayConfig
     ENV.fetch("NIP_11_max_message_length", 16384).to_i
   end
 
-  def mailer_default_from
-    ENV.fetch("MAILER_DEFAULT_FROM", "admin@nostr.localhost")
+  def max_searchable_tag_value_length
+    ENV.fetch("NIP_12_max_searchable_tag_value_length", 1000).to_i
+  end
+
+  def min_pow
+    ENV.fetch("NIP_13_MIN_POW", 0).to_i
+  end
+
+  def created_at_in_past
+    ENV.fetch("NIP_22_CREATED_AT_IN_PAST", 1.year.to_i).to_i
+  end
+
+  def created_at_in_future
+    ENV.fetch("NIP_22_CREATED_AT_IN_FUTURE", 3.months.to_i).to_i
+  end
+
+  def restrict_change_auth_pubkey
+    val = ENV.fetch("NIP_42_restrict_change_auth_pubkey", false)
+    ActiveRecord::Type::Boolean.new.cast(val)
+  end
+
+  def challenge_window_seconds
+    ENV.fetch("NIP_42_challenge_window_seconds", 600).to_i
+  end
+
+  def fast_auth_window_seconds
+    ENV.fetch("NIP_43_fast_auth_window_seconds", 60).to_i
+  end
+
+  def self_url
+    ENV.fetch("NIP_42_43_SELF_URL", "ws://localhost:3000")
   end
 end

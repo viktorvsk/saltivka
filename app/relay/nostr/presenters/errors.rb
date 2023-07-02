@@ -3,9 +3,7 @@ module Nostr
     class Errors
       attr_reader :errors, :format
 
-      DEFAULT_FORMAT = ENV.fetch("DEFAULT_ERRORS_FORMAT", "TEXT")
-
-      def initialize(errors, format = DEFAULT_FORMAT)
+      def initialize(errors, format = RELAY_CONFIG.default_format)
         @errors, @format = errors, format
       end
 

@@ -55,7 +55,7 @@ module Nostr
               return false unless delegation_tag
               return delegation_tag.second.starts_with?(prefix)
             end
-          when /\A#[a-z]\Z/
+          when /\A#[a-zA-Z]\Z/
             # NIP-12 search single letter filters
             filter_value.any? do |prefix|
               searchable_tags.any? do |t|
@@ -178,7 +178,7 @@ module Nostr
               .where(where_clause, values: authors_to_search)
           end
 
-          if /\A#[a-z]\Z/.match?(key)
+          if /\A#[a-zA-Z]\Z/.match?(key)
             # NIP-12 + #e #p #d
             rel = rel.joins(:searchable_tags).where("searchable_tags.name = '#{key.last}' AND searchable_tags.value ILIKE ANY (ARRAY[?])", value.map { |t| "#{t}%" })
           end

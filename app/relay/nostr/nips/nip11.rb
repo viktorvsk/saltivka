@@ -24,9 +24,9 @@ module Nostr
             auth_required: false, # TODO: NIP-42
             payment_required: false # TODO
           },
-          relay_countries: RELAY_CONFIG.relay_countries.split(" "),
-          language_tags: RELAY_CONFIG.language_tags.split(" "),
-          tags: RELAY_CONFIG.tags.split(" "),
+          relay_countries: RELAY_CONFIG.relay_countries,
+          language_tags: RELAY_CONFIG.language_tags,
+          tags: RELAY_CONFIG.tags,
           posting_policy: RELAY_CONFIG.posting_policy_url
         }
       end

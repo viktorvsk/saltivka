@@ -131,11 +131,9 @@ module Nostr
                 type: "array",
                 prefixItems: {
                   type: "string",
-                  enum: %w[e p], # TODO: should we allow "unknown" tags?
-                  minLength: 1,
-                  maxLength: 1
+                  minLength: 1
                 },
-                minLength: 2
+                minLength: 1
               }
             ],
             maxItems: RELAY_CONFIG.max_event_tags
@@ -171,7 +169,7 @@ module Nostr
             id: :ids,
             items: {
               type: :string,
-              minLength: 1,
+              minLength: RELAY_CONFIG.min_prefix,
               maxLength: 64
             }
           },
@@ -180,7 +178,7 @@ module Nostr
             id: :authors,
             items: {
               type: :string,
-              minLength: 1,
+              minLength: RELAY_CONFIG.min_prefix,
               maxLength: 64
             }
           },
@@ -201,7 +199,7 @@ module Nostr
             id: :tagged_events,
             items: {
               type: :string,
-              minLength: 1,
+              minLength: RELAY_CONFIG.min_prefix,
               maxLength: 64
             }
           },
@@ -210,7 +208,7 @@ module Nostr
             id: :tagged_pubkeys,
             items: {
               type: :string,
-              minLength: 1,
+              minLength: RELAY_CONFIG.min_prefix,
               maxLength: 64
             }
           }

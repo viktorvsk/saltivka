@@ -21,7 +21,7 @@ class NewEvent
           end
         end
       else
-        # TODO: Bloom filters
+        # TODO: This should be a LUA script
         REDIS.hgetall("subscriptions").each do |pubsub_id, filters|
           matches = JSON.parse(filters).any? { |filter_set| event.matches_nostr_filter_set?(filter_set) }
           next unless matches

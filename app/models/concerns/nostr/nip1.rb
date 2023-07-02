@@ -5,8 +5,8 @@ module Nostr
     included do
       validates :kind, presence: true
       validate :tags_must_be_array
-      validate :id_must_match_payload
-      validate :sig_must_match_payload
+      validate :id_must_match_payload, if: proc { |_event| RELAY_CONFIG.validate_id_on_server }
+      validate :sig_must_match_payload, if: proc { |_event| RELAY_CONFIG.validate_sig_on_server }
       validates :sig, presence: true, length: {is: 128}
       validates :sha256, presence: true, length: {is: 64}
 

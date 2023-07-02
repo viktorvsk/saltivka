@@ -12,6 +12,16 @@ class RelayConfig
     ENV.fetch("DEFAULT_FILTER_LIMIT", 100).to_i
   end
 
+  def validate_id_on_server
+    val = ENV.fetch("VALIDATE_ID_ON_SERVER", true)
+    ActiveRecord::Type::Boolean.new.cast(val)
+  end
+
+  def validate_sig_on_server
+    val = ENV.fetch("VALIDATE_SIG_ON_SERVER", true)
+    ActiveRecord::Type::Boolean.new.cast(val)
+  end
+
   def available_filters
     nip_1_default_filters = "kinds ids authors #e #p since until"
     nip_12_tags = "#a #b #c #d #f #g #h #i #j #k #l #m #n #o #q #r #s #t #u #v #w #x #y #z #A #B #C #D #E #F #G #H #I #J #K #L #M #N #O #P #Q #R #S #T #U #V #W #X #Y #Z"

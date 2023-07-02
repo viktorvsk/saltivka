@@ -23,6 +23,9 @@ gem "sidekiq", "~> 7"
 gem "bip-schnorr"
 gem "json_schemer"
 
+gem "sentry-ruby"
+gem "sentry-sidekiq"
+
 group :development, :test do
   gem "debug", platforms: %i[mri mingw x64_mingw]
   gem "dotenv-rails"

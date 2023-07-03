@@ -1,5 +1,3 @@
-require "schnorr"
-
 module Nostr
   class RelayController
     include Nostr::Nips::Nip1

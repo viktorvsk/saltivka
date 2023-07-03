@@ -9,7 +9,7 @@ module Nostr
 
         errors.push("Kind #{event["kind"]} is invalid for NIP-43 event, expected 22242") unless event["kind"] === 22242
         errors.push("Created At is too old, expected window is #{RELAY_CONFIG.fast_auth_window_seconds} seconds") if Time.at(event["created_at"].to_i + RELAY_CONFIG.fast_auth_window_seconds).past?
-        errors.push("Created At is in future") if Time.at(event["created_at"]).future?
+        errors.push("Created At is in the future") if Time.at(event["created_at"]).future?
         errors.push("Tag 'relay' has invalid value, expected #{RELAY_CONFIG.self_url}") unless URI.parse(relay_tag.second).host === URI.parse(RELAY_CONFIG.self_url).host
 
         serialized_event = [

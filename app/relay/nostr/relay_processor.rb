@@ -27,6 +27,7 @@ module Nostr
         end
 
         Rails.logger.info("[Nostr::RelayProcessor] response=#{response}")
+
         ws.send(response)
       end
 

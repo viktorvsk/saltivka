@@ -9,13 +9,13 @@ module Nostr
 
     COMMANDS = %w[REQ CLOSE EVENT COUNT]
 
-    def initialize(redis:)
-      @redis = redis
-      @connection_id = SecureRandom.hex
+    def initialize(connection_id = nil)
+      @connection_id = connection_id || SecureRandom.hex
     end
 
-    def perform(event_data, &block)
+    def perform(event_data:, redis:, &block)
       Rails.logger.info(event_data)
+      @redis = redis
       nostr_event = JSON.parse(event_data)
       command = nostr_event.shift
       if command.present? && command.upcase.in?(COMMANDS)
@@ -38,7 +38,7 @@ module Nostr
       block.call notice!("error: #{error}")
     end
 
-    def terminate(_event)
+    def terminate(event:, redis:)
       Rails.logger.info("[TERMINATING] connection_id=#{connection_id}")
 
       redis.multi do

@@ -18,9 +18,9 @@ module Nostr
       end
 
       if challenge_tag
-        unless REDIS.sismember("connections", challenge_tag.second.to_s)
-          errors.add(:tags, "'challenge' is invalid")
-        end
+        connection_id = challenge_tag.second.to_s
+
+        errors.add(:tags, "'challenge' is invalid") unless MemStore.connected?(cid: connection_id)
       else
         errors.add(:tags, "'challenge' is missing")
       end
@@ -30,7 +30,7 @@ module Nostr
       end
 
       if created_at.future?
-        errors.add(:created_at, "must not be in future")
+        errors.add(:created_at, "must not be in the future")
       end
     end
   end

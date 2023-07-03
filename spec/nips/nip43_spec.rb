@@ -25,11 +25,9 @@ RSpec.describe("NIP-43") do
       end
     end
 
-    describe "validates 22242 event according to NIP-43" do
-      it "validates the 22242 event" do
-        event = build(:event, kind: 22242, tags: [["relay", "http://localhost"]], created_at: 10.seconds.ago)
-        expect(Nostr::Nips::Nip43.call(event.as_json.stringify_keys)).to eq([event.pubkey, []])
-      end
+    it "extracts valid pubkey from the 22242 event" do
+      event = build(:event, kind: 22242, tags: [["relay", "http://localhost"]], created_at: 10.seconds.ago)
+      expect(Nostr::Nips::Nip43.call(event.as_json.stringify_keys)).to eq([event.pubkey, []])
     end
 
     it "terminates current connection if previous connection is active and auth-event key expired" do

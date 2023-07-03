@@ -74,7 +74,7 @@ RSpec.describe("NIP-04") do
       end
 
       context "without pubkey argument" do
-        it "does not find kind 4 events by default while finds other kinds" do
+        it "does not find kind 4 events by default but finds other kinds" do
           e1 = create(:event, kind: 1)
           create(:event, kind: 4)
 

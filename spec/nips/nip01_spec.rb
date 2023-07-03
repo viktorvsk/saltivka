@@ -184,7 +184,7 @@ RSpec.describe("NIP-01") do
         end
       end
 
-      context "with invalid args responds with error" do
+      context "with invalid arguments, responds with error" do
         it "given multiple filters of invalid type" do
           @expected_error = %(property '/1' is not of type: object; property '/2' is not of type: object)
           @nostr_event = ["REQ", "SUBID", [], "UNKNOWN ARG"].to_json

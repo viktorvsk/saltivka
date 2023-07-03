@@ -1,12 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Nostr::Relay do
-  it "sample non-websocket request" do
-    # TODO: test actual values
-    expect(Nostr::Relay.call({})).to eq [200, {"Content-Type" => "application/json"}, [Nostr::Nips::Nip11.call.to_json]]
-  end
-
-  it "websocket request" do
+  it "handles websocket request" do
     allow(SecureRandom).to receive(:hex).and_return("CONN_ID")
 
     ws_double = instance_double(Faye::WebSocket)

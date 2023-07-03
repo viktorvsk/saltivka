@@ -44,4 +44,41 @@ RSpec.describe("NIP-45") do
       end
     end
   end
+
+  describe Nostr::RelayController do
+    before do
+      @random_connection_id = "CONN_ID"
+      @ws_sender = double
+      @expect_sidekiq_push = lambda do |klass, args|
+        expect(Sidekiq::Client).to receive(:push).with({
+          "retry" => true,
+          "backtrace" => false,
+          "queue" => :nostr,
+          "class" => klass,
+          "args" => args
+        })
+      end
+      @valid_event = JSON.dump(JSON.parse(File.read(Rails.root.join("spec", "support", "nostr_event_real.json"))))
+    end
+
+    subject do
+      allow(SecureRandom).to receive(:hex).and_return(@random_connection_id)
+      result = Nostr::RelayController.new.perform(event_data: @nostr_event, redis: REDIS_TEST_CONNECTION) do |notice|
+        expect(notice).to eq(["NOTICE", "error: #{@expected_error}"].to_json) if @expected_error
+      end
+
+      result
+    end
+
+    it "pushes event to Sidekiq" do
+      @nostr_event = ["COUNT", "SUBID", {}].to_json
+
+      @expect_sidekiq_push.call("CountRequest", ["CONN_ID", "SUBID", "[{}]"])
+
+      subject
+
+      assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), []
+      assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {}
+    end
+  end
 end

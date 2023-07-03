@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe Nostr::Relay do
+RSpec.describe "Nostr::Relay" do
   it "handles websocket request" do
     allow(SecureRandom).to receive(:hex).and_return("CONN_ID")
 

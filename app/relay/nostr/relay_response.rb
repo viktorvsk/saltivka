@@ -1,5 +1,5 @@
 module Nostr
-  class RelayProcessor
+  class RelayResponse
     attr_reader :ws
 
     def initialize(ws:)
@@ -26,7 +26,7 @@ module Nostr
           ["NOTICE", event].to_json
         end
 
-        Rails.logger.info("[Nostr::RelayProcessor] response=#{response}")
+        Rails.logger.info("[Nostr::RelayResponse] response=#{response}")
 
         ws.send(response)
       end

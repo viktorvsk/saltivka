@@ -4,7 +4,7 @@ Nostr::Relay = lambda do |env|
 
     redis_subscriber = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
     controller = Nostr::RelayController.new
-    relay_processor = Nostr::RelayProcessor.new(ws: ws)
+    relay_response = Nostr::RelayResponse.new(ws: ws)
     connection_id = controller.connection_id
     redis_subscriber.sadd("connections", connection_id)
 
@@ -15,7 +15,7 @@ Nostr::Relay = lambda do |env|
     redis_thread = Thread.new do
       redis_subscriber.psubscribe("events:#{connection_id}:*") do |on|
         on.pmessage do |pattern, channel, event|
-          relay_processor.call(channel, event)
+          relay_response.call(channel, event)
         end
       end
     end

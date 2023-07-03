@@ -3,7 +3,7 @@ class CreateEvents < ActiveRecord::Migration[7.0]
     create_table :events do |t|
       t.integer :kind, null: false, limit: 3
       t.jsonb :tags, default: []
-      t.text :content, limit: 8.megabytes
+      t.binary :content, limit: 8.megabytes
       t.references :author, index: true, foreign_key: true, null: false
       t.string :sha256, null: false, limit: 64
       t.string :sig, null: false, limit: 128

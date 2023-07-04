@@ -42,14 +42,8 @@ class NewEvent
 
         MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16/NIP-20
       end
-
-    elsif event.errors[:sha256].include?("has already been taken") || event.errors[:sig].include?("has already been taken")
-      MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, false, "duplicate: this event is already present in the database"].to_json)
     elsif event.errors[:sha256].any? { |error_text| error_text.to_s =~ /PoW difficulty must be at least/ }
       MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, false, "pow: min difficulty must be #{RELAY_CONFIG.min_pow}, got #{event.pow_difficulty}"].to_json)
-    elsif event.errors[:"author.pubkey"].include?("has already been taken") || event.author.errors[:pubkey].include?("has already been taken") # TODO: consider remove
-      NewEvent.perform_async(connection_id, event_json)
-      return event
     else
       MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, false, "error: #{event.errors.full_messages.join(", ")}"].to_json) # TODO: errors presenter
     end

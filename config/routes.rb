@@ -1,7 +1,15 @@
 Rails.application.routes.draw do
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  mount Nostr::Relay, at: "/", constraints: ->(request) { Faye::WebSocket.websocket?(request.env) || request.env["HTTP_CONTENT_TYPE"] === "application/nostr+json" }
 
-  # Defines the root path route ("/")
-  # root "articles#index"
-  mount Nostr::Relay, at: "/"
+  root to: "homes#show"
+
+  resource :session, only: %i[new create destroy]
+  resource :homes, only: %i[show]
+
+  namespace :admin do
+    resources :trusted_authors, only: %i[index create destroy]
+    resources :connections, only: %i[index destroy]
+    resource :configuration, only: %i[show]
+    root to: "connections#index"
+  end
 end

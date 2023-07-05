@@ -2,6 +2,7 @@ class AuthorizationRequest
   include Sidekiq::Worker
   sidekiq_options queue: "nostr"
 
+  # TODO: consider update active connections based on results
   def perform(connection_id, event_sha256, pubkey)
     if TrustedAuthor.joins(:author).where(authors: {pubkey: pubkey}).exists?
       MemStore.authorize!(cid: connection_id, level: "4")

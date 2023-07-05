@@ -1,0 +1,12 @@
+<tr>
+  <td><%= connection[:id] %></td>
+  <td><%= connection[:auth_level] %></td>
+  <td><%= connection[:pubkey] %></td>
+  <td><%= connection[:auth_event_22242] %></td>
+  <td>
+    <% connection[:subscriptions].each do |sub| %>
+      <span class="tag"><%= sub %></span>
+    <% end %>
+  </td>
+  <td><%= button_to "Delete", admin_connection_path(connection[:id]), method: :delete, class: 'button is-danger is-small' %></td>
+</tr>

@@ -8,8 +8,12 @@ Nostr::Relay = lambda do |env|
     connection_id = controller.connection_id
     redis_subscriber.sadd("connections", connection_id)
 
-    Nostr::AuthenticationFlow.call(ws_url: ws.url, connection_id: connection_id, redis: redis_subscriber) do |event|
-      ws.send(event)
+    Nostr::AuthenticationFlow.new.call(ws_url: ws.url, connection_id: connection_id, redis: redis_subscriber) do |event|
+      if event.first === "TERMINATE"
+        ws.close(3403, "restricted: #{event.last}")
+      else
+        ws.send(event.to_json)
+      end
     end
 
     redis_thread = Thread.new do

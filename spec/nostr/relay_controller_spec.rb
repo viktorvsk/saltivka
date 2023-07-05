@@ -71,4 +71,22 @@ RSpec.describe Nostr::RelayController do
       assert_includes [99, 98], REDIS_TEST_CONNECTION.ttl("events22242:event22242_id")
     end
   end
+
+  describe "#authorized?" do
+    subject do
+      allow(SecureRandom).to receive(:hex).and_return(@random_connection_id)
+      result = Nostr::RelayController.new.perform(event_data: @nostr_event, redis: REDIS_TEST_CONNECTION) do |notice|
+        expect(notice).to eq(["NOTICE", @expected_error].to_json) if @expected_error
+      end
+
+      result
+    end
+    it "NOTICEs when not authorized" do
+      allow(RELAY_CONFIG).to receive(:required_auth_level_for_req).and_return(1)
+
+      @expected_error = "restricted: your account doesn't have required authorization level"
+      @nostr_event = ["REQ", "SUBID", {}].to_json
+      subject
+    end
+  end
 end

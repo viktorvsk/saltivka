@@ -39,6 +39,9 @@ module Nostr
         else
           [event["pubkey"], []]
         end
+      rescue => _e
+        # TODO: log excetpion e
+        [nil, ["something went wrong"]]
       end
     end
   end

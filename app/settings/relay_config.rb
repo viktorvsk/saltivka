@@ -4,6 +4,33 @@ class RelayConfig
     ENV.fetch("DEFAULT_ERRORS_FORMAT", "TEXT")
   end
 
+  def authorization_timeout
+    ENV.fetch("AUTHORIZATION_TIMEOUT", 10).to_i
+  end
+
+  def forced_min_auth_level
+    ENV.fetch("FORCED_MIN_AUTH_LEVEL", 0).to_i
+  end
+
+  def required_auth_level_for_req
+    ENV.fetch("REQUIRED_AUTH_LEVEL_FOR_REQ", 0).to_i
+  end
+
+  def required_auth_level_for_close
+    # Its not a typo that the same env variable is used
+    # close command should have the same auth level as req
+    # Some edge cases possible if auth level was changed between calls
+    ENV.fetch("REQUIRED_AUTH_LEVEL_FOR_REQ", 0).to_i
+  end
+
+  def required_auth_level_for_event
+    ENV.fetch("REQUIRED_AUTH_LEVEL_FOR_EVENT", 0).to_i
+  end
+
+  def required_auth_level_for_count
+    ENV.fetch("REQUIRED_AUTH_LEVEL_FOR_COUNT", 0).to_i
+  end
+
   def mailer_default_from
     ENV.fetch("MAILER_DEFAULT_FROM", "admin@nostr.localhost")
   end
@@ -33,75 +60,75 @@ class RelayConfig
   end
 
   def relay_name
-    ENV.fetch("NIP_11_relay_name", "")
+    ENV.fetch("NIP_11_RELAY_NAME", "")
   end
 
   def description
-    ENV.fetch("NIP_11_description", "")
+    ENV.fetch("NIP_11_DESCRIPTION", "")
   end
 
   def pubkey
-    ENV.fetch("NIP_11_pubkey", "")
+    ENV.fetch("NIP_11_PUBKEY", "")
   end
 
   def contact
-    ENV.fetch("NIP_11_contact", "")
+    ENV.fetch("NIP_11_CONTACT", "")
   end
 
   def supported_nips
-    ENV.fetch("NIP_11_supported_nips", "")
+    ENV.fetch("NIP_11_SUPPORTED_NIPS", "1 4 9 11 12 13 16 20 22 26 28 33 40 42 43 45 65").to_s.split(" ").map(&:to_i)
   end
 
   def software
-    ENV.fetch("NIP_11_software", "")
+    ENV.fetch("NIP_11_SOFTWARE", "")
   end
 
   def version
-    ENV.fetch("NIP_11_version", "")
+    ENV.fetch("NIP_11_VERSION", "")
   end
 
   def relay_countries
-    ENV.fetch("NIP_11_relay_countries", "UK UA US").to_s.split(" ")
+    ENV.fetch("NIP_11_RELAY_COUNTRIES", "UK UA US").to_s.split(" ")
   end
 
   def language_tags
-    ENV.fetch("NIP_11_language_tags", "en en-419").to_s.split(" ")
+    ENV.fetch("NIP_11_LANGUAGE_TAGS", "en en-419").to_s.split(" ")
   end
 
   def tags
-    ENV.fetch("NIP_11_tags", "").to_s.split(" ")
+    ENV.fetch("NIP_11_TAGS", "").to_s.split(" ")
   end
 
   def posting_policy_url
-    ENV.fetch("NIP_11_posting_policy", "")
+    ENV.fetch("NIP_11_POSTING_POLICY", "")
   end
 
   def max_subscriptions
-    ENV.fetch("NIP_11_max_subscriptions", 20).to_i
+    ENV.fetch("NIP_11_MAX_SUBSCRIPTIONS", 20).to_i
   end
 
   def max_filters
-    ENV.fetch("NIP_11_max_filters", 100).to_i
+    ENV.fetch("NIP_11_MAX_FILTERS", 100).to_i
   end
 
   def min_prefix
-    ENV.fetch("NIP_11_min_prefix", 4).to_i
+    ENV.fetch("NIP_11_MIN_PREFIX", 4).to_i
   end
 
   def max_event_tags
-    ENV.fetch("NIP_11_max_event_tags", 100).to_i
+    ENV.fetch("NIP_11_MAX_EVENT_TAGS", 100).to_i
   end
 
   def max_content_length
-    ENV.fetch("NIP_11_max_content_length", 8196).to_i
+    ENV.fetch("NIP_11_MAX_CONTENT_LENGTH", 8196).to_i
   end
 
   def max_message_length
-    ENV.fetch("NIP_11_max_message_length", 16384).to_i
+    ENV.fetch("NIP_11_MAX_MESSAGE_LENGTH", 16384).to_i
   end
 
   def max_searchable_tag_value_length
-    ENV.fetch("NIP_12_max_searchable_tag_value_length", 1000).to_i
+    ENV.fetch("NIP_12_MAX_SEARCHABLE_TAG_VALUE_LENGTH", 1000).to_i
   end
 
   def min_pow
@@ -117,19 +144,23 @@ class RelayConfig
   end
 
   def restrict_change_auth_pubkey
-    val = ENV.fetch("NIP_42_restrict_change_auth_pubkey", false)
+    val = ENV.fetch("NIP_42_RESTRICT_CHANGE_AUTH_PUBKEY", false)
     ActiveRecord::Type::Boolean.new.cast(val)
   end
 
   def challenge_window_seconds
-    ENV.fetch("NIP_42_challenge_window_seconds", 600).to_i
+    ENV.fetch("NIP_42_CHALLENGE_WINDOW_SECONDS", 600).to_i
   end
 
   def fast_auth_window_seconds
-    ENV.fetch("NIP_43_fast_auth_window_seconds", 60).to_i
+    ENV.fetch("NIP_43_FAST_AUTH_WINDOW_SECONDS", 60).to_i
   end
 
   def self_url
     ENV.fetch("NIP_42_43_SELF_URL", "ws://localhost:3000")
+  end
+
+  def kinds_exempt_of_auth
+    ENV.fetch("NIP_65_KINDS_EXEMPT_OF_AUTH", "10002").to_s.split(" ").map(&:to_i)
   end
 end

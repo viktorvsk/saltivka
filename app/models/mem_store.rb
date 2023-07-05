@@ -12,8 +12,23 @@ class MemStore
       Sidekiq.redis { |c| c.hexists("authentications", cid) }
     end
 
-    def auth!(cid:, pubkey:)
-      Sidekiq.redis { |c| c.hset("authentications", cid, pubkey) }
+    def authenticate!(cid:, event_sha256:, pubkey:)
+      Sidekiq.redis do |c|
+        c.multi do
+          c.hset("authentications", cid, pubkey)
+          c.lpush("queue:nostr", {class: "AuthorizationRequest", args: [cid, event_sha256, pubkey]}.to_json)
+        end
+      end
+    end
+
+    def authorize!(cid:, level:)
+      Sidekiq.redis do |c|
+        c.multi do
+          c.hset("authorizations", cid, level)
+          c.lpush("authorization_result:#{cid}", level)
+          c.expire("authorization_result:#{cid}", RELAY_CONFIG.authorization_timeout.to_s)
+        end
+      end
     end
 
     def subscriptions

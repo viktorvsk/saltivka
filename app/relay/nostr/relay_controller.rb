@@ -16,13 +16,18 @@ module Nostr
       @redis = redis
       nostr_event = JSON.parse(event_data)
       command = nostr_event.shift
+
       if command.present? && command.upcase.in?(COMMANDS)
         contract_class = "Nostr::Commands::Contracts::#{command.downcase.classify}".constantize
         contract = contract_class.new
         contract_result = contract.call(nostr_event)
         if contract_result.success?
           controller_action = "#{command.downcase}_command"
-          send(controller_action, nostr_event, block)
+          if authorized?(command, nostr_event)
+            send(controller_action, nostr_event, block)
+          else
+            block.call notice!("restricted: your account doesn't have required authorization level")
+          end
         else
           error = Presenters::Errors.new(contract_result.errors.to_h)
           block.call notice!("error: #{error}")
@@ -47,11 +52,20 @@ module Nostr
         redis.srem("connections", connection_id)
         redis.hdel("connections_authenticators", connection_id)
         redis.hdel("subscriptions", pubsub_ids) if pubsub_ids.present?
+        redis.hdel("authentications", connection_id) # TODO: check why it wasn't here before
+        redis.hdel("authorizations", connection_id)
         redis.call("SET", "events22242:#{event22242_id}", "", "KEEPTTL")
       end
     end
 
     private
+
+    def authorized?(command, nostr_event)
+      return true if Nostr::Nips::Nip65.call(command, nostr_event)
+
+      level = redis.hget("authorizations", connection_id).to_i # nil.to_i === 0
+      level >= RELAY_CONFIG.send("required_auth_level_for_#{command.downcase}")
+    end
 
     def notice!(text)
       ["NOTICE", text].to_json

@@ -17,7 +17,7 @@ class NewEvent
           if RELAY_CONFIG.restrict_change_auth_pubkey && MemStore.pubkey?(cid: connection_id)
             MemStore.fanout(cid: connection_id, command: :notice, payload: "This connection is already authenticated. To authenticate another pubkey please open new connection")
           else
-            MemStore.auth!(cid: connection_id, pubkey: event.pubkey)
+            MemStore.authenticate!(cid: connection_id, event_sha256: event.sha256, pubkey: event.pubkey)
           end
         end
       else

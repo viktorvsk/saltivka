@@ -1,7 +1,7 @@
 # create User from ENV
 
 if ENV["ADMIN_EMAIL"].present? && ENV["ADMIN_PASSWORD"].present? && !User.exists?
-  User.create!(email: ENV["ADMIN_EMAIL"], password: ENV["ADMIN_PASSWORD"], password_confirmation: ENV["ADMIN_PASSWORD"])
+  User.create!(email: ENV["ADMIN_EMAIL"], password: ENV["ADMIN_PASSWORD"], password_confirmation: ENV["ADMIN_PASSWORD"], admin: true)
 end
 
 if ENV["TRUSTED_PUBKEYS"].present? && !Author.exists?

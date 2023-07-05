@@ -20,6 +20,7 @@ gem "pg", "~> 1.1"
 gem "redis", "~> 5.0"
 gem "hiredis-client"
 gem "sidekiq", "~> 7"
+gem "sorcery"
 
 gem "bip-schnorr"
 gem "json_schemer"

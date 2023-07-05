@@ -14,6 +14,7 @@ services:
     image: postgres:15
     volumes:
       - ./demo/docker/pg-data:/var/lib/postgresql/data
+      - ./demo/postgresql.conf:/etc/postgresql/postgresql.conf
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: nostr
@@ -21,10 +22,12 @@ services:
       POSTGRES_HOST_AUTH_METHOD: trust
   redis:
     image: redis/redis-stack-server
+    environment:
+      - REDIS_ARGS=--maxmemory 2GB --maxmemory-policy noeviction --maxclients 10000 --tcp-backlog 511 # https://github.com/redis-stack/redis-stack/issues/110
   db-migration:
     image: saltivka
     env_file: ./demo/.env
-    command: sh -c "until bundle exec rails db:migrate; do sleep 5; done"
+    command: sh -c "until bundle exec rails db:migrate db:seed; do sleep 5; done"
     depends_on:
       - postgresql
       - redis

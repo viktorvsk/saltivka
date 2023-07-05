@@ -19,9 +19,6 @@ RSpec.describe "NIP-65" do
         @nostr_event = ["REQ", "SUBID", {}].to_json
         subject
       end
-
-      it "does not allow to process 10002 events if min level of auth is forced" do
-      end
     end
   end
 

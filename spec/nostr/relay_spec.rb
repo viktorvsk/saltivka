@@ -19,4 +19,12 @@ RSpec.describe "Nostr::Relay" do
       "REQUEST_METHOD" => "GET"
     })
   end
+
+  describe "NIP-65" do
+    context "with RELAY_CONFIG.forced_min_auth_level = 1" do
+      it "doesn't process 10002 events" do
+        # TODO: this should rather be a e2e test
+      end
+    end
+  end
 end

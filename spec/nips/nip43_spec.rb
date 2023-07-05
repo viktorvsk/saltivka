@@ -59,8 +59,6 @@ RSpec.describe("NIP-43") do
           expect(result).to eq("TERMINATED")
           expect(REDIS_TEST_CONNECTION.llen("authorization_result:CONN_ID")).to be_zero
         end
-
-        it "does not allow to process 10002 events if min level of auth is forced"
       end
     end
 

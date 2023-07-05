@@ -12,6 +12,7 @@ module Nostr
       if command.upcase === "TERMINATE"
         code, reason = JSON.parse(event)
         ws.close(code, reason)
+        Thread.current.exit
       else
         response = case command.upcase
         when "FOUND_END"

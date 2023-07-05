@@ -15,6 +15,9 @@ module Nostr
       Rails.logger.info(event_data)
       @redis = redis
       nostr_event = JSON.parse(event_data)
+      unless nostr_event.is_a?(Array)
+        return block.call notice!("error: event must be an Array")
+      end
       command = nostr_event.shift
 
       if command.present? && command.upcase.in?(COMMANDS)

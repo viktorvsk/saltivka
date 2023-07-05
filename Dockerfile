@@ -41,6 +41,8 @@ COPY --from=Builder --chown=app:app /app /app
 
 WORKDIR /app
 
+RUN bundle exec rake assets:precompile
+
 USER app
 
 EXPOSE 3000

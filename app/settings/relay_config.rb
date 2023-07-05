@@ -76,7 +76,11 @@ class RelayConfig
   end
 
   def supported_nips
-    ENV.fetch("NIP_11_SUPPORTED_NIPS", "1 4 9 11 12 13 16 20 22 26 28 33 40 42 43 45 65").to_s.split(" ").map(&:to_i)
+    nips = Set.new(%w[1 4 9 11 13 16 20 22 26 28 33 40 42 43 45])
+    nips.add(12) if ("a".."z").to_a.concat(("A".."Z").to_a).all? { |f| f.in?(available_filters) }
+    nips.add(65) if kinds_exempt_of_auth.include?(10002)
+
+    nips.map(&:to_i).sort
   end
 
   def software

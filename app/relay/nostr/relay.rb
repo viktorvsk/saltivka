@@ -9,6 +9,12 @@ Nostr::Relay = lambda do |env|
     redis_thread = nil
 
     ws.on :open do |event|
+      # TODO: check maintenance mode
+      # TODO: check connections limit
+      # TODO: check payload size (RELAY_CONFIG.max_message_length)
+      # TODO: Limit requests count
+      # TODO: Limit traffic
+
       Nostr::AuthenticationFlow.new.call(ws_url: ws.url, connection_id: connection_id, redis: redis_subscriber) do |event|
         if event.first === "TERMINATE"
           ws.close(3403, "restricted: #{event.last}")

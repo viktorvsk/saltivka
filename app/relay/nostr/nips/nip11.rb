@@ -12,7 +12,7 @@ module Nostr
           software: RELAY_CONFIG.software,
           version: RELAY_CONFIG.version,
           limitation: {
-            max_message_length: RELAY_CONFIG.max_message_length, # Assumed this would be enforced by nginx or other proxy
+            max_message_length: RELAY_CONFIG.max_message_length,
             max_subscriptions: RELAY_CONFIG.max_subscriptions,
             max_filters: RELAY_CONFIG.max_filters,
             max_limit: RELAY_CONFIG.max_limit,
@@ -21,7 +21,7 @@ module Nostr
             max_event_tags: RELAY_CONFIG.max_event_tags,
             max_content_length: RELAY_CONFIG.max_content_length,
             min_pow_difficulty: RELAY_CONFIG.min_pow,
-            auth_required: false, # TODO: NIP-42
+            auth_required: RELAY_CONFIG.forced_min_auth_level > 0,
             payment_required: false # TODO
           },
           relay_countries: RELAY_CONFIG.relay_countries,

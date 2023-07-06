@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  mount Nostr::Relay, at: "/", constraints: ->(request) { Faye::WebSocket.websocket?(request.env) || request.env["HTTP_CONTENT_TYPE"] === "application/nostr+json" }
+  mount Nostr::Relay, at: "/", constraints: ->(request) { Faye::WebSocket.websocket?(request.env) || request.env["CONTENT_TYPE"] === "application/nostr+json" }
 
   root to: "homes#show"
 

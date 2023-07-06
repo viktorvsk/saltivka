@@ -97,6 +97,7 @@ module Nostr
       end
 
       def pubkey=(value)
+        # TODO: .consider create_or_find_by
         self.author ||= Author.where(pubkey: value).first
         self.author || build_author(pubkey: value)
       end

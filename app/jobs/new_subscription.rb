@@ -19,7 +19,7 @@ class NewSubscription
 
     ids = Event.find_by_sql(union).pluck(:id)
 
-    Event.where(id: ids).find_each do |event|
+    Event.includes(:author).where(id: ids).find_each do |event|
       MemStore.fanout(cid: connection_id, sid: subscription_id, command: :found_event, payload: event.to_json)
     end
 

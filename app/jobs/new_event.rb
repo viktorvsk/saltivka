@@ -33,6 +33,8 @@ class NewEvent
 
         MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16/NIP-20
       end
+    elsif event.errors[:sha256].include?("has already been taken")
+      MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, false, "duplicate: this event is already present in the database (for replaceable and parameterized replaceable events it may mean newer events are present)"].to_json)
     elsif event.errors[:sha256].any? { |error_text| error_text.to_s =~ /PoW difficulty must be at least/ }
       MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, false, "pow: min difficulty must be #{RELAY_CONFIG.min_pow}, got #{event.pow_difficulty}"].to_json)
     else
@@ -47,7 +49,7 @@ class NewEvent
   private
 
   def should_fanout?(event, subscriber_pubkey)
-    # TODO: return true if Configurable NIP-04
+    return true unless RELAY_CONFIG.enforce_kind_4_authentication
     return true unless event.kind === 4
 
     event_p_tag = event.tags.find { |t| t.first == "p" }

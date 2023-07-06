@@ -127,16 +127,19 @@ module Nostr
         rel = all.distinct(:id).order(created_at: :desc)
         filter_set.stringify_keys!
 
-        unless filter_set["kinds"].present?
+        if RELAY_CONFIG.enforce_kind_4_authentication && filter_set["kinds"].blank?
           rel = rel.where.not(kind: 4)
         end
 
         filter_set.select { |key, value| value.present? }.each do |key, value|
           if key == "kinds"
             value = Array.wrap(value)
-            if value.include?(4)
+            if RELAY_CONFIG.enforce_kind_4_authentication && value.include?(4)
               value.delete(4)
-              next if value.blank? && subscriber_pubkey.blank?
+              if value.blank? && subscriber_pubkey.blank?
+                rel = rel.where.not(kind: 4)
+                next
+              end
 
               rel = if subscriber_pubkey.present?
                 if value.present?

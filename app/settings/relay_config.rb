@@ -55,6 +55,11 @@ class RelayConfig
     ENV.fetch("NIP_1_12_AVAILABLE_FILTERS", "#{nip_1_default_filters} #{nip_12_tags}").to_s.split(" ")
   end
 
+  def enforce_kind_4_authentication
+    val = ENV.fetch("NIP_04_NIP_42_ENFORCE_KIND_4_AUTHENTICATION", true)
+    ActiveRecord::Type::Boolean.new.cast(val)
+  end
+
   def max_limit
     ENV.fetch("NIP_11_MAX_FILTER_LIMIT", 1000).to_i
   end

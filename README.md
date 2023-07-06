@@ -45,7 +45,7 @@ Some thoughts and hints on production deployment may be found [here](/docs/DEPLO
 2. Local setup for development and contributions
 
 * TBD: link to the guide on how to deploy to managed cloud environment
-* TBD: link to production deployment instance
+* Live instance could be found at [https://saltivka.org](https://saltivka.org) and relay address is `wss://saltivka.org`
 
 ## Docker Compose (demo)
 1. Prepare a host with docker environment installed (something like [this](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04)). Demo setup expects approximately 8 GB of RAM

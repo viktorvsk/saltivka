@@ -26,18 +26,9 @@ class NewEvent
           matches = JSON.parse(filters).any? { |filter_set| event.matches_nostr_filter_set?(filter_set) }
           next unless matches
           subscriber_cid, subscriber_sid = pubsub_id.split(":")
-          if event.kind === 4
-            event_p_tag = event.tags.find { |t| t.first == "p" }
-            next unless event_p_tag.present? # TODO: process invalid kind 4 event
-            subscriber_pubkey = MemStore.pubkey_for(cid: subscriber_cid)
-            # We don't have to send this event to author because only subscriptions
-            # with matching filters should receive it
-            # We also don't have to do anything regarding delegation because
-            # delegation is only about publishing events and not receiving
-            next if event_p_tag.second != subscriber_pubkey
+          subscriber_pubkey = MemStore.pubkey_for(cid: subscriber_cid)
 
-          end
-          MemStore.fanout(cid: subscriber_cid, sid: subscriber_sid, command: :found_event, payload: event.to_json)
+          MemStore.fanout(cid: subscriber_cid, sid: subscriber_sid, command: :found_event, payload: event.to_json) if should_fanout?(event, subscriber_pubkey)
         end
 
         MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16/NIP-20
@@ -51,5 +42,20 @@ class NewEvent
     event
   rescue ActiveRecord::RecordNotUnique => _e
     MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, false, "duplicate: this event is already present in the database"].to_json)
+  end
+
+  private
+
+  def should_fanout?(event, subscriber_pubkey)
+    # TODO: return true if Configurable NIP-04
+    return true unless event.kind === 4
+
+    event_p_tag = event.tags.find { |t| t.first == "p" }
+    return false if event_p_tag.blank? # TODO: process invalid kind 4 event
+
+    receiver_pubkey = event_p_tag.second
+
+    # TODO: consider delegation
+    subscriber_pubkey.in?([receiver_pubkey, event.pubkey])
   end
 end

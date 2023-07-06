@@ -67,7 +67,7 @@ Its a typical Ruby on Rails application so all defaults mostly apply.
 1. `$ git clone https://github.com/viktorvsk/saltivka.git`
 2. `$ cd saltivka`
 3. `$ cp .env.example .env.development` (Adjust Postgres and Redis settings)
-4. `$ echo POSTGRES_DATABASE=nostrails_test > .env.test`
+4. `$ echo POSTGRES_DATABASE=saltivka_test > .env.test`
 5. Adjust Postgres and Redis credentials in `.env.test` if needed. Use databases different from development environment
 6. `$ rails db:create db:migrate db:seed`
 7. `$ rspec`

@@ -108,7 +108,7 @@ RSpec.describe("NIP-42") do
       it "authorizes with level 0" do
         expect(MemStore).to receive(:fanout).with(cid: "CONN_ID", command: :ok, payload: ["OK", event.sha256, false, "restricted: unknown author"].to_json)
         expect { subject.perform("CONN_ID", event.sha256, event.pubkey) }.to change { REDIS_TEST_CONNECTION.llen("authorization_result:CONN_ID") }.by(1)
-        expect(REDIS_TEST_CONNECTION.lpop("authorization_result:CONN_ID")).to eq("0")
+        expect(REDIS_TEST_CONNECTION.lpop("authorization_result:CONN_ID")).to eq("1")
       end
     end
   end

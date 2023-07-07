@@ -53,7 +53,11 @@ class NewEvent
     return true unless event.kind === 4
 
     event_p_tag = event.tags.find { |t| t.first == "p" }
-    return false if event_p_tag.blank? # TODO: process invalid kind 4 event
+
+    if event_p_tag.blank?
+      Sentry.capture_message("[NewEvent][InvalidKind4Event] event=#{event.to_json}", level: :warning)
+      return false
+    end
 
     receiver_pubkey = event_p_tag.second
 

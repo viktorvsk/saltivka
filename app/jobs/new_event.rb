@@ -21,15 +21,7 @@ class NewEvent
           end
         end
       else
-        # TODO: This should be a LUA script
-        MemStore.subscriptions.each do |pubsub_id, filters|
-          matches = JSON.parse(filters).any? { |filter_set| event.matches_nostr_filter_set?(filter_set) }
-          next unless matches
-          subscriber_cid, subscriber_sid = pubsub_id.split(":")
-          subscriber_pubkey = MemStore.pubkey_for(cid: subscriber_cid)
-
-          MemStore.fanout(cid: subscriber_cid, sid: subscriber_sid, command: :found_event, payload: event.to_json) if should_fanout?(event, subscriber_pubkey)
-        end
+        MemStore.fanout_new_event_to_all_active_subscriptions(event)
 
         MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16/NIP-20
       end
@@ -47,24 +39,5 @@ class NewEvent
   rescue ActiveRecord::RecordNotUnique => _e
     Sentry.capture_message("[NewEvent][DuplicateEvent] event=#{event.to_json}", level: :warning)
     MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, false, "duplicate: this event is already present in the database"].to_json)
-  end
-
-  private
-
-  def should_fanout?(event, subscriber_pubkey)
-    return true unless RELAY_CONFIG.enforce_kind_4_authentication
-    return true unless event.kind === 4
-
-    event_p_tag = event.tags.find { |t| t.first == "p" }
-
-    if event_p_tag.blank?
-      Sentry.capture_message("[NewEvent][InvalidKind4Event] event=#{event.to_json}", level: :warning)
-      return false
-    end
-
-    receiver_pubkey = event_p_tag.second
-
-    # TODO: consider delegation
-    subscriber_pubkey.in?([receiver_pubkey, event.pubkey])
   end
 end

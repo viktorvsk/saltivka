@@ -8,9 +8,13 @@ module Nostr
         filters_json_string = filters.to_json # only Array of filter_sets (filters) should be stored in Redis
         pubsub_id = "#{connection_id}:#{subscription_id}"
 
-        # TODO: Use multi/exec here
-        is_new_subscription = !ActiveRecord::Type::Boolean.new.cast(redis.sismember("client_reqs:#{connection_id}", subscription_id))
-        is_limit_reached = redis.scard("client_reqs:#{connection_id}") >= RELAY_CONFIG.max_subscriptions
+        r1, r2 = redis.multi do |t|
+          t.sismember("client_reqs:#{connection_id}", subscription_id)
+          t.scard("client_reqs:#{connection_id}")
+        end
+
+        is_new_subscription = !ActiveRecord::Type::Boolean.new.cast(r1)
+        is_limit_reached = r2 >= RELAY_CONFIG.max_subscriptions
 
         if is_new_subscription && is_limit_reached
           # NIP-11

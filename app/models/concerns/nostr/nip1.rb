@@ -11,30 +11,10 @@ module Nostr
       validates :sha256, presence: true, length: {is: 64}
 
       belongs_to :author, autosave: true
-      has_many :searchable_tags, autosave: true, dependent: :delete_all
-
-      before_create :init_searchable_tags
 
       delegate :pubkey, to: :author, allow_nil: true
 
       validates_associated :author
-
-      def init_searchable_tags
-        if kinda?(:parameterized_replaceable) && tags.none? { |t| t.first === "d" }
-          searchable_tags.new(name: "d", value: "")
-        end
-        tags.map { |t| t[..1] }.uniq { |tag| tag.sort.join }.each do |tag|
-          tag_name, tag_value = tag
-          tag_value_too_long = tag_value && tag.second.size > RELAY_CONFIG.max_searchable_tag_value_length
-          next if tag_value_too_long
-          satisfies_nip_12 = tag_name.size > 1 # NIP-12 populate searchable filters for every single letter tag
-          satisfies_nip_26 = tag_name != "delegation" # indexes delegation pubkey for search
-          next if !satisfies_nip_12 && !satisfies_nip_26
-          tag_value ||= ""
-
-          searchable_tags.new(name: tag_name, value: tag_value)
-        end
-      end
 
       def matches_nostr_filter_set?(filter_set)
         filter_set.transform_keys(&:downcase).slice(*RELAY_CONFIG.available_filters).all? do |filter_type, filter_value|
@@ -130,7 +110,7 @@ module Nostr
           rel = rel.where.not(kind: 4)
         end
 
-        filter_set.select { |key, value| value.present? }.each do |key, value|
+        filter_set.transform_keys(&:downcase).slice(*RELAY_CONFIG.available_filters).select { |key, value| value.present? }.each do |key, value|
           if key == "kinds"
             value = Array.wrap(value)
             if RELAY_CONFIG.enforce_kind_4_authentication && value.include?(4)

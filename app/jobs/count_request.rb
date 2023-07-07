@@ -5,7 +5,8 @@ class CountRequest
   def perform(connection_id, subscription_id, filters)
     filters = begin
       JSON.parse(filters)
-    rescue
+    rescue => e
+      Sentry.capture_exception(e)
       return
     end
     return if connection_id.blank? || subscription_id.blank?

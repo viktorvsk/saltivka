@@ -39,8 +39,8 @@ module Nostr
         else
           [event["pubkey"], []]
         end
-      rescue => _e
-        # TODO: log excetpion e
+      rescue => e
+        Sentry.capture_exception(e)
         [nil, ["something went wrong"]]
       end
     end

@@ -13,10 +13,10 @@ module Nostr
 
       if RELAY_CONFIG.forced_min_auth_level > 0 # force NIP-43
         return yield(terminate("NIP-43 is forced over NIP-42 and auth event is missing in URL")) unless auth_event_22242
-        return yield(terminate("NIP-43 is forced over NIP-42 and auth event has errors: #{errors.join(", ")}")) if errors.present? # TODO: errors presenter
+        return yield(terminate("NIP-43 is forced over NIP-42 and auth event has errors: #{Nostr::Presenters::Errors.new(errors)}")) if errors.present?
       else
         return yield(["AUTH", connection_id]) unless auth_event_22242 # NIP-42 fallback if no auth event provided
-        return yield(terminate("NIP-43 auth attempt is detected but auth event has errors: #{errors.join(", ")}")) if errors.present?
+        return yield(terminate("NIP-43 auth attempt is detected but auth event has errors: #{Nostr::Presenters::Errors.new(errors)}")) if errors.present?
       end
 
       # Here we have a valid NIP-43 auth event present so the result is either
@@ -75,8 +75,9 @@ module Nostr
         end
       end
     rescue => e
+      Sentry.capture_exception(e)
+      Sentry.capture_message("[AuthenticationFlow][NotAuthorized][#{e.class}] event=#{event.to_json}", level: :warning)
       if RELAY_CONFIG.forced_min_auth_level > 0 # force NIP-43
-        # TODO: log exception e
         yield(terminate("NIP-43 is forced over NIP-42 and something went wrong"))
       else
         yield(["NOTICE", "error: #{e.class} #{e.message}"])

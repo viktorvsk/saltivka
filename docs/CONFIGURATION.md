@@ -4,7 +4,7 @@ Environment variables are used to manage how the relay works.
 `.env.example` contains complete list of possible settings with their default values
 Some settings are used for deployment, i.e. database URL or number of processes for application server.
 Some settings are used to control business logic and supported NIPs.
-Here we will discuss business logic settings.
+First let's discuss business logic settings.
 
 | Variable | Description | Default value | Notes |
 | -----  | ----------- | ------------- | ------- |
@@ -47,3 +47,28 @@ Here we will discuss business logic settings.
 | ADMIN\_EMAIL| if specified, user with this email will be created as admin who can sign in using UI to view admin dashboard |  | only works once |
 | ADMIN\_PASSWORD| password for this user |  | only works once |
 | TRUSTED\_PUBKEYS| list of pubkeys that will have highest auth_level=4 |  | space delimited, only works once |
+
+
+Now let's briefly review general app settings:
+
+| Variable | Description | Default value |
+| ------ | ----------- |:-------------:|
+| POSTGRES_USER     | DB username | postgres |
+| POSTGRES_PASSWORD | DB user password |
+| POSTGRES_HOST | DB host | localhost |
+| POSTGRES_DATABASE | DB name | saltivka |
+| POSTGRES_PORT | DB port | 5432 |
+| POSTGRES_POOL | number of connections in pool. Usually must match `RAILS_MAX_THREADS` | 5 |
+| REDIS_URL | URL of Redis service for WebsocketServer and Sidekiq worker components | redis://localhost:6379 |
+| RAILS\_MAX_THREADS | max number of threads per puma worker. Must be tuned responsibly but usually anything greater than 5 doesn't mean profits for puma. But keep in mind, Sidekiq worker also depends on this variable so it should be adjusted accordingly | 5 |
+| RAILS\_MIN_THREADS | min number of threads per puma worker. With stable traffic its better to have `min === max`, with burst traffic `min` should be lower than `max`| 5 |
+| PORT | application port | 3000 |
+| PIDFILE | path to pidfile | tmp/pids/server.pid |
+| WEB_CONCURRENCY | number of puma workers (processes). Usually should match number of CPU cores but on practice should be determined based on the workload and resources | 2 |
+| RAILS_ENV | environment to run application, most of the time should be left default | production |
+| RAILS\_SERVE\_STATIC_FILES | Make Rails serve static file in `/public` directory. Most of the time Rails should run behind reverse proxy with this parameter set to `false` and reverse proxy to serve static assets |
+| RAILS_LOG\_TO\_STDOUT | logs destination |
+| SECRET\_KEY_BASE | some random secret string for sessions and other stuff |
+| SENTRY_DSN | Sentry integration |
+| CI | run full tests suite on CI |
+| RUBY_YJIT\_ENABLE | enable YJIT for Ruby, its Docker-image-dependent, usually should be left default| true |

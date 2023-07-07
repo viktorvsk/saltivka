@@ -90,11 +90,11 @@ class RelayConfig
   end
 
   def software
-    ENV.fetch("NIP_11_SOFTWARE", "")
+    "https://source.saltivka.org"
   end
 
   def version
-    ENV.fetch("NIP_11_VERSION", "")
+    ENV["GIT_COMMIT"]
   end
 
   def relay_countries

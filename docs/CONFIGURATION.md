@@ -25,8 +25,6 @@ Here we will discuss business logic settings.
 | NIP\_11\_DESCRIPTION| see [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) |  | |
 | NIP\_11\_PUBKEY| see [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) |  | |
 | NIP\_11\_CONTACT| see [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) |  | |
-| NIP\_11\_SOFTWARE| see [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) |  | |
-| NIP\_11\_VERSION| see [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) |  | |
 | NIP\_11\_RELAY\_COUNTRIES| see [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) | UK UA US | |
 | NIP\_11\_LANGUAGE\_TAGS| see [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) | en en-419 | |
 | NIP\_11\_TAGS| see [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) |  | |

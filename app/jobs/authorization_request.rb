@@ -2,7 +2,10 @@ class AuthorizationRequest
   include Sidekiq::Worker
   sidekiq_options queue: "nostr"
 
-  # TODO: consider update active connections based on results
+  # TODO: consider update active connections based on data changes
+  # i.e. when TrustedAuthor record is created check if there are
+  # existing connections with this pubkey and update their auth_level
+  # and do the opposite if TrustedAuthor record was deleted
   def perform(connection_id, event_sha256, pubkey)
     if TrustedAuthor.joins(:author).where(authors: {pubkey: pubkey}).exists?
       MemStore.authorize!(cid: connection_id, level: "4")

@@ -52,7 +52,6 @@ Some thoughts and hints on production deployment may be found [here](/docs/DEPLO
 2. SSH into this host
 3. ```git clone https://github.com/viktorvsk/saltivka.git```
 4. ```cd saltivka```
-5. ```docker build -t saltivka .``` (TODO: this should be removed once image gets to Dockerhub)
 6. ```docker compose up --build --scale worker=4```
 
 That's it! Wait a minute or two until database is ready. Now you should have HTTP/WS server available at `localhost:3000` and HTTPS/WSS at `localhost:2402`. Ensure ports are open on your server. Both commands should work and let you start working with Nostr:

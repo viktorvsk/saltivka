@@ -29,5 +29,5 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags:
-            - ${{ steps.extract_version_tag.outputs.version_tag }}
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/saltivka:${{ steps.extract_version_tag.outputs.version_tag }}

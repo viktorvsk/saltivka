@@ -25,6 +25,6 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags:
-            - latest
-            - ${{github.sha}}
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/saltivka:${{github.sha}}
+            ${{ secrets.DOCKER_USERNAME }}/saltivka:latest

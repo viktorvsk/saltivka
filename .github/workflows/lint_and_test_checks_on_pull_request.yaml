@@ -1,0 +1,57 @@
+name: Saltivka Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint_and_test_checks_on_pull_request:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: recario
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2.2'
+          bundler-cache: true
+
+      - name: Prepare environment — install Redis, Postgres and gems dependencies and migrate database
+        run: sudo apt-get install redis postgresql-client -y && bundle install --jobs 4 --retry 3 && bin/rails db:migrate
+
+      - name: Check code style
+        run: bin/lint
+
+      - name: Run tests
+        env:
+          POSTGRES_DATABAS: saltivka_test
+          REDIS_UR: redis://localhost:6379/8
+          POSTGRES_PASSWOR: postgres
+          RAILS_LOG_TO_STDOU: true
+        run: bin/rspec

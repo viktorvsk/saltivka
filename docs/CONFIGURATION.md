@@ -58,7 +58,7 @@ Now let's briefly review general app settings:
 | POSTGRES_HOST | DB host | localhost |
 | POSTGRES_DATABASE | DB name | saltivka |
 | POSTGRES_PORT | DB port | 5432 |
-| POSTGRES_POOL | number of connections in pool. Usually must match `RAILS_MAX_THREADS` | 5 |
+| POSTGRES_POOL | number of connections in the pool. Usually must match `RAILS_MAX_THREADS` | 5 |
 | REDIS_URL | URL of Redis service for WebsocketServer and Sidekiq worker components | redis://localhost:6379 |
 | RAILS\_MAX_THREADS | max number of threads per puma worker. Must be tuned responsibly but usually anything greater than 5 doesn't mean profits for puma. But keep in mind, Sidekiq worker also depends on this variable so it should be adjusted accordingly | 5 |
 | RAILS\_MIN_THREADS | min number of threads per puma worker. With stable traffic its better to have `min === max`, with burst traffic `min` should be lower than `max`| 5 |

@@ -20,7 +20,7 @@ This is an implementation of the [Nostr protocol](https://github.com/nostr-proto
 * [NIP-65: Relay List Metadata](https://github.com/nostr-protocol/nips/blob/master/65.md)
 
 # Abstract
-Nostr requires decentralization. Decentralization requires servers. Many different servers, small and big. Some servers should be robust and cheap to operate at scale. Some servers are better to be cute and simple to use. This relay aims to become the most developer-friendly and the most host-friendly implementation through:
+Nostr requires decentralization. Decentralization requires servers. Many different servers, small and big. Some servers should be robust and cheap to operate at scale. Some servers are better to be cute and simple to use. This relay aims to become the most developer-friendly and the most relay-operator-friendly implementation through:
 
 * **high configurability** — like support for dynamic feature flags in future
 * **clean errors descriptions** — including different formats and granular causes
@@ -80,3 +80,4 @@ It's a typical Ruby on Rails application so all defaults mostly apply.
 * [Trade-offs](/docs/TRADEOFFS.md)
 * [Deployment hints](/docs/DEPLOYMENT.md)
 * [Roadmap](/docs/ROADMAP.md)
+* [Contributing](/docs/CONTRIBUTING.md)

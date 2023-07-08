@@ -48,16 +48,6 @@ RSpec.describe("NIP-45") do
   describe Nostr::RelayController do
     before do
       @random_connection_id = "CONN_ID"
-      @ws_sender = double
-      @expect_sidekiq_push = lambda do |klass, args|
-        expect(Sidekiq::Client).to receive(:push).with({
-          "retry" => true,
-          "backtrace" => false,
-          "queue" => :nostr,
-          "class" => klass,
-          "args" => args
-        })
-      end
       @valid_event = JSON.dump(JSON.parse(File.read(Rails.root.join("spec", "support", "nostr_event_real.json"))))
     end
 
@@ -73,10 +63,10 @@ RSpec.describe("NIP-45") do
     it "pushes event to Sidekiq" do
       @nostr_event = ["COUNT", "SUBID", {}].to_json
 
-      @expect_sidekiq_push.call("CountRequest", ["CONN_ID", "SUBID", "[{}]"])
-
       subject
 
+      assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr"), 1
+      assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr"), {class: "CountRequest", args: ["CONN_ID", "SUBID", "[{}]"]}.to_json
       assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), []
       assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {}
     end

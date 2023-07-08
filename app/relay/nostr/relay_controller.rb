@@ -73,19 +73,5 @@ module Nostr
     def notice!(text)
       ["NOTICE", text].to_json
     end
-
-    # TODO: use raw redis connection to create a Sidekiq job as in
-    # redis.lpush("queue:nostr", {class: "AuthorizationRequest", args: [cid, event_sha256, pubkey]}.to_json)
-    def sidekiq_pusher
-      @sidekiq_pusher ||= lambda do |klass, args|
-        Sidekiq::Client.push({
-          "retry" => true,
-          "backtrace" => false,
-          "queue" => :nostr,
-          "class" => klass,
-          "args" => args
-        })
-      end
-    end
   end
 end

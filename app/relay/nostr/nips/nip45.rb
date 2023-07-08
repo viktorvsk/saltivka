@@ -7,7 +7,7 @@ module Nostr
         subscription_id, filters = nostr_event.first, nostr_event[1..]
         filters_json_string = filters.to_json # only Array of filter_sets (filters) should be stored in Redis
 
-        sidekiq_pusher.call("CountRequest", [connection_id, subscription_id, filters_json_string])
+        redis.lpush("queue:nostr", {class: "CountRequest", args: [connection_id, subscription_id, filters_json_string]}.to_json)
       end
     end
   end

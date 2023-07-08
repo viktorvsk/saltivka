@@ -127,16 +127,6 @@ RSpec.describe("NIP-01") do
   describe Nostr::RelayController do
     before do
       @random_connection_id = "CONN_ID"
-      @ws_sender = double
-      @expect_sidekiq_push = lambda do |klass, args|
-        expect(Sidekiq::Client).to receive(:push).with({
-          "retry" => true,
-          "backtrace" => false,
-          "queue" => :nostr,
-          "class" => klass,
-          "args" => args
-        })
-      end
       @valid_event = JSON.dump(JSON.parse(File.read(Rails.root.join("spec", "support", "nostr_event_real.json"))))
     end
 
@@ -153,10 +143,10 @@ RSpec.describe("NIP-01") do
       it "saves connection_id and subscription_id to redis and adds a NewSubscription job to Sidekiq queue" do
         @nostr_event = ["REQ", "SUBID", {}].to_json
 
-        @expect_sidekiq_push.call("NewSubscription", ["CONN_ID", "SUBID", "[{}]"])
-
         subject
 
+        assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr"), 1
+        assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", "[{}]"]}.to_json
         assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"]
         assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => "[{}]"}
       end
@@ -165,10 +155,10 @@ RSpec.describe("NIP-01") do
         filters = {"kinds" => [1]}
         @nostr_event = ["REQ", "SUBID", filters].to_json
 
-        @expect_sidekiq_push.call("NewSubscription", ["CONN_ID", "SUBID", [filters].to_json])
-
         subject
 
+        assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr"), 1
+        assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", [filters].to_json]}.to_json
         assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"]
         assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => [filters].to_json}
       end
@@ -244,9 +234,11 @@ RSpec.describe("NIP-01") do
       context "with valid event data" do
         it "pushes event to Sidekiq" do
           @nostr_event = ["EVENT", JSON.parse(@valid_event)].to_json
-          @expect_sidekiq_push.call("NewEvent", ["CONN_ID", JSON.parse(@valid_event).to_json])
 
           subject
+
+          assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr"), 1
+          assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr"), {class: "NewEvent", args: ["CONN_ID", @valid_event]}.to_json
         end
       end
 

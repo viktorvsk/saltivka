@@ -3,16 +3,6 @@ require "rails_helper"
 RSpec.describe Nostr::RelayController do
   before do
     @random_connection_id = "CONN_ID"
-    @ws_sender = double
-    @expect_sidekiq_push = lambda do |klass, args|
-      expect(Sidekiq::Client).to receive(:push).with({
-        "retry" => true,
-        "backtrace" => false,
-        "queue" => :nostr,
-        "class" => klass,
-        "args" => args
-      })
-    end
     @valid_event = JSON.dump(JSON.parse(File.read(Rails.root.join("spec", "support", "nostr_event_real.json"))))
   end
 

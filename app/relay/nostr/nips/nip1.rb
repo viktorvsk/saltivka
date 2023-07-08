@@ -24,7 +24,7 @@ module Nostr
             redis.sadd("client_reqs:#{connection_id}", subscription_id)
             redis.hset("subscriptions", pubsub_id, filters_json_string)
           end
-          sidekiq_pusher.call("NewSubscription", [connection_id, subscription_id, filters_json_string])
+          redis.lpush("queue:nostr", {class: "NewSubscription", args: [connection_id, subscription_id, filters_json_string]}.to_json)
         end
       end
 
@@ -39,7 +39,7 @@ module Nostr
       end
 
       def event_command(nostr_event, _block)
-        sidekiq_pusher.call("NewEvent", [connection_id, nostr_event.first.to_json])
+        redis.lpush("queue:nostr", {class: "NewEvent", args: [connection_id, nostr_event.first.to_json]}.to_json)
       end
     end
   end

@@ -14,6 +14,9 @@ module Nostr
     def perform(event_data:, redis:, &block)
       Rails.logger.info(event_data)
       @redis = redis
+      if event_data.bytesize > RELAY_CONFIG.max_content_length
+        return block.call notice!("error: max allowed content length is #{RELAY_CONFIG.max_content_length} bytes")
+      end
       nostr_event = JSON.parse(event_data)
       unless nostr_event.is_a?(Array)
         return block.call notice!("error: event must be an Array")

@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_05_121232) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_08_133001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "authors", force: :cascade do |t|
     t.string "pubkey", limit: 64, null: false
+    t.index "upper((pubkey)::text) varchar_pattern_ops", name: "index_authors_for_prefix_search_on_pubkey"
     t.index ["pubkey"], name: "index_authors_on_pubkey", unique: true
   end
 
@@ -33,6 +34,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_05_121232) do
     t.string "sha256", limit: 64, null: false
     t.string "sig", limit: 128, null: false
     t.datetime "created_at"
+    t.index "upper((sha256)::text) varchar_pattern_ops", name: "index_events_for_prefix_search_on_sha256"
     t.index ["author_id"], name: "index_events_on_author_id"
     t.index ["created_at", "kind"], name: "index_events_on_created_at_and_kind"
     t.index ["kind"], name: "index_events_on_kind"
@@ -44,6 +46,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_05_121232) do
     t.bigint "event_id", null: false
     t.string "name", null: false
     t.string "value", null: false
+    t.index "upper((value)::text) varchar_pattern_ops", name: "index_searchable_tags_for_prefix_search_on_value"
     t.index ["event_id", "name", "value"], name: "index_searchable_tags_on_event_id_and_name_and_value", unique: true
   end
 

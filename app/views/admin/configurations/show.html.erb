@@ -1,4 +1,27 @@
-<div class="content mb-6">
-  <h1>Configuration</h1>
-  <pre><%= @configuration_json %></pre>
+<h1 class="title is-1">Configuration</h1>
+
+<h2 class="title is-2">Dynamic</h1>
+<div class="box mb-6">
+
+  <div class="field">
+    <%= label_tag "max_allowed_connections", "Max allowed connections", class: 'label' %>
+    <div class="control"><%= text_field_tag "max_allowed_connections", @max_allowed_connections, class: "input", type: :number, data: { action: "input->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %></div>
+  </div>
+
+  <label class="toggle">
+    <%= check_box_tag "maintenance", nil, ActiveRecord::Type::Boolean.new.cast(@maintenance), class: "toggle-checkbox", data: { action: "input->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %>
+    <div class="toggle-switch"></div>
+    <span class="toggle-label">Maintenance mode</span>
+  </label>
+</div>
+
+<h2 class="title is-2">Static</h1>
+<div class="box mb-6">
+
+  <% @disabled_configurations.each do |config| %>
+    <div class="field">
+      <%= label_tag config, config.to_s.humanize, class: 'label' %>
+      <div class="control"><%= text_field_tag config, RELAY_CONFIG.send(config).to_s, class: "input",disabled: true %></div>
+    </div>
+  <% end %>
 </div>

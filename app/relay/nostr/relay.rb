@@ -11,11 +11,14 @@ Nostr::Relay = lambda do |env|
     last_active_at = Time.now.to_i
 
     ws.on :open do |event|
-      # TODO: check maintenance mode
-      # TODO: check connections limit
-      # TODO: check payload size (RELAY_CONFIG.max_message_length)
-      # TODO: Limit requests count
-      # TODO: Limit traffic
+      maintenance, max_allowed_connections, connections_count = redis_subscriber.multi do |t|
+        t.get("maintenance")
+        t.get("max_allowed_connections")
+        t.scard("connections")
+      end
+
+      ws.close(3503, "restricted: server is on maintenance, please try again later") if ActiveRecord::Type::Boolean.new.cast(maintenance)
+      ws.close(3503, "restricted: server is busy, please try again later") if max_allowed_connections.to_i != 0 && connections_count.to_i >= max_allowed_connections.to_i
 
       Nostr::AuthenticationFlow.new.call(ws_url: ws.url, connection_id: connection_id, redis: redis_subscriber) do |event|
         if event.first === "TERMINATE"

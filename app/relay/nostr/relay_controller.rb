@@ -14,6 +14,8 @@ module Nostr
     def perform(event_data:, redis:, &block)
       Rails.logger.info(event_data)
       @redis = redis
+      # TODO: Rate limit
+      # TODO: Record requests and traffic
       if event_data.bytesize > RELAY_CONFIG.max_content_length
         return block.call notice!("error: max allowed content length is #{RELAY_CONFIG.max_content_length} bytes")
       end

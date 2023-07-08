@@ -7,6 +7,8 @@ Nostr::Relay = lambda do |env|
     relay_response = Nostr::RelayResponse.new(ws: ws)
     connection_id = controller.connection_id
     redis_thread = nil
+    hearbeat_thread = nil
+    last_active_at = Time.now.to_i
 
     ws.on :open do |event|
       # TODO: check maintenance mode
@@ -32,9 +34,17 @@ Nostr::Relay = lambda do |env|
           end
         end
       end
+
+      hearbeat_thread = Thread.new do
+        loop do
+          ws.close(3408, "Connection was idle for too long, max amount of time is #{RELAY_CONFIG.heartbeat_interval} seconds") if (Time.now.to_i - last_active_at) > 5
+          sleep(RELAY_CONFIG.heartbeat_interval)
+        end
+      end
     end
 
     ws.on :message do |event|
+      last_active_at = Time.now.to_i
       Sidekiq.redis do |redis_connection|
         controller.perform(event_data: event.data, redis: redis_connection) do |notice|
           ws.send(notice)
@@ -45,6 +55,7 @@ Nostr::Relay = lambda do |env|
     ws.on :close do |event|
       redis_subscriber.unsubscribe if redis_subscriber.subscribed?
       redis_thread&.exit
+      hearbeat_thread&.exit
       controller.terminate(event: event, redis: redis_subscriber)
       redis_thread = nil
       ws = nil

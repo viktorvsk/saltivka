@@ -8,6 +8,7 @@ First let's discuss business logic settings.
 
 | Variable | Description | Default value | Notes |
 | -----  | ----------- | ------------- | ------- |
+| HEARBEAT_INTERVAL | Amount of time connections are allowed to be idle | 1200 | seconds |
 | DEFAULT\_ERRORS\_FORMAT| other option is JSON or "as is"  | TEXT | experimental |
 | AUTHORIZATION\_TIMEOUT| when NIP-43 min auth_level > 0 connection is blocked until authorization request is processed. This value defines timeout in seconds | 10 |  |
 | FORCED\_MIN\_AUTH\_LEVEL| Authorization is implemented in levels, see [here](/docs/AUTHORIZATION.md) for more details | 0 |  |

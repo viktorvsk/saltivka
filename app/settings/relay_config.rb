@@ -1,4 +1,8 @@
 class RelayConfig
+  def heartbeat_interval
+    ENV.fetch("HEARBEAT_INTERVAL", 1200).to_i
+  end
+
   def default_format
     # TODO: another option is JSON [WIP]
     ENV.fetch("DEFAULT_ERRORS_FORMAT", "TEXT")

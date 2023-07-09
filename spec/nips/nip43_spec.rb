@@ -160,19 +160,35 @@ RSpec.describe("NIP-43") do
     it "terminates current and previous connections of previous connection is active" do
       event = build(:event, kind: 22242, tags: [["relay", "http://localhost"]], created_at: 5.seconds.ago)
       payload = CGI.escape(event.to_json)
+      current_connection_disconnected = false
+      previous_connection_disconnected = false
 
-      REDIS_TEST_CONNECTION.set("events22242:#{event.sha256}", "FIRST_CONN_ID") # simulate connection is active
+      Thread.new do
+        Redis.new.psubscribe("events:FIRST_CONN_ID:*") do |on|
+          on.pmessage do |_pattern, channel, message|
+            command = channel.split(":").last
+            expect(command).to eq("terminate")
+            expect(message).to eq([3403, "restricted: event with id #{event.sha256} was used for authentication twice"].to_json)
+            previous_connection_disconnected = true
+            Thread.current.exit
+          end
+        end
+      end
 
-      # hdel_mock.expect(:call, nil, ["connections_authenticators", "CONN_ID"])
-      # hdel_mock.expect(:call, nil, ["authentications", "FIRST_CONN_ID"])
-
-      expect(REDIS_TEST_CONNECTION).to receive(:publish).with("events:FIRST_CONN_ID:_:terminate", [3403, "restricted: event with id #{event.sha256} was used for authentication twice"].to_json)
-      expect(REDIS_TEST_CONNECTION).to receive(:hdel).with("connections_authenticators", "CONN_ID")
-      expect(REDIS_TEST_CONNECTION).to receive(:hdel).with("authentications", "FIRST_CONN_ID")
+      # simulate connection is active
+      REDIS_TEST_CONNECTION.set("events22242:#{event.sha256}", "FIRST_CONN_ID")
+      REDIS_TEST_CONNECTION.hset("authentications", "FIRST_CONN_ID", event.pubkey)
+      REDIS_TEST_CONNECTION.hset("connections_authenticators", "FIRST_CONN_ID", event.sha256)
 
       subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |message|
+        current_connection_disconnected = true
         expect(message).to eq(["TERMINATE", "event with id #{event.sha256} was used for authentication twice"])
       end
+
+      expect(REDIS_TEST_CONNECTION.hget("authentications", "FIRST_CONN_ID")).to be_nil
+      expect(REDIS_TEST_CONNECTION.hget("connections_authenticators", "CONN_ID")).to be_nil
+      expect(current_connection_disconnected).to be_truthy
+      expect(previous_connection_disconnected).to be_truthy
     end
   end
 

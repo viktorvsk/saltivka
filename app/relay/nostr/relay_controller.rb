@@ -20,7 +20,11 @@ module Nostr
 
       return block.call notice!("rate-limited: take it easy") if rate_limited && exceeds_window_quota?
 
-      redis.zadd("requests:#{remote_ip}", ts, ts)
+      redis.multi do |t|
+        t.zadd("requests:#{remote_ip}", ts, ts)
+        t.hincrby("requests", connection_id, 1)
+        t.hincrby("traffic", connection_id, event_data.bytesize)
+      end
 
       if event_data.bytesize > RELAY_CONFIG.max_content_length
         return block.call notice!("error: max allowed content length is #{RELAY_CONFIG.max_content_length} bytes")
@@ -74,6 +78,7 @@ module Nostr
         redis.hdel("requests", connection_id)
         redis.hdel("traffic", connection_id)
         redis.hdel("connections_ips", connection_id)
+        redis.hdel("connections_starts", connection_id)
         redis.call("SET", "events22242:#{event22242_id}", "", "KEEPTTL")
       end
     end

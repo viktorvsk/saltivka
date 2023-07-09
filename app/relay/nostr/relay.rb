@@ -32,6 +32,7 @@ Nostr::Relay = lambda do |env|
 
       redis_subscriber.sadd("connections", connection_id)
       redis_subscriber.hset("connections_ips", connection_id, controller.remote_ip)
+      redis_subscriber.hset("connections_starts", connection_id, Time.now.to_i.to_s)
 
       redis_thread = Thread.new do
         redis_subscriber.psubscribe("events:#{connection_id}:*") do |on|

@@ -1,6 +1,6 @@
 class ConnectionsViewer
   def call
-    connections, connections_authenticators, authentications, authorizations, requests, traffic, ips = Sidekiq.redis do |c|
+    connections, connections_authenticators, authentications, authorizations, requests, traffic, ips, starts = Sidekiq.redis do |c|
       c.multi do |t|
         t.smembers("connections")
         t.hgetall("connections_authenticators")
@@ -9,6 +9,7 @@ class ConnectionsViewer
         t.hgetall("requests")
         t.hgetall("traffic")
         t.hgetall("connections_ips")
+        t.hgetall("connections_starts")
       end
     end
     subscriptions = Sidekiq.redis do |c|
@@ -26,7 +27,8 @@ class ConnectionsViewer
         subscriptions: subscriptions[index],
         requests: requests[cid],
         traffic: traffic[cid],
-        ip: ips[cid]
+        ip: ips[cid],
+        starts: starts[cid]
       }
     end
   end

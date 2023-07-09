@@ -26,8 +26,8 @@ module Nostr
         t.hincrby("traffic", connection_id, event_data.bytesize)
       end
 
-      if event_data.bytesize > RELAY_CONFIG.max_content_length
-        return block.call notice!("error: max allowed content length is #{RELAY_CONFIG.max_content_length} bytes")
+      if event_data.bytesize > RELAY_CONFIG.max_message_length
+        return block.call notice!("error: max allowed content length is #{RELAY_CONFIG.max_message_length} bytes")
       end
 
       nostr_event = JSON.parse(event_data)

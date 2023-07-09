@@ -9,6 +9,7 @@ module Nostr
       validate :sig_must_match_payload, if: proc { |_event| RELAY_CONFIG.validate_sig_on_server }
       validates :sig, presence: true, length: {is: 128}
       validates :sha256, presence: true, length: {is: 64}
+      validates :content, length: {maximum: RELAY_CONFIG.max_content_length}
 
       belongs_to :author, autosave: true
 

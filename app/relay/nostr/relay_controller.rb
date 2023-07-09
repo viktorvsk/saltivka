@@ -23,7 +23,7 @@ module Nostr
       redis.multi do |t|
         t.zadd("requests:#{remote_ip}", ts, ts)
         t.hincrby("requests", connection_id, 1)
-        t.hincrby("traffic", connection_id, event_data.bytesize)
+        t.hincrby("incoming_traffic", connection_id, event_data.bytesize)
       end
 
       if event_data.bytesize > RELAY_CONFIG.max_message_length
@@ -76,7 +76,7 @@ module Nostr
         redis.hdel("authentications", connection_id) # TODO: check why it wasn't here before
         redis.hdel("authorizations", connection_id)
         redis.hdel("requests", connection_id)
-        redis.hdel("traffic", connection_id)
+        redis.hdel("incoming_traffic", connection_id)
         redis.hdel("connections_ips", connection_id)
         redis.hdel("connections_starts", connection_id)
         redis.call("SET", "events22242:#{event22242_id}", "", "KEEPTTL")

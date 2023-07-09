@@ -9,7 +9,7 @@
     <% end %>
   </td>
   <td><%= connection[:requests] %></td>
-  <td><%= connection[:traffic] %></td>
+  <td><%= connection[:incoming_traffic] %></td>
   <td><%= connection[:ip] %></td>
   <td><%= time_ago_in_words Time.at(connection[:starts].to_i) %></td>
   <td><%= button_to "Close", admin_connection_path(connection[:id]), method: :delete, class: 'button is-danger is-small' %></td>

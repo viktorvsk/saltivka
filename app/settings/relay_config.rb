@@ -3,6 +3,14 @@ class RelayConfig
     ENV.fetch("HEARBEAT_INTERVAL", 1200).to_i
   end
 
+  def rate_limiting_sliding_window
+    ENV.fetch("RATE_LIMITING_SLIDING_WINDOW", 60).to_i
+  end
+
+  def rate_limiting_max_requests
+    ENV.fetch("RATE_LIMITING_MAX_REQUESTS", 300).to_i
+  end
+
   def default_format
     # TODO: another option is JSON [WIP]
     ENV.fetch("DEFAULT_ERRORS_FORMAT", "TEXT")

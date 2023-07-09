@@ -1,18 +1,27 @@
 <h1 class="title is-1">Configuration</h1>
 
 <h2 class="title is-2">Dynamic</h1>
-<div class="box mb-6">
 
+<div class="box mb-4">
   <div class="field">
     <%= label_tag "max_allowed_connections", "Max allowed connections", class: 'label' %>
-    <div class="control"><%= text_field_tag "max_allowed_connections", @max_allowed_connections, class: "input", type: :number, data: { action: "input->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %></div>
+    <div class="control"><%= text_field_tag "max_allowed_connections", @max_allowed_connections, class: "input", type: :number, data: { action: "change->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %></div>
   </div>
+</div>
 
+<div class="box mb-4 is-flex is-justify-content-space-between">
+  <b class="toggle-label">Maintenance mode</b>
   <label class="toggle">
-    <%= check_box_tag "maintenance", nil, ActiveRecord::Type::Boolean.new.cast(@maintenance), class: "toggle-checkbox", data: { action: "input->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %>
+    <%= check_box_tag "maintenance", nil, ActiveRecord::Type::Boolean.new.cast(@maintenance), class: "toggle-checkbox", data: { action: "change->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %>
     <div class="toggle-switch"></div>
-    <span class="toggle-label">Maintenance mode</span>
   </label>
+</div>
+
+<div class="box mb-4">
+  <div class="field">
+    <%= label_tag "unlimited_ips", "Unlimited IP addresses", class: 'label' %>
+    <div class="control"><%= text_field_tag "unlimited_ips", @unlimited_ips.join(" "), class: "input", data: { action: "change->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %></div>
+  </div>
 </div>
 
 <h2 class="title is-2">Static</h1>

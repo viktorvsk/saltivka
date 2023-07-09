@@ -68,5 +68,24 @@ class MemStore
     def connected?(cid:)
       Sidekiq.redis { |c| ActiveRecord::Type::Boolean.new.cast(c.sismember("connections", cid)) }
     end
+
+    def update_config(cname, cvalue)
+      Sidekiq.redis do |c|
+        case cname
+        when "unlimited_ips"
+          members = cvalue.to_s.split(" ")
+          if members.present?
+            c.multi do |t|
+              t.del("unlimited_ips")
+              t.sadd("unlimited_ips", members)
+            end
+          else
+            c.del("unlimited_ips")
+          end
+        else
+          c.set(cname, cvalue.to_s)
+        end
+      end
+    end
   end
 end

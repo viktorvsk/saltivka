@@ -3,27 +3,35 @@ module Nostr
     include Nostr::Nips::Nip1
     include Nostr::Nips::Nip45
 
-    attr_reader :redis, :connection_id
+    attr_reader :redis, :connection_id, :remote_ip, :rate_limited
 
     COMMANDS = %w[REQ CLOSE EVENT COUNT]
 
-    def initialize(connection_id = nil)
+    def initialize(remote_ip: nil, rate_limited: true, connection_id: nil)
       @connection_id = connection_id || SecureRandom.hex
+      @remote_ip = remote_ip || "127.0.0.1"
+      @rate_limited = rate_limited
     end
 
     def perform(event_data:, redis:, &block)
       Rails.logger.info(event_data)
       @redis = redis
-      # TODO: Rate limit
-      redis.hincrby("requests", connection_id, 1)
-      redis.hincrby("traffic", connection_id, event_data.bytesize)
+      ts = Time.now.to_i
+
+      return block.call notice!("rate-limited: take it easy") if rate_limited && exceeds_window_quota?
+
+      redis.zadd("requests:#{remote_ip}", ts, ts)
+
       if event_data.bytesize > RELAY_CONFIG.max_content_length
         return block.call notice!("error: max allowed content length is #{RELAY_CONFIG.max_content_length} bytes")
       end
+
       nostr_event = JSON.parse(event_data)
+
       unless nostr_event.is_a?(Array)
         return block.call notice!("error: event must be an Array")
       end
+
       command = nostr_event.shift
 
       if command.present? && command.upcase.in?(COMMANDS)
@@ -71,6 +79,11 @@ module Nostr
     end
 
     private
+
+    def exceeds_window_quota?
+      requests_count_in_time_window = redis.zcount("requests:#{remote_ip}", RELAY_CONFIG.rate_limiting_sliding_window.seconds.ago.to_i, "+inf").to_i
+      requests_count_in_time_window > RELAY_CONFIG.rate_limiting_max_requests
+    end
 
     def authorized?(command, nostr_event)
       return true if Nostr::Nips::Nip65.call(command, nostr_event)

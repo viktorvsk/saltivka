@@ -47,7 +47,9 @@ RSpec.describe Nostr::RelayController do
       REDIS_TEST_CONNECTION.hset("subscriptions", "#{cid}:SUBID", "{}")
       REDIS_TEST_CONNECTION.call("SET", "events22242:event22242_id", cid, "EX", "100")
 
-      controller = Nostr::RelayController.new(cid)
+      controller = Nostr::RelayController.new
+
+      allow(controller).to receive(:connection_id).and_return(cid)
 
       controller.terminate(event: cid, redis: REDIS_TEST_CONNECTION)
 

@@ -1,6 +1,4 @@
-# Trade-offs
-
-Known major limitations:
+# Known major limitations
 
 * There is no way at the moment to drop jobs in progress when connection is closed during processing. For instance, if a client initiated a heavy `COUNT` event and disconnected immediately there is no way to stop execution of the job and resources will just be wasted.
 * Every connection gets its own `connection_id` and there is no way now to `reconnect` (however, there is no visible use-case for it too except for some lost responses)

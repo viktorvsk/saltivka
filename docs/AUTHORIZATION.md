@@ -12,10 +12,11 @@ Keep in mind, in this scenario connection will be blocked (using redis `BLPOP` c
 
 If `FORCED_MIN_AUTH_LEVEL` is zero, it means anonymous clients are able to establish connections.
 In this case WebsocketServer will try to find and process a NIP-43 Fast Auth kind-22242 event.
-3 options are possible in this case
-1. Auth event is found and invalid — connection is closed with the reason of specific error.
-2. Auth event is found and valid — authorization request is created, connection is **not** blocked and becomes established. Once the authorization request is processed, relevant `auth_level` will be assigned to the connection. Meanwhile client is able to perform requests using `auth_level=0`
-3. Auth event is not found — then fallback to NIP-42 happens and `["AUTH", "<CONNECTION_ID>"]` event is sent to the client. In this case `challenge` is the connection identifier. According to NIP-42 relay may send this event at any given point in time. We only send it immediately after a connection is established.
+3 options are possible in this case:
+
+1. **Auth event is found and invalid** — connection is closed with the reason of specific error.
+2. **Auth event is found and valid** — authorization request is created, connection is **not** blocked and becomes established. Once the authorization request is processed, relevant `auth_level` will be assigned to the connection. Meanwhile client is able to perform requests using `auth_level=0`
+3. **Auth event is not found** — then fallback to NIP-42 happens and `["AUTH", "<CONNECTION_ID>"]` event is sent to the client. In this case `challenge` is the connection identifier. According to NIP-42 relay may send this event at any given point in time. We only send it immediately after a connection has been established.
 
 As soon as connection is established, the client may send any commands.
 However, each command is the subject to individual `auth_level` configuration.
@@ -50,6 +51,7 @@ It is also planned to dedicate more attention to this model in future developmen
 This is going to be handled by introducing additional business logic on level 3 while level 2 could be treated like some kind of a "cold user base".
 Meaning, if a user decided to provide you with their email, payment is already done using some personal information.
 And main features are planned for level 3. There will be different strategies on how relay could be configured to get payments, like:
+
 * Periodic subscription
 * Pay per event
 * Pay per traffic
@@ -62,7 +64,8 @@ Of course, it will take time to be implemented.
 
 # Relevant configuration
 
-Next configurations are relevant in scope of authentication and authorization (see [here](/docs/CONFIGURATION.md) for details)
+Next configurations are relevant in scope of authentication and authorization (see [here](/docs/CONFIGURATION.md) for details):
+
 * `AUTHORIZATION_TIMEOUT`
 * `FORCED_MIN_AUTH_LEVEL`
 * `REQUIRED_AUTH_LEVEL_FOR_REQ`

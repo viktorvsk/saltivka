@@ -49,6 +49,25 @@ Redis is utilized heavily here. 2 main use-cases are:
 
 But it is also responsible to handle various data structures i.e. expiration keys and rate limiting sorted sets etc.
 
+###### DATA STRUCTURES
+
+| Data Structure | Type | Description |
+| --- | --- | --- |
+| `client_reqs:<CONNECTION_ID>` | SET | subscription_id list per connection |
+| `connections` | SET | list of active connections |
+| `connections_authenticators` | HASH | event kind-22242 id that validated connection |
+| `subscriptions` | HASH | contains filters per each `pubsub_id` (which consists of `<CONNECTION_ID>:<SUBSCRIPTION_ID>`) |
+| `authentications` | HASH |pubkey per connection |
+| `authorizations` | HASH | `auth_level` per connection |
+| `requests` | HASH | requests count per connection |
+| `traffic` | HASH | incoming traffic per connection |
+| `connections_ips` | HASH |IP address per connection |
+| `connections_starts` | HASH | start time per connection |
+| `events22242:<EVENT_22242_ID>` | EXPIRABLE STRING | indicates that the event was already used for authentications, expires when event becomes invalid |
+| `maintenance` | STRING | prevents new connections, doesn't break existing |
+| `unlimited_ips` | SET | list of IP addresses that won't be a subject to rate limiting |
+| `max_allowed_connections` | STRING | NULL or 0 means unlimited  |
+
 ###### NOTES
 
 Choosing what actual Redis server to use and how to configure it consider the following.

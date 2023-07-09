@@ -34,7 +34,7 @@ The ultimate goal is everyone using this relay for the next use-cases:
 * **Non-technical but curious people** wants to setup a private relay to share it with friends and family
 * **Small-to-medium businesses** use custom configuration of the relay to provide paid services in their specific niche (i.e. invite-driven userbase gets IT-related curated content into their feed)
 
-This however doesn't mean it *shouldn't* be possible to serve millions of users per day with this relay. It just means that with Ruby and concurrency one will have to throw more money into hardware. So performance optimizations will usually have low priority unless it prevents some interesting use-cases. 
+This however doesn't mean it *shouldn't* be possible to serve millions of users per day with this relay. It just means that with Ruby and concurrency one will have to spend more money into hardware. So performance optimizations will usually have low priority unless it prevents some interesting use-cases. 
 
 # Getting started
 Here you won't find any instructions on how to deploy production-ready services for millions of active connections because there are infinite amount of ways of how to achieve it and which trade-offs to choose.
@@ -76,7 +76,7 @@ It's a typical Ruby on Rails application so all defaults mostly apply.
 # Further reading
 * [Configuration options](/docs/CONFIGURATION.md)
 * [Architecture details](/docs/ARCHITECTURE.md)
-* [Trade-offs](/docs/TRADEOFFS.md)
+* [Limitations](/docs/LIMITATIONS.md)
 * [Deployment hints](/docs/DEPLOYMENT.md)
 * [Roadmap](/docs/ROADMAP.md)
 * [Contributing](/docs/CONTRIBUTING.md)

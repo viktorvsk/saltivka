@@ -3,13 +3,16 @@
 First set of tasks in the Roadmap is grouped by major goals this relay is trying to achieve with the highest priority.
 
 ## High Configurability
+
 - [ ] Flexible retention policy
 - [ ] Configuration hot reload using UI
-- 
+
 ## Clean Errors Descriptions
+
 This section probably mostly requires NIPs to handle errors in a universal ways across different clients and servers.
 
 ## Comprehensive Tests and Documentation Coverage
+
 - [ ] Introduce mutation testing
 - [ ] Implement e2e tests
 - [ ] Implement performance testing suite
@@ -17,7 +20,9 @@ This section probably mostly requires NIPs to handle errors in a universal ways 
 - [ ] Prepare resources for different kinds of deployments (articles, videos etc)
 - [ ] Document Redis structures required for connections
 - [ ] Create [C4 models](https://c4model.com) of the system
+
 ## Feature Rich
+
 - [ ] https://github.com/nostr-protocol/nips/blob/master/50.md
 - [ ] https://github.com/nostr-protocol/nips/blob/master/98.md
 - [ ] https://github.com/nostr-protocol/nips/pull/377/files
@@ -34,12 +39,17 @@ This section probably mostly requires NIPs to handle errors in a universal ways 
 - [ ] Spam protection
 
 ## Great Accessibility
+
 - [ ] HTTP API to execute Nostr events
 - [ ] GraphQL to execute Nostr events
 
 Next set of tasks is more technical and non-functional
 
 ## Performance
+
+- [ ] Use LUA scripting for heavy redis computations
+
 ## Optimized Storage
+
   * `kind` could probably be a 2 byte integer given that unlikely there will be more than 65k different event kinds in the nearest future
   * `created_at` could be a 4 byte integer

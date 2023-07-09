@@ -1,4 +1,7 @@
 # Saltivka
+
+![Saltivka](/public/assets/saltivka.jpeg)
+
 This is an implementation of the [Nostr protocol](https://github.com/nostr-protocol/nostr) server (Nostr Relay) in Ruby. It implements the following list of specifications (Nostr Implementation Possibilities or NIPs):
 
 * [NIP-01: Basic protocol flow description](https://github.com/nostr-protocol/nips/blob/master/01.md)

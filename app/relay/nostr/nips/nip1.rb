@@ -20,11 +20,11 @@ module Nostr
           # NIP-11
           block.call notice!("error: Reached maximum of #{RELAY_CONFIG.max_subscriptions} subscriptions")
         else
-          redis.multi do
-            redis.sadd("client_reqs:#{connection_id}", subscription_id)
-            redis.hset("subscriptions", pubsub_id, filters_json_string)
+          redis.multi do |t|
+            t.sadd("client_reqs:#{connection_id}", subscription_id)
+            t.hset("subscriptions", pubsub_id, filters_json_string)
+            t.lpush("queue:nostr", {class: "NewSubscription", args: [connection_id, subscription_id, filters_json_string]}.to_json)
           end
-          redis.lpush("queue:nostr", {class: "NewSubscription", args: [connection_id, subscription_id, filters_json_string]}.to_json)
         end
       end
 
@@ -32,9 +32,9 @@ module Nostr
         subscription_id = nostr_event.first
         pubsub_id = "#{connection_id}:#{subscription_id}"
 
-        redis.multi do
-          redis.del("client_reqs:#{connection_id}")
-          redis.hdel("subscriptions", pubsub_id)
+        redis.multi do |t|
+          t.del("client_reqs:#{connection_id}")
+          t.hdel("subscriptions", pubsub_id)
         end
       end
 

@@ -2,7 +2,7 @@
   <div class="navbar-brand">
     <%= link_to "Saltivka", root_path, class: "navbar-item is-size-4" %>
 
-    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample" data-controller="navbar" data-action="click->navbar#toggleBurger">
       <span aria-hidden="true"></span>
       <span aria-hidden="true"></span>
       <span aria-hidden="true"></span>
@@ -11,14 +11,11 @@
 
   <div id="navbarBasicExample" class="navbar-menu">
     <div class="navbar-start">
-
       <% if current_user&.admin? %>
         <%= link_to "Connections", admin_connections_path, class: 'navbar-item' %>
         <%= link_to "Trusted Authors", admin_trusted_authors_path, class: 'navbar-item' %>
         <%= link_to "Configuration", admin_configuration_path, class: 'navbar-item' %>
       <% end %>
-
-
     </div>
 
     <div class="navbar-end">

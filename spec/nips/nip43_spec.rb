@@ -164,16 +164,16 @@ RSpec.describe("NIP-43") do
       previous_connection_disconnected = false
 
       Thread.new do
-        Redis.new.psubscribe("events:FIRST_CONN_ID:*") do |on|
-          on.pmessage do |_pattern, channel, message|
-            command = channel.split(":").last
-            expect(command).to eq("terminate")
+        Redis.new.subscribe("events:FIRST_CONN_ID:_:terminate") do |on|
+          on.message do |channel, message|
             expect(message).to eq([3403, "restricted: event with id #{event.sha256} was used for authentication twice"].to_json)
             previous_connection_disconnected = true
             Thread.current.exit
           end
         end
       end
+
+      sleep(0.1)
 
       # simulate connection is active
       REDIS_TEST_CONNECTION.set("events22242:#{event.sha256}", "FIRST_CONN_ID")

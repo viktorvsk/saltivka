@@ -77,6 +77,7 @@ module Nostr
         redis.hdel("authorizations", connection_id)
         redis.hdel("requests", connection_id)
         redis.hdel("incoming_traffic", connection_id)
+        redis.hdel("outgoing_traffic", connection_id)
         redis.hdel("connections_ips", connection_id)
         redis.hdel("connections_starts", connection_id)
         redis.call("SET", "events22242:#{event22242_id}", "", "KEEPTTL")

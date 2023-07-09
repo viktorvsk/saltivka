@@ -61,6 +61,7 @@ But it is also responsible to handle various data structures i.e. expiration key
 | `authorizations` | HASH | `auth_level` per connection |
 | `requests` | HASH | requests count per connection |
 | `incoming_traffic` | HASH | incoming traffic per connection |
+| `outgoing_traffic` | HASH | outgoing traffic per connection |
 | `connections_ips` | HASH |IP address per connection |
 | `connections_starts` | HASH | start time per connection |
 | `events22242:<EVENT_22242_ID>` | EXPIRABLE STRING | indicates that the event was already used for authentications, expires when event becomes invalid |

@@ -6,7 +6,7 @@ Nostr::Relay = lambda do |env|
     redis_subscriber = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
     rate_limited = redis_subscriber.sismember("unlimited_ips", remote_ip)
     controller = Nostr::RelayController.new(remote_ip: remote_ip, rate_limited: rate_limited)
-    relay_response = Nostr::RelayResponse.new(ws: ws)
+    relay_response = Nostr::RelayResponse.new
     connection_id = controller.connection_id
     redis_thread = nil
     hearbeat_thread = nil
@@ -26,6 +26,7 @@ Nostr::Relay = lambda do |env|
         if event.first === "TERMINATE"
           ws.close(3403, "restricted: #{event.last}")
         else
+          redis_subscriber.hincrby("outgoing_traffic", connection_id, event.to_json.bytesize)
           ws.send(event.to_json)
         end
       end
@@ -37,7 +38,16 @@ Nostr::Relay = lambda do |env|
       redis_thread = Thread.new do
         redis_subscriber.psubscribe("events:#{connection_id}:*") do |on|
           on.pmessage do |pattern, channel, event|
-            relay_response.call(channel, event)
+            _namespace, _connection_id, subscription_id, command = channel.split(":")
+
+            if command.upcase === "TERMINATE"
+              code, reason = JSON.parse(event)
+              ws.close(code, reason)
+              Thread.current.exit
+            else
+              Sidekiq.redis { |redis_connection| redis_connection.hincrby("outgoing_traffic", connection_id, event.to_json.bytesize) }
+              ws.send(relay_response.call(command.upcase, subscription_id, event))
+            end
           end
         end
       end
@@ -54,6 +64,7 @@ Nostr::Relay = lambda do |env|
       last_active_at = Time.now.to_i
       Sidekiq.redis do |redis_connection|
         controller.perform(event_data: event.data, redis: redis_connection) do |notice|
+          redis_connection.hincrby("outgoing_traffic", connection_id, notice.bytesize)
           ws.send(notice)
         end
       end

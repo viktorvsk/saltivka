@@ -15,7 +15,8 @@ module Nostr
       Rails.logger.info(event_data)
       @redis = redis
       # TODO: Rate limit
-      # TODO: Record requests and traffic
+      redis.hincrby("requests", connection_id, 1)
+      redis.hincrby("traffic", connection_id, event_data.bytesize)
       if event_data.bytesize > RELAY_CONFIG.max_content_length
         return block.call notice!("error: max allowed content length is #{RELAY_CONFIG.max_content_length} bytes")
       end
@@ -62,6 +63,9 @@ module Nostr
         redis.hdel("subscriptions", pubsub_ids) if pubsub_ids.present?
         redis.hdel("authentications", connection_id) # TODO: check why it wasn't here before
         redis.hdel("authorizations", connection_id)
+        redis.hdel("requests", connection_id)
+        redis.hdel("traffic", connection_id)
+        redis.hdel("connections_ips", connection_id)
         redis.call("SET", "events22242:#{event22242_id}", "", "KEEPTTL")
       end
     end

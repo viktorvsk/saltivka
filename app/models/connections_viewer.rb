@@ -1,11 +1,14 @@
 class ConnectionsViewer
   def call
-    connections, connections_authenticators, authentications, authorizations = Sidekiq.redis do |c|
+    connections, connections_authenticators, authentications, authorizations, requests, traffic, ips = Sidekiq.redis do |c|
       c.multi do |t|
         t.smembers("connections")
         t.hgetall("connections_authenticators")
         t.hgetall("authentications")
         t.hgetall("authorizations")
+        t.hgetall("requests")
+        t.hgetall("traffic")
+        t.hgetall("connections_ips")
       end
     end
     subscriptions = Sidekiq.redis do |c|
@@ -20,7 +23,10 @@ class ConnectionsViewer
         auth_level: authorizations[cid].to_i,
         pubkey: authentications[cid],
         auth_event_22242: connections_authenticators[cid],
-        subscriptions: subscriptions[index]
+        subscriptions: subscriptions[index],
+        requests: requests[cid],
+        traffic: traffic[cid],
+        ip: ips[cid]
       }
     end
   end

@@ -102,7 +102,7 @@ class RelayConfig
   end
 
   def software
-    "https://source.saltivka.org"
+    "https://github.com/viktorvsk/saltivka"
   end
 
   def version

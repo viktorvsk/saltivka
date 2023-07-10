@@ -69,6 +69,30 @@ But it is also responsible to handle various data structures i.e. expiration key
 | `unlimited_ips` | SET | list of IP addresses that won't be a subject to rate limiting |
 | `max_allowed_connections` | STRING | NULL or 0 means unlimited  |
 
+###### Pubsub Messages
+
+Main communication between WebsocketServer and other components (ApplicationServer, Sidekiq worker) is going through Redis `PUBSUB`.
+It is possible to subscriber to those messages if necessary.
+For example, in order to build some extension/plugin or integration.
+Currently all the messages are publishied to channels of the following pattern:
+```
+events:<CONNECTION_ID>:<SUBSCRIPTION_ID>:<COMMAND>"
+```
+`SUBSCRIPTION_ID` may equal to `_` if it is not used in specific command.
+
+See the list of commands with their Nostr equivalents and description:
+
+| Command | Nostr Equivalent | Example Payload |
+| ------- | ---------------- | ------- | ----------- |
+| FOUND_END | EOSE |— |
+| FOUND_EVENT | EVENT| `"{\"id\": \"...\", \"sig\": \"...\", ...}"` |
+| OK | OK |`"[\"OK\", \"<MESSAGE>\"]"` |
+| COUNT | COUNT | "5" |
+| NOTICE | NOTICE | `"MESSAGE"` |
+| TERMINATE | — | `"[4000, "<REASON>"]"` |
+
+Keep in mind, there is no message for `AUTH` because it is handled directly in WebsocketServer and not through Redis.
+
 ###### NOTES
 
 Choosing what actual Redis server to use and how to configure it consider the following.

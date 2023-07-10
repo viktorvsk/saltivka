@@ -37,7 +37,7 @@ Planned `auth_levels` (or roles)
 | 0     | Anonymous | connection is not authenticated by any pubkey | |
 | 1     | Stranger  | connection is only authenticated by pubkey | |
 | 2     | Guest     | connection is authenticated by pubkey which is registered on the server using email or other ways | Not implemented yet |
-| 3     | Friend    | connections is authenticated by pubkey that is registered and has active (paid) subscription | Not implemented yet |
+| 3     | Friend    | connections is authenticated by pubkey that has active (paid) subscription (may be anonymous) | Not implemented yet |
 | 4     | Best Friend | connection is authenticated by pubkey which is added as a `TrustedPubkey` manually by an admin | |
 
 Keep in mind, this model doesn't have any block-list.

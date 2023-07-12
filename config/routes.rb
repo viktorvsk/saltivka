@@ -3,6 +3,11 @@ Rails.application.routes.draw do
 
   root to: "homes#show"
 
+  get "/pay-to-relay", to: "invoices#new"
+  post "/payment-callback/:provider", to: "invoices#update"
+
+  resources :invoices, only: %i[create]
+
   resource :session, only: %i[new create destroy]
   resource :homes, only: %i[show]
 

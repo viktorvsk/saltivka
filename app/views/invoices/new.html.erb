@@ -1,0 +1,66 @@
+<h1 class="title">Subscription Management</h1>
+
+<div class="box">
+
+  <h2 class="title is-4">
+    Welcome to <%= RELAY_CONFIG.relay_name %>!
+  </h2>
+  <p class="mb-5">
+    We are offering extended features support for our active subscribers.
+    Here you can add more days to your subscription.
+    Simply provide your public key in <i>npub</i> or <i>hex</i> format, select the number of additional days you want, and pay the invoice
+    After that as soon as your client supports <a href="https://github.com/nostr-protocol/nips/blob/master/42.md">NIP-42</a> (or <a href="https://saltivka.org/custom_nips/NIP-43.md" target="_blank">NIP-43</a><sup>experimental</sup>) you will experience full power of our relay.
+    There are also features that are available on our portal (work in progress) outside of Nostr clients.
+    See our <%= link_to "policy", RELAY_CONFIG.posting_policy_url %> for more details on features.
+  </p>
+
+  <% if @invoice.errors.any? %>
+    <div class="notification is-danger">
+      <ul>
+        <% @invoice.errors.full_messages. each do |error| %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_for(@invoice, method: "POST", url: invoices_path, data: { controller: "invoice" }) do |f| %>
+    <div class="field">
+      <%= f.label :pubkey, class: "label" %>
+      <div class="control"><%= f.text_field :pubkey, class: "input", placeholder: "npub10elfcs4fr0l0r8af98jlmgdh9c8tcxjvz9qkw038js35mp4dma8qzvjptg", required: true, pattern: "^[0-9a-f]{64}$", data: { action: "change->invoice#convertPubkey" } %></div>
+      <small>npub or hex formats. npub will be automatically converted into hex</small>
+    </div>
+
+    <div class="field">
+      <%= f.label :period_days, class: "label" %>
+      <div class="field is-grouped">
+        <div class="control"><%= f.text_field :period_days, class: "input", placeholder: "Number of days to pay for", required: true, type: :number, min: 1, max: 90, data: { action: "input->invoice#recalculateDays", "price-per-day": RELAY_CONFIG.price_per_day } %></div>
+        <div class="field has-addons">
+          <div class="control"><%= f.text_field :amount_sats, class: "input", placeholder: "Price", required: true, type: :number, disabled: true %></div>
+          <p class="control">
+            <a class="button is-static">
+              sats
+            </a>
+          </p>
+        </div>
+      </div>
+      <small>Choose how many days you want to add to your subscription. Price per day is <b><%= RELAY_CONFIG.price_per_day %> sats</b>.</small>
+    </div>
+
+    <div class="field">
+      <%= f.label :provider, class: "label" %>
+      <% Invoice::PROVIDERS.each_with_index do |(pname, provider), index| %>
+        <label class="radio is-flex">
+          <%= f.radio_button :provider, pname, class: "radio is-align-self-center mr-2", checked: index.zero? %>
+          <%= image_tag("payment_providers/#{pname}") %>
+        </label>
+        <br>
+      <% end %>
+    </div>
+
+    <div class="buttons">
+      <%= f.submit "Create Invoice", class: "button is-success" %>
+    </div>
+  <% end %>
+
+</div>

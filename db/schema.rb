@@ -10,9 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_08_133001) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_11_083714) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "author_subscriptions", force: :cascade do |t|
+    t.bigint "author_id", null: false
+    t.datetime "expires_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_author_subscriptions_on_author_id", unique: true
+  end
 
   create_table "authors", force: :cascade do |t|
     t.string "pubkey", limit: 64, null: false
@@ -42,6 +50,26 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_08_133001) do
     t.index ["sig"], name: "index_events_on_sig", unique: true
   end
 
+  create_table "invoices", force: :cascade do |t|
+    t.bigint "author_id", null: false
+    t.integer "amount_sats", null: false
+    t.integer "period_days", null: false
+    t.integer "paid_days", default: 0, null: false
+    t.string "provider", null: false
+    t.string "status", default: "pending", null: false
+    t.string "external_id"
+    t.string "order_id", null: false
+    t.jsonb "request", default: {}
+    t.jsonb "response", default: {}
+    t.jsonb "webhooks", default: []
+    t.datetime "paid_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_invoices_on_author_id"
+    t.index ["external_id", "provider"], name: "index_invoices_on_external_id_and_provider", unique: true
+    t.index ["order_id"], name: "index_invoices_on_order_id", unique: true
+  end
+
   create_table "searchable_tags", id: false, force: :cascade do |t|
     t.bigint "event_id", null: false
     t.string "name", null: false
@@ -67,8 +95,10 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_08_133001) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "author_subscriptions", "authors"
   add_foreign_key "delete_events", "authors"
   add_foreign_key "events", "authors"
+  add_foreign_key "invoices", "authors"
   add_foreign_key "searchable_tags", "events"
   add_foreign_key "trusted_authors", "authors"
 end

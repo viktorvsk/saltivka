@@ -1,4 +1,24 @@
 class RelayConfig
+  def default_invoice_amount
+    ENV.fetch("DEFAULT_INVOICE_AMOUNT", 6000).to_i
+  end
+
+  def default_invoice_period
+    ENV.fetch("DEFAULT_INVOICE_PERIOD", 30).to_i
+  end
+
+  def price_per_day
+    ENV.fetch("PRICE_PER_DAY", 200).to_i
+  end
+
+  def provider_api_key_open_node
+    ENV["PROVIDER_API_KEY_OPEN_NODE"]
+  end
+
+  def invoice_ttl
+    ENV.fetch("INVOICE_TTL", 1200).to_i
+  end
+
   def heartbeat_interval
     ENV.fetch("HEARBEAT_INTERVAL", 1200).to_i
   end

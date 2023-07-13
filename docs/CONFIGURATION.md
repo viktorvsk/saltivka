@@ -51,6 +51,16 @@ First let's discuss business logic settings.
 | ADMIN\_PASSWORD| password for this user |  | only works once |
 | TRUSTED\_PUBKEYS| list of pubkeys that will have highest `auth_level=4` |  | space delimited list, only works once |
 
+Here lets review configuration related to payments:
+
+| Variable | Description | Default value | Notes |
+| -----  | ----------- | ------------- | ------- |
+| DEFAULT\_INVOICE_AMOUNT | The value users see filled on the first page load | 6000 | sats |
+| DEFAULT\_INVOICE_PERIOD | The value users see filled on the first page load | 30 | days |
+| PRICE\_PER_DAY | Subscription daily price | 200 | sats |
+| PROVIDER\_API_KEY\_OPEN\_NODE | Integration secret key | | |
+| INVOICE_TTL | How much time users have to pay the invoice | 1200 | seconds |
+
 
 Now let's briefly review general app settings:
 

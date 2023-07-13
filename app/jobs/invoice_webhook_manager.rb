@@ -3,7 +3,7 @@ class InvoiceWebhookManager
   sidekiq_options queue: "payment_webhooks"
 
   def perform(provider_name, webhook_data_json)
-    webhook_data = JSON.parse(webhook_data)
+    webhook_data = JSON.parse(webhook_data_json)
 
     provider = Invoice::PROVIDERS[provider_name.to_sym]
     return Sentry.capture_message("[InvoiceWebhook][InvalidProvider] provider=#{provider_name} webhook=#{webhook_data_json}") unless provider

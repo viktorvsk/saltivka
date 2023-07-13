@@ -52,7 +52,7 @@
       <% Invoice::PROVIDERS.each_with_index do |(pname, provider), index| %>
         <label class="radio is-flex">
           <%= f.radio_button :provider, pname, class: "radio is-align-self-center mr-2", checked: index.zero? %>
-          <%= image_tag("payment_providers/#{pname}") %>
+          <%= image_tag("payment_providers/#{pname}.png") %>
         </label>
         <br>
       <% end %>

@@ -1,0 +1,44 @@
+<div class="content">
+  <h1>Subscriptions</h1>
+  <% if @author_subscriptions.present? %>
+    <div class="table-container">
+      <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+        <thead>
+          <tr>
+            <th>Pubkey</th>
+            <th>Expires in</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%= render @author_subscriptions %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <%= form_for :author_subscription, url: admin_author_subscriptions_path, html: { class: 'box mt-6 mb-6' } do |f| %>
+    <div class="field">
+      <%= f.label :pubkey, class: 'label' %>
+      <div class="control">
+        <%= f.text_field :pubkey, class: 'input', placeholder: 'a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95', pattern: /^[0-9a-f]{64}$/, required: true %>
+      </div>
+    </div>
+
+    <div class="field">
+      <%= f.label :period_days, class: 'label' %>
+      <div class="control">
+        <%= f.text_field :period_days, class: 'input', placeholder: '30', type: :number, required: true %>
+      </div>
+      <small>Negative numbers substract days left</small>
+    </div>
+
+    <div class="field">
+      <div class="control">
+        <%= f.submit 'Update Subscription', class: 'button is-primary' %>
+      </div>
+
+    </div>
+  <% end %>
+
+</div>

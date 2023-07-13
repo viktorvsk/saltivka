@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   namespace :admin do
     resources :trusted_authors, only: %i[index create destroy]
     resources :connections, only: %i[index destroy]
+    resources :author_subscriptions, only: %i[index show create destroy]
     resource :configuration, only: %i[show update]
     root to: "connections#index"
   end

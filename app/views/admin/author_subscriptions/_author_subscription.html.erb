@@ -1,0 +1,5 @@
+<tr>
+  <td><%= author_subscription.author.pubkey %></td>
+  <td><%= (author_subscription.expires_at.present? && author_subscription.expires_at.future?) ? distance_of_time_in_words(Time.current, author_subscription.expires_at) : "expired" %></td>
+  <td><%= button_to "Delete", admin_author_subscription_path(author_subscription), method: :delete, class: 'button is-danger is-small' %></td>
+</tr>

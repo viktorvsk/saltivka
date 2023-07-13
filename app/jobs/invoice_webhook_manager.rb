@@ -28,7 +28,7 @@ class InvoiceWebhookManager
     if period_days === invoice.period_days.to_i
       subscription = AuthorSubscription.create_or_find_by(author_id: invoice.author_id)
       Invoice.transaction do
-        result = AuthorSubscription.where(id: subscription.id).update_all("expires_at = COALESCE(expires_at, NOW()) #{sign} '#{period_days} days'")
+        result = AuthorSubscription.where(id: subscription.id).update_all("expires_at = COALESCE(expires_at, NOW()) + '#{period_days} days'")
         raise(ActiveRecord::Rollback, "Failed to update AuthorSubscription#expires_at") unless result === 1
         raise(ActiveRecord::Rollback, "Faield to change Invoice#status to 'paid") unless invoice.update(status: "paid", paid_at: Time.current)
       end
@@ -38,12 +38,11 @@ class InvoiceWebhookManager
       #
       # return if period_days === 0
       #
-      # sign = period_days.positive? ? "+" : "-"
       # # TODO: it seems to be race-condition-free but and race conditions are
       # # extremely unlikely here but still makes sense to ensure
       # subscription = AuthorSubscription.create_or_find_by(author_id: invoice.author_id)
-      # AuthorSubscription.where(id: subscription.id).update_all("expires_at = COALESCE(expires_at, NOW()) #{sign} '#{period_days} days'")
-      # Invoice.where(id: invoice.id).update_all("status - 'paid', paid_days = COALESCE(paid_days, 0) #{sign} '#{period_days} days' ")
+      # AuthorSubscription.where(id: subscription.id).update_all("expires_at = COALESCE(expires_at, NOW()) + '#{period_days} days'")
+      # Invoice.where(id: invoice.id).update_all("status - 'paid', paid_days = COALESCE(paid_days, 0) + '#{period_days} days' ")
     end
   end
 end

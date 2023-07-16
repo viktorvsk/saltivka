@@ -13,11 +13,6 @@ class UsersController < ApplicationController
     end
   end
 
-  def destroy
-    logout
-    redirect_to(:root, notice: "Logged out!")
-  end
-
   def new
     @user = User.new
   end

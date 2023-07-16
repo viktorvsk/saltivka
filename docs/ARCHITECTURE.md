@@ -68,6 +68,7 @@ But it is also responsible to handle various data structures i.e. expiration key
 | `maintenance` | STRING | prevents new connections, doesn't break existing |
 | `unlimited_ips` | SET | list of IP addresses that won't be a subject to rate limiting |
 | `max_allowed_connections` | STRING | NULL or 0 means unlimited  |
+| `email_confirmations:<TOKEN>` | EXPIRABLE STRING | Used to confirm users emails on Sign Up |
 
 ###### Pubsub Messages
 

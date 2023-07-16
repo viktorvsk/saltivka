@@ -87,5 +87,32 @@ class MemStore
         end
       end
     end
+
+    # Those methods are used in order to validate event of kind 22242
+    # for authentication of user pubkeys on the web side
+    def connect(cid:)
+      Sidekiq.redis { |c| c.sadd("connections", cid) }
+    end
+
+    def disconnect(cid:)
+      Sidekiq.redis { |c| c.srem("connections", cid) }
+    end
+
+    def add_email_confirmation(email)
+      token = SecureRandom.hex
+      Sidekiq.redis do |connection|
+        connection.call("set", "email_confirmations:#{token}", email, "EX", User::EMAIL_CONFIRM_EXPIRATION_SECONDS.to_s)
+      end
+
+      token
+    end
+
+    def find_email_to_confirm(token)
+      Sidekiq.redis { |c| c.get("email_confirmations:#{token}") }
+    end
+
+    def confirm_email(token)
+      Sidekiq.redis { |c| c.del("email_confirmations:#{token}") }
+    end
   end
 end

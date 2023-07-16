@@ -7,7 +7,7 @@ class User < ApplicationRecord
   validates :password, confirmation: true, if: -> { new_record? || changes[:crypted_password] }
   validates :password_confirmation, presence: true, if: -> { new_record? || changes[:crypted_password] }
 
-  validates :email, uniqueness: true
+  validates :email, uniqueness: true, presence: true
 
   scope :active, -> { where.not(confirmed_at: nil) }
 

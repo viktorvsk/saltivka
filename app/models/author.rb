@@ -3,6 +3,7 @@ class Author < ApplicationRecord
 
   has_many :events, dependent: :destroy
   has_many :invoices, dependent: :destroy
-  has_many :author_subscriptions, dependent: :destroy
+  has_one :author_subscription, dependent: :destroy
   has_one :trusted_author, dependent: :destroy, autosave: true
+  has_one :user_pubkey, dependent: :destroy
 end

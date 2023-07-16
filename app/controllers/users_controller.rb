@@ -6,7 +6,7 @@ class UsersController < ApplicationController
 
     if @user.save
       auto_login(@user)
-      UserMailer.with(user: @user).deliver_later
+      UserMailer.with(user: @user).confirm_sign_up_email.deliver_later
       redirect_back_or_to(:root, notice: "Login successful")
     else
       render action: "new", status: :unprocessable_entity

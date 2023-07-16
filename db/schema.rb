@@ -54,7 +54,6 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_15_003017) do
     t.bigint "author_id", null: false
     t.integer "amount_sats", null: false
     t.integer "period_days", null: false
-    t.integer "paid_days", default: 0, null: false
     t.string "provider", null: false
     t.string "status", default: "pending", null: false
     t.string "external_id"

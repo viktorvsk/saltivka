@@ -1,0 +1,38 @@
+<% if @user.errors.any? %>
+  <div class="notification is-danger">
+    <ul>
+      <% @user.errors.full_messages. each do |error| %>
+        <li><%= error %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<%= form_for :user, url: user_path, html: { class: 'box mt-6 mb-6', data: { turbo: false } } do |f| %>
+  <div class="field">
+    <%= f.label :email, class: 'label' %>
+    <div class="control">
+      <%= f.email_field :email, class: 'input', placeholder: 'e.g. alex@example.com' %>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= f.label :password, class: 'label' %>
+    <div class="control">
+      <%= f.password_field :password, class: 'input', placeholder: '********' %>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= f.label :password_confirmation, class: 'label' %>
+    <div class="control">
+      <%= f.password_field :password_confirmation, class: 'input', placeholder: '********' %>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="control">
+      <%= f.submit 'Sign up', class: 'button is-primary' %>
+    </div>
+  </div>
+<% end %>

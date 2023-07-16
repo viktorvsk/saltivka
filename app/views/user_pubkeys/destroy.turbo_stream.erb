@@ -1,0 +1,6 @@
+<% if @user_pubkey.errors.none? %>
+  <%= turbo_stream.remove(@user_pubkey) %>
+  <%= turbo_stream.append("connected_pubkeys", %(<span id="connected_pubkeys_not_found">No connected pubkeys found</span>)) if current_user.user_pubkeys.empty? %>
+<% else %>
+  <%= turbo_stream.update("flash", partial: "layouts/flash") %>
+<% end %>

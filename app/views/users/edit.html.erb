@@ -1,0 +1,131 @@
+<div data-controller="profile">
+  <h1 class="title">Profile</h1>
+
+  <h2 class="title is-4">Edit</h2>
+  <div class="box">
+
+    <% if current_user.errors.any? %>
+      <div class="notification is-danger">
+        <ul>
+          <% current_user.errors.full_messages. each do |error| %>
+            <li><%= error %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_for(current_user) do |f| %>
+      <div class="field">
+        <div class="control">
+          <div class="label">
+            <%= f.label :email %>
+            <% if current_user.active? %>
+              <small>Confirmed</small>
+            <% else %>
+              <small class="has-text-danger">Not confirmed</small>
+            <% end %>
+          </div>
+          <%= f.text_field :email, disabled: true, class: "input" %>
+          <small><i>Email can't be changed</i></small>
+            
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="control">
+          <div class="label">
+            <%= f.label :password %>
+          </div>
+          <%= f.text_field :password, type: :password, class: "input", placeholder: "********" %>
+            
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="control">
+          <div class="label">
+            <%= f.label :password_confirmation %>
+          </div>
+          <%= f.text_field :password_confirmation, type: :password, placeholder: "********", class: "input" %>
+            
+        </div>
+      </div>
+
+      <div class="field">
+        <%= f.submit "Update Profile", class: "button is-info" %>
+      </div>
+    <% end %>
+  </div>
+
+
+  <H2 class="title is-4">Connected Pubkeys</H2>
+  <div class="box" >
+      <%= turbo_frame_tag "connected_pubkeys" do %>
+        <% if current_user.user_pubkeys.any? %>
+          <%= render current_user.user_pubkeys %>
+        <% else %>
+          <span id="connected_pubkeys_not_found">No connected pubkeys found</span>
+        <% end %>
+      <% end %>
+  </div>
+
+  <H2 class="title is-4">Connect New Pubkey</H2>
+  <div class="box">
+
+    <%= form_tag user_pubkeys_path, method: :post, data: { action: "turbo:submit-end->profile#resetForm", controller: "profile" } do %>
+
+      <div class="field">
+        <div class="label">
+          <%= label_tag :pubkey %>
+        </div>
+        <%= text_field_tag :pubkey, ""  , class: "input", required: true, placeholder: "bd3981deb0bf16fb8829d4b07f665fbed0c87697f9e370181ed7b74cff87885e" %>
+        <small>Nostr account (public key) you want to connect to your profile. hex or npub formats are accepted. npub will be automatically converted to hex.</small>
+      </div>
+
+      <div class="field">
+        <div class="label">
+          <%= label_tag :signature %>
+        </div>
+        <%= text_area_tag :signature, "", class: "textarea", rows: 3, required: true, placeholder: %({"kind":22242,"content":"","pubkey":"a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95","sig":"a25a15d6ff5276d68207a02dc39b025826946bf10d21f789f422a00603941d93710d86c37757ca6fc38bb7bef0cd2488c2d75d23e2e3a5b95aa5d3ed5fe12e78","created_at":1689420486,"id":"51533534554b386245c41d636d4976f2f0cc39af70cd987f0a473c0183f141ba","tags":[["challenge","email@example.com"],["relay","http://localhost:3000"]]}) %>
+        <small>We must ensure you actually own the Nostr account you want to connect. To do this, we ask you to sign a special Nostr event. It can be achieved in different ways: manually providing the event or using a NIP-07 signer. </small>
+      </div>
+
+      <%= link_to "Sign Event", "#", id: "nip-07-sign-event", class: "button", data: { action: "click->profile#signAuthEvent", relay: RELAY_CONFIG.self_url, challenge: current_user.email } %>
+      <%= button_tag "Connect Pubkey", class: "button is-primary", type: :submit %>
+    <% end %>
+
+
+  </div>
+
+  <H2 class="title is-4">Relay Connection Information</H2>
+  <div class="box mb-6">
+    <p>
+      There are different ways to connect to <%= RELAY_CONFIG.relay_name %> relay with your profile depending on your client of choice.
+      The best experience is will get clients with support of NIP-42 (and NIP-43<sup>experimental</sup>).
+      Using such a client all you have to do is to add the next URL to your relay list:
+      <pre class="mb-3 mt-3"><%= RELAY_CONFIG.self_url %></pre>
+      And you will instantly get authenticated with your profile using one of connected Nostr accounts.
+    </p>
+
+    <p>
+      For clients without support of those NIPs currently we suggest the following workaround. Using NIP-07 signer or manually generated kind-22242 event get temporary relay URL that will grant one-time session access to your account.
+      While this is by far not the best user experience, it might become helpful for different development workflows or other narrow use-cases when you are limited by your client.
+      Authentication greatly improves client's experience and features relays may offer.
+      Paste your signature here:
+      <%= text_area_tag :nip_43_signature, "", class: "textarea mt-3 mb-3", rows: 3, required: true, data: { action: "input->profile#updateNip43RelayUrl", relay: RELAY_CONFIG.self_url }, placeholder: %({"kind":22242,"content":"","pubkey":"a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95","sig":"a25a15d6ff5276d68207a02dc39b025826946bf10d21f789f422a00603941d93710d86c37757ca6fc38bb7bef0cd2488c2d75d23e2e3a5b95aa5d3ed5fe12e78","created_at":1689420486,"id":"51533534554b386245c41d636d4976f2f0cc39af70cd987f0a473c0183f141ba","tags":[["challenge","email@example.com"],["relay","http://localhost:3000"]]}) %>
+      Or use NIP-07 signer to do it automatically.
+      <div class="mt-3 mb-3">
+        <%= link_to "Sign NIP-43 Event", "#", id: "nip-07-sign-nip-43-event", class: "button", data: { action: "click->profile#signAuthEventForNip43", relay: RELAY_CONFIG.self_url } %>
+      </div>
+      <pre id="nip-43-url" class="mb-3 mt-3"><%= "#{RELAY_CONFIG.self_url}?authorization=" %></pre>
+      <p>
+        Keep in mind, URL will be valid for <i><%= RELAY_CONFIG.fast_auth_window_seconds %> seconds</i> after signign.
+        And you can <b>use this URL only once</b> for security reasons (described in NIP-43<sup>experimental</sup>)
+      </p>
+    </p>
+
+    
+
+  </div>
+
+</div>

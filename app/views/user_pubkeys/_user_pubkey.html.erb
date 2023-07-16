@@ -1,0 +1,6 @@
+<%= turbo_frame_tag user_pubkey do %>
+  <div class="is-flex is-justify-content-space-between is-align-items-center">
+    <pre><%= user_pubkey.author.pubkey %></pre>
+    <%= button_to "Disconnect", user_pubkey_path(user_pubkey), method: :delete, class: "button is-large is-danger is-align-self-flex-end", data: { turbo_confirm: "Are you sure you want to disconnect this Nostr account from your profile?" } %>
+  </div>
+<% end %>

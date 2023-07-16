@@ -1,0 +1,7 @@
+<% if @user_pubkey.errors.none? && @auth_event.errors.none? %>
+  <%= turbo_stream.remove("connected_pubkeys_not_found") %>
+  <%= turbo_stream.remove(@user_pubkey) %>
+  <%= turbo_stream.append("connected_pubkeys", partial: "user_pubkeys/user_pubkey", locals: { user_pubkey: @user_pubkey }) %>
+<% else %>
+  <%= turbo_stream.update("flash", partial: "layouts/flash") %>
+<% end %>

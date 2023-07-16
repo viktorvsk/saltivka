@@ -95,10 +95,10 @@ RSpec.describe("NIP-42") do
   end
 
   describe AuthorizationRequest do
-    let(:event) { create(:event) }
+    let(:event) { create(:event, author: create(:author, pubkey: FAKE_CREDENTIALS[:alice][:pk])) }
     context "when pubkey is trusted" do
       it "authorizes with level 4" do
-        TrustedAuthor.create(author: event.author)
+        create(:trusted_author, author: event.author)
         expect { subject.perform("CONN_ID", event.sha256, event.pubkey) }.to change { REDIS_TEST_CONNECTION.llen("authorization_result:CONN_ID") }.by(1)
         expect(REDIS_TEST_CONNECTION.lpop("authorization_result:CONN_ID")).to eq("4")
       end
@@ -109,6 +109,69 @@ RSpec.describe("NIP-42") do
         expect(MemStore).to receive(:fanout).with(cid: "CONN_ID", command: :ok, payload: ["OK", event.sha256, false, "restricted: unknown author"].to_json)
         expect { subject.perform("CONN_ID", event.sha256, event.pubkey) }.to change { REDIS_TEST_CONNECTION.llen("authorization_result:CONN_ID") }.by(1)
         expect(REDIS_TEST_CONNECTION.lpop("authorization_result:CONN_ID")).to eq("1")
+      end
+    end
+
+    context "when pubkey has active subscription" do
+      it "authorizes with level 4" do
+        create(:author_subscription, :active, author: event.author)
+        expect { subject.perform("CONN_ID", event.sha256, event.pubkey) }.to change { REDIS_TEST_CONNECTION.llen("authorization_result:CONN_ID") }.by(1)
+        expect(REDIS_TEST_CONNECTION.lpop("authorization_result:CONN_ID")).to eq("3")
+      end
+    end
+
+    context "when pubkey has inactive subscription" do
+      it "authorizes with level 4" do
+        create(:author_subscription, author: event.author)
+        expect { subject.perform("CONN_ID", event.sha256, event.pubkey) }.to change { REDIS_TEST_CONNECTION.llen("authorization_result:CONN_ID") }.by(1)
+        expect(REDIS_TEST_CONNECTION.lpop("authorization_result:CONN_ID")).to eq("1")
+      end
+    end
+
+    context "with active user" do
+      let(:user) { create(:user) }
+
+      context "having multiple pubkeys connected" do
+        let!(:inactive_user_pubkey_1) { create(:user_pubkey, user: user) }
+        let!(:inactive_user_pubkey_2) { create(:user_pubkey, user: user) }
+
+        context "when one of the pubkeys is active" do
+          let!(:active_user_pubkey) do
+            pk = create(:user_pubkey, user: user, author: event.author)
+            create(:author_subscription, :active, author: event.author)
+            pk
+          end
+
+          it "authorizes active pubkey with level 3" do
+            expect { subject.perform("CONN_ID", event.sha256, event.pubkey) }.to change { REDIS_TEST_CONNECTION.llen("authorization_result:CONN_ID") }.by(1)
+            expect(REDIS_TEST_CONNECTION.lpop("authorization_result:CONN_ID")).to eq("3")
+          end
+
+          it "authorizes inactive pubkey with level 3" do
+            author = create(:author, pubkey: FAKE_CREDENTIALS[:bob][:pk])
+            create(:user_pubkey, user: user, author: author)
+            event1 = create(:event, author: author)
+
+            expect { subject.perform("CONN_ID", event1.sha256, event1.pubkey) }.to change { REDIS_TEST_CONNECTION.llen("authorization_result:CONN_ID") }.by(1)
+            expect(REDIS_TEST_CONNECTION.lpop("authorization_result:CONN_ID")).to eq("3")
+          end
+        end
+
+        it "authorizes active pubkey with level 2" do
+          create(:user_pubkey, user: user, author: event.author)
+          expect { subject.perform("CONN_ID", event.sha256, event.pubkey) }.to change { REDIS_TEST_CONNECTION.llen("authorization_result:CONN_ID") }.by(1)
+          expect(REDIS_TEST_CONNECTION.lpop("authorization_result:CONN_ID")).to eq("2")
+        end
+      end
+    end
+
+    context "when active User has many connected pubkey" do
+      it "authorizes with level 3" do
+        user = create(:user)
+        create(:user_pubkey, author: event.author, user: user)
+        create(:author_subscription, :active, author: event.author)
+        expect { subject.perform("CONN_ID", event.sha256, event.pubkey) }.to change { REDIS_TEST_CONNECTION.llen("authorization_result:CONN_ID") }.by(1)
+        expect(REDIS_TEST_CONNECTION.lpop("authorization_result:CONN_ID")).to eq("3")
       end
     end
   end

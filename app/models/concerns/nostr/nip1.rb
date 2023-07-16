@@ -81,6 +81,10 @@ module Nostr
         self.author = Author.create_or_find_by(pubkey: value)
       end
 
+      def created_at=(value)
+        value.is_a?(Numeric) ? super(Time.at(value)) : super(value)
+      end
+
       private
 
       def tags_must_be_array

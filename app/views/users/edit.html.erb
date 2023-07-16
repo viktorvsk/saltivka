@@ -22,12 +22,13 @@
             <% if current_user.active? %>
               <sup class="has-text-primary"><small>Confirmed</small></sup>
             <% else %>
-              <sup class="has-text-danger"><small>Not confirmed</small></sup>
+              <sup class="has-text-danger">
+                <small>Not confirmed</small>
+              </sup>
             <% end %>
           </div>
           <%= f.text_field :email, disabled: true, class: "input" %>
           <small><i>Email can't be changed</i></small>
-            
         </div>
       </div>
 
@@ -56,6 +57,13 @@
       </div>
     <% end %>
   </div>
+
+  <% unless current_user.confirmed_at %>
+    <H2 class="title is-4">Email Confirmation</H2>
+    <div class="box">
+      <%= button_to "Send Again", email_confirmations_path, method: :post, class: "button is-primary" %>
+    </div>
+  <% end %>
 
 
   <H2 class="title is-4">Connected Pubkeys</H2>

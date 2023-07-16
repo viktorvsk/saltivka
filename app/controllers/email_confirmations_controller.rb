@@ -18,5 +18,7 @@ class EmailConfirmationsController < ApplicationController
   end
 
   def create
+    UserMailer.with(user: current_user).confirm_sign_up_email.deliver_later
+    redirect_to edit_user_path, notice: "Successfully sent confirmation email, please, check your inbox!"
   end
 end

@@ -14,7 +14,7 @@ Rails.application.routes.draw do
   resource :user, only: %i[new edit create update show] do
     resources :user_pubkeys, only: %i[create destroy update], on: :collection, as: :pubkeys
   end
-  resources :email_confirmations, only: %i[show]
+  resources :email_confirmations, only: %i[show create]
 
   namespace :admin do
     resources :trusted_authors, only: %i[index create destroy]

@@ -13,7 +13,7 @@ module Nostr
       challenge_tag = tags.find { |t| t.first === "challenge" }
       self_url_host = URI.parse(RELAY_CONFIG.self_url).host
 
-      unless URI.parse(relay_tag.second.to_s).host === self_url_host
+      unless URI.parse(relay_tag&.second.to_s).host === self_url_host
         errors.add(:tags, "'relay' must equal to #{RELAY_CONFIG.self_url}")
       end
 

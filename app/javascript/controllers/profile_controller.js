@@ -67,4 +67,11 @@ export default class extends Controller {
     document.getElementById("nip-43-url").innerText = `${relayURL}?authorization=${encodeURIComponent(payload)}`
   }
 
+  convertPubkey(event) {
+    if (event.target.value.match("^npub")) {
+      const {data} = nip19.decode(event.target.value)
+      event.target.value = data
+    }
+  }
+
 }

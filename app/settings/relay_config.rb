@@ -205,4 +205,20 @@ class RelayConfig
   def kinds_exempt_of_auth
     ENV.fetch("NIP_65_KINDS_EXEMPT_OF_AUTH", "10002").to_s.split(" ").map(&:to_i)
   end
+
+  def smtp_address
+    ENV["SMTP_ADDRESS"]
+  end
+
+  def smtp_port
+    ENV["SMTP_PORT"]
+  end
+
+  def smtp_username
+    ENV["SMTP_USERNAME"]
+  end
+
+  def smtp_password
+    ENV["SMTP_PASSWORD"]
+  end
 end

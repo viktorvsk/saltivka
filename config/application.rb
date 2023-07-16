@@ -34,6 +34,22 @@ module Saltivka
 
     config.time_zone = "UTC"
 
+    if ENV["SMTP_ADDRESS"].present?
+      config.action_mailer.raise_delivery_errors = true
+      config.action_mailer.delivery_method = :smtp
+      config.action_mailer.smtp_settings = {
+        user_name: ENV["SMTP_USERNAME"],
+        password: ENV["SMTP_PASSWORD"],
+        address: ENV["SMTP_ADDRESS"],
+        port: ENV["SMTP_PORT"],
+        authentication: :plain,
+        enable_starttls_auto: ENV.fetch("SMTP_SSL", true)
+      }
+      config.action_mailer.default_url_options = {
+        host: ENV["DEFAULT_MAILER_HOST"]
+      }
+    end
+
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end

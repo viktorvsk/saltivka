@@ -1,4 +1,6 @@
 class EmailConfirmationsController < ApplicationController
+  skip_before_action :require_login, only: %i[show]
+
   def show
     token = params[:id]
     email = MemStore.find_email_to_confirm(token)
@@ -13,5 +15,8 @@ class EmailConfirmationsController < ApplicationController
     end
 
     redirect_to root_path
+  end
+
+  def create
   end
 end

@@ -1,4 +1,6 @@
 class ApplicationController < ActionController::Base
+  before_action :require_login
+
   protected
 
   # TODO: Fix Turbo redirects

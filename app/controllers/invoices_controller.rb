@@ -1,11 +1,9 @@
 class InvoicesController < ApplicationController
   skip_before_action :verify_authenticity_token, only: %i[update]
+  skip_before_action :require_login
 
   def new
     @invoice = Invoice.new(amount_sats: RELAY_CONFIG.default_invoice_amount, period_days: RELAY_CONFIG.default_invoice_period)
-  end
-
-  def show
   end
 
   def create

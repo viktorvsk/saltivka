@@ -50,8 +50,9 @@ jobs:
 
       - name: Run tests
         env:
-          POSTGRES_DATABAS: saltivka_test
-          REDIS_UR: redis://localhost:6379/8
-          POSTGRES_PASSWOR: postgres
-          RAILS_LOG_TO_STDOU: true
+          POSTGRES_DATABASE: saltivka_test
+          REDIS_URL: redis://localhost:6379/8
+          POSTGRES_PASSWORD: postgres
+          RAILS_LOG_TO_STDOUT: true
+          CI: true
         run: bin/rspec

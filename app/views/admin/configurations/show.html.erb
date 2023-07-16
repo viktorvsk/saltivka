@@ -1,36 +1,48 @@
 <h1 class="title is-1">Configuration</h1>
 
-<h2 class="title is-2">Dynamic</h1>
+<div class="box">
+  <h2 class="title is-2">Hot Reload Settings</h2>
+  <p class="mb-4">These configurations can be changed on the fly and become effective immediately.</p>
 
-<div class="box mb-4">
-  <div class="field">
-    <%= label_tag "max_allowed_connections", "Max allowed connections", class: 'label' %>
-    <div class="control"><%= text_field_tag "max_allowed_connections", @max_allowed_connections, class: "input", type: :number, data: { action: "change->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %></div>
-  </div>
-</div>
-
-<div class="box mb-4 is-flex is-justify-content-space-between">
-  <b class="toggle-label">Maintenance mode</b>
-  <label class="toggle">
-    <%= check_box_tag "maintenance", nil, ActiveRecord::Type::Boolean.new.cast(@maintenance), class: "toggle-checkbox", data: { action: "change->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %>
-    <div class="toggle-switch"></div>
-  </label>
-</div>
-
-<div class="box mb-4">
-  <div class="field">
-    <%= label_tag "unlimited_ips", "Unlimited IP addresses", class: 'label' %>
-    <div class="control"><%= text_field_tag "unlimited_ips", @unlimited_ips.join(" "), class: "input", data: { action: "change->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %></div>
-  </div>
-</div>
-
-<h2 class="title is-2">Static</h1>
-<div class="box mb-6">
-
-  <% @disabled_configurations.each do |config| %>
+  <div class="box mb-4">
     <div class="field">
-      <%= label_tag config, config.to_s.humanize, class: 'label' %>
-      <div class="control"><%= text_field_tag config, RELAY_CONFIG.send(config).to_s, class: "input",disabled: true %></div>
+      <%= label_tag "max_allowed_connections", "Max allowed connections", class: 'label' %>
+      <div class="control">
+        <%= text_field_tag "max_allowed_connections", @max_allowed_connections, class: "input", type: :number, data: { action: "change->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %>
+      </div>
     </div>
-  <% end %>
+  </div>
+
+  <div class="box mb-4 is-flex is-justify-content-space-between">
+    <b class="toggle-label">Maintenance mode</b>
+    <label class="toggle">
+      <%= check_box_tag "maintenance", nil, ActiveRecord::Type::Boolean.new.cast(@maintenance), class: "toggle-checkbox", data: { action: "change->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %>
+      <div class="toggle-switch"></div>
+    </label>
+  </div>
+
+  <div class="box mb-4">
+    <div class="field">
+      <%= label_tag "unlimited_ips", "Unlimited IP addresses", class: 'label' %>
+      <div class="control"><%= text_field_tag "unlimited_ips", @unlimited_ips.join(" "), class: "input", data: { action: "change->admin-configuration#updateDynamicConfig", controller: "admin-configuration" } %></div>
+    </div>
+  </div>
 </div>
+
+<div class="box mb-6">
+  <h2 class="title is-2">Boot Time Settings</h1>
+  <p class="mb-4">
+    These settings must be a part of deployment process and configured through environmental variables.
+    See <%= link_to "documentation", "https://github.com/viktorvsk/saltivka/blob/main/docs/CONFIGURATION.md" %> for more details.
+  </p>
+
+  <div class="box mb-6">
+
+    <% @disabled_configurations.each do |config| %>
+      <div class="field">
+        <%= label_tag config, config.to_s.humanize, class: 'label' %>
+        <div class="control"><%= text_field_tag config, RELAY_CONFIG.send(config).to_s, class: "input",disabled: true %></div>
+      </div>
+    <% end %>
+  </div>
+</h2>

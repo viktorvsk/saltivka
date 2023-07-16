@@ -7,7 +7,7 @@ class EmailConfirmationsController < ApplicationController
       MemStore.confirm_email(token)
       user = User.find_by_email(email)
       auto_login(user)
-      flash[:notice] = "Email was successfully confired!"
+      flash[:notice] = "Email was successfully confirmed!"
     else
       flash[:alert] = "Email was not confirmed: confirmation token not found or expired"
     end

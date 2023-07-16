@@ -11,6 +11,7 @@
 
   <div id="navbarBasicExample" class="navbar-menu">
     <div class="navbar-start">
+      <%= link_to "Profile", edit_user_path, class: 'navbar-item' %>
       <% if current_user&.admin? %>
         <%= link_to "Connections", admin_connections_path, class: 'navbar-item' %>
         <%= link_to "Trusted Authors", admin_trusted_authors_path, class: 'navbar-item' %>
@@ -26,6 +27,7 @@
             <%= button_to "Sign out", session_path, method: :delete, class: 'button' %>
           <% else %>
             <%= link_to "Sign in", new_session_path, class: "button" %>
+            <%= link_to "Sign up", new_user_path, class: "button is-success" %>
 
           <% end %>
 

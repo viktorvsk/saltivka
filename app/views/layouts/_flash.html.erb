@@ -1,9 +1,11 @@
-<% if flash.present? %>
-  <div class="mt-6 mb-6">
-    <% flash.each do |key, value| %>
-      <div class="notification is-<%= key %>">
-        <%= value %>
-      </div>
-    <% end %>
-  </div>
+<%= turbo_frame_tag "flash" do %>
+  <% if flash.present? %>
+    <div class="mt-6 mb-6">
+      <% flash.each do |key, value| %>
+        <div class="notification is-<%= key %>">
+          <%= value %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 <% end %>

@@ -11,6 +11,10 @@ Rails.application.routes.draw do
 
   resource :session, only: %i[new create destroy]
   resource :homes, only: %i[show]
+  resource :user, only: %i[new edit create update show] do
+    resources :user_pubkeys, only: %i[create destroy update], on: :collection, as: :pubkeys
+  end
+  resources :email_confirmations, only: %i[show]
 
   namespace :admin do
     resources :trusted_authors, only: %i[index create destroy]

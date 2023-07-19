@@ -2,7 +2,7 @@
   <% if flash.present? %>
     <div class="mt-6 mb-6">
       <% flash.each do |key, value| %>
-        <div class="notification is-<%= key %>">
+        <div class="notification <%= css_for_flash(key) %>">
           <%= value %>
         </div>
       <% end %>

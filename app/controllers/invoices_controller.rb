@@ -66,7 +66,7 @@ class InvoicesController < ApplicationController
   end
 
   def fail!
-    flash.now[:notice] = "Oops something went wrong, we are already investigating it"
+    flash.now[:alert] = "Oops something went wrong, we are already investigating it"
     @invoice.update!(status: "failed")
     render :new, status: :unprocessable_entity
   end

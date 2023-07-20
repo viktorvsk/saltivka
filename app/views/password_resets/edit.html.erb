@@ -1,0 +1,36 @@
+<h1 class="title is-1">Reset Password</h1>
+
+<%= form_with model: @user, url: password_reset_path(@token), method: :put, local: true, html: { class: "box mb-6 mt-6" } do |f| %>
+  <% if @user.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@user.errors.count, "error") %> prohibited this user from being saved:</h2>
+
+      <ul>
+      <% @user.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <div class="label"><%= f.label :email %></div>
+    <%= @user.email %>
+  </div>
+  <div class="field">
+    <div class="label"><%= f.label :password %></div>
+    <div class="control">
+      <%= f.password_field :password, class: "input", required: true %>
+    </div>
+  </div>
+  <div class="field">
+    <div class="label"><%= f.label :password_confirmation %></div>
+    <div class="control">
+      <%= f.password_field :password_confirmation, class: "input", required: true %>
+    </div>
+    <%= f.hidden_field :token, value: @token %>
+  </div>
+  <div class="actions">
+    <%= f.submit "Submit", class: "button is-primary" %>
+  </div>
+<% end %>

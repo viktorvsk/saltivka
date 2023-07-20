@@ -4,7 +4,8 @@
 # Available submodules are: :user_activation, :http_basic_auth, :remember_me,
 # :reset_password, :session_timeout, :brute_force_protection, :activity_logging,
 # :magic_login, :external
-Rails.application.config.sorcery.submodules = []
+
+Rails.application.config.sorcery.submodules = [:reset_password]
 
 # Here you can configure each submodule's features.
 Rails.application.config.sorcery.configure do |config|
@@ -256,7 +257,7 @@ Rails.application.config.sorcery.configure do |config|
     # Downcase the username before trying to authenticate, default is false
     # Default: `false`
     #
-    # user.downcase_username_before_authenticating =
+    user.downcase_username_before_authenticating = true
 
     # Change default email attribute.
     # Default: `:email`
@@ -364,7 +365,7 @@ Rails.application.config.sorcery.configure do |config|
     # options: `:deliver_later`, `:deliver_now`, `:deliver`
     # Default: :deliver (Rails version < 4.2) or :deliver_now (Rails version 4.2+)
     #
-    # user.email_delivery_method =
+    user.email_delivery_method = :deliver_later
 
     # Activation needed email method on your mailer class.
     # Default: `:activation_needed_email`
@@ -401,7 +402,7 @@ Rails.application.config.sorcery.configure do |config|
     # Password reset mailer class.
     # Default: `nil`
     #
-    # user.reset_password_mailer =
+    user.reset_password_mailer = UserMailer
 
     # Reset password email method on your mailer class.
     # Default: `:reset_password_email`
@@ -418,7 +419,7 @@ Rails.application.config.sorcery.configure do |config|
     # How many seconds before the reset request expires. nil for never expires.
     # Default: `nil`
     #
-    # user.reset_password_expiration_period =
+    user.reset_password_expiration_period = 24.hours.to_i
 
     # Hammering protection: how long in seconds to wait before allowing another email to be sent.
     # Default: `5 * 60`

@@ -49,6 +49,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           RAILS_LOG_TO_STDOUT: true
           RAILS_ENV: test
+          PROVIDER_API_KEY_OPEN_NODE: invalid
           CI: true
         run: sudo apt-get install redis postgresql-client -y && bundle install --jobs 4 --retry 3 && bin/rails db:migrate
 
@@ -62,5 +63,6 @@ jobs:
           POSTGRES_PASSWORD: postgres
           RAILS_LOG_TO_STDOUT: true
           RAILS_ENV: test
+          PROVIDER_API_KEY_OPEN_NODE: invalid
           CI: true
         run: bin/rspec

@@ -12,19 +12,26 @@ class PasswordResetsController < ApplicationController
   def edit
     @user = User.load_from_reset_password_token(params[:id])
     @token = params[:id]
-    not_authenticated unless @user
+    unless @user
+      flash[:alert] = "Reset password code expired or invalid"
+      not_authenticated
+    end
   end
 
   def update
     @token = params[:user][:token]
     @user = User.load_from_reset_password_token(@token)
 
-    return not_authenticated if @user.blank?
+    if @user.blank?
+      flash[:alert] = "Reset password code expired or invalid"
+      not_authenticated
+    end
 
     @user.password_confirmation = params[:user][:password_confirmation]
 
     if @user.change_password!(params[:user][:password])
-      redirect_to(root_path, notice: "Password was successfully updated.")
+      auto_login(@user)
+      redirect_to(root_path, notice: "Password was successfu lly updated.")
     else
       render action: "edit"
     end

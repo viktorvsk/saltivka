@@ -27,5 +27,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/saltivka:${{github.sha}}
-            ${{ secrets.DOCKER_USERNAME }}/saltivka:latest
+            ${{ secrets.DOCKER_USERNAME }}/${{ github.repository }}:${{github.sha}}
+            ${{ secrets.DOCKER_USERNAME }}/${{ github.repository }}:latest

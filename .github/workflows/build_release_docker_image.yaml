@@ -1,13 +1,17 @@
 aname: Publish Latest Docker image
 
 on:
-  push:
-    branches:
-      - 'release-**'
+  release:
+    types: [published]
+  workflow_dispatch:
+
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -18,11 +22,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract version tag from branch name
-        shell: bash
-        run: echo "version_tag=${GITHUB_REF#refs/heads/release-}" >> $GITHUB_OUTPUT
-        id: extract_version_tag
-
       - name: Build and push Docker image
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
         with:
@@ -30,4 +29,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/saltivka:${{ steps.extract_version_tag.outputs.version_tag }}
+            ${{ secrets.DOCKER_USERNAME }}/${{ github.repository }}:${{ steps.extract_version_tag.outputs.version_tag }}
+          tags: ${{ steps.meta.outputs.tags }}

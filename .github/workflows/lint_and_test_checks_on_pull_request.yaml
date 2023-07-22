@@ -43,6 +43,13 @@ jobs:
           bundler-cache: true
 
       - name: Prepare environment — install Redis, Postgres and gems dependencies and migrate database
+        env:
+          POSTGRES_DATABASE: saltivka_test
+          REDIS_URL: redis://localhost:6379/8
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST: postgres
+          RAILS_LOG_TO_STDOUT: true
+          CI: true
         run: sudo apt-get install redis postgresql-client -y && bundle install --jobs 4 --retry 3 && bin/rails db:migrate
 
       - name: Check code style

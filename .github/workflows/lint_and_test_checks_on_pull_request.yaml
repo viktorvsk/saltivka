@@ -48,6 +48,7 @@ jobs:
           REDIS_URL: redis://localhost:6379/8
           POSTGRES_PASSWORD: postgres
           RAILS_LOG_TO_STDOUT: true
+          RAILS_ENV: test
           CI: true
         run: sudo apt-get install redis postgresql-client -y && bundle install --jobs 4 --retry 3 && bin/rails db:migrate
 
@@ -60,5 +61,6 @@ jobs:
           REDIS_URL: redis://localhost:6379/8
           POSTGRES_PASSWORD: postgres
           RAILS_LOG_TO_STDOUT: true
+          RAILS_ENV: test
           CI: true
         run: bin/rspec

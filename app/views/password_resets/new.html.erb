@@ -1,6 +1,6 @@
 <h1 class= "title is-1">Forgot Password?</h1>
 
-<%= form_with url: password_resets_path, local: true, method: :post, class: 'box mt-6 mb-6' do |f| %>
+<%= form_with url: password_resets_path, method: :post, class: 'box mt-6 mb-6' do |f| %>
   <div class="field">
     <div class="label"><%= f.label :email %></div>
     <div class="control"><%= f.text_field :email, class: "input", required: true, pattern: "^.*@.*\..*$" %></div>

@@ -16,7 +16,7 @@
     </div>
   <% end %>
 
-  <%= form_for :trusted_author, url: admin_trusted_authors_path, html: { class: 'box mt-6 mb-6', data: { turbo: false } } do |f| %>
+  <%= form_for :trusted_author, url: admin_trusted_authors_path, html: { class: 'box mt-6 mb-6' } do |f| %>
     <div class="field">
       <%= f.label :pubkey, class: 'label' %>
       <div class="control">

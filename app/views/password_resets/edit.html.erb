@@ -1,6 +1,6 @@
 <h1 class="title is-1">Reset Password</h1>
 
-<%= form_with model: @user, url: password_reset_path(@token), method: :put, local: true, html: { class: "box mb-6 mt-6" } do |f| %>
+<%= form_with model: @user, url: password_reset_path(@token), method: :put, html: { class: "box mb-6 mt-6" } do |f| %>
   <% if @user.errors.any? %>
     <div id="error_explanation">
       <h2><%= pluralize(@user.errors.count, "error") %> prohibited this user from being saved:</h2>

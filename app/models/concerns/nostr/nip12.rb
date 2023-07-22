@@ -11,7 +11,9 @@ module Nostr
         if kinda?(:parameterized_replaceable) && tags.none? { |t| t.first === "d" }
           searchable_tags.new(name: "d", value: "")
         end
-        tags.map { |t| t[..1] }.uniq { |tag| tag.sort.join }.each do |tag|
+        tag_with_value_only = tags.map { |t| t[..1] }
+        unique_tags = tag_with_value_only.uniq { |tag| tag[0] + tag[1..].map(&:downcase).sort.join }
+        unique_tags.each do |tag|
           tag_name, tag_value = tag
           tag_value_too_long = tag_value && tag.second.size > RELAY_CONFIG.max_searchable_tag_value_length
           next if tag_value_too_long

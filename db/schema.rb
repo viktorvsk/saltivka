@@ -10,8 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_20_115009) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_22_095546) do
   # These are extensions that must be enabled in order to support this database
+  enable_extension "citext"
   enable_extension "plpgsql"
 
   create_table "author_subscriptions", force: :cascade do |t|
@@ -23,13 +24,13 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_20_115009) do
   end
 
   create_table "authors", force: :cascade do |t|
-    t.string "pubkey", limit: 64, null: false
-    t.index "upper((pubkey)::text) varchar_pattern_ops", name: "index_authors_for_prefix_search_on_pubkey"
+    t.citext "pubkey", null: false
+    t.index ["pubkey"], name: "index_authors_for_prefix_search_on_pubkey", opclass: :varchar_pattern_ops
     t.index ["pubkey"], name: "index_authors_on_pubkey", unique: true
   end
 
   create_table "delete_events", id: false, force: :cascade do |t|
-    t.string "sha256", limit: 64, null: false
+    t.citext "sha256", null: false
     t.bigint "author_id", null: false
     t.index ["sha256", "author_id"], name: "index_delete_events_on_sha256_and_author_id", unique: true
   end
@@ -39,13 +40,13 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_20_115009) do
     t.jsonb "tags", default: []
     t.binary "content"
     t.bigint "author_id", null: false
-    t.string "sha256", limit: 64, null: false
-    t.string "sig", limit: 128, null: false
+    t.citext "sha256", null: false
+    t.citext "sig", null: false
     t.datetime "created_at"
-    t.index "upper((sha256)::text) varchar_pattern_ops", name: "index_events_for_prefix_search_on_sha256"
     t.index ["author_id"], name: "index_events_on_author_id"
     t.index ["created_at", "kind"], name: "index_events_on_created_at_and_kind"
     t.index ["kind"], name: "index_events_on_kind"
+    t.index ["sha256"], name: "index_events_for_prefix_search_on_sha256", opclass: :varchar_pattern_ops
     t.index ["sha256"], name: "index_events_on_sha256", unique: true
     t.index ["sig"], name: "index_events_on_sig", unique: true
   end
@@ -54,10 +55,10 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_20_115009) do
     t.bigint "author_id", null: false
     t.integer "amount_sats", null: false
     t.integer "period_days", null: false
-    t.string "provider", null: false
-    t.string "status", default: "pending", null: false
+    t.citext "provider", null: false
+    t.citext "status", default: "pending", null: false
     t.string "external_id"
-    t.string "order_id", null: false
+    t.citext "order_id", null: false
     t.jsonb "request", default: {}
     t.jsonb "response", default: {}
     t.jsonb "webhooks", default: []
@@ -73,8 +74,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_20_115009) do
     t.bigint "event_id", null: false
     t.string "name", null: false
     t.string "value", null: false
-    t.index "upper((value)::text) varchar_pattern_ops", name: "index_searchable_tags_for_prefix_search_on_value"
     t.index ["event_id", "name", "value"], name: "index_searchable_tags_on_event_id_and_name_and_value", unique: true
+    t.index ["value"], name: "index_searchable_tags_for_prefix_search_on_value", opclass: :varchar_pattern_ops
   end
 
   create_table "trusted_authors", force: :cascade do |t|

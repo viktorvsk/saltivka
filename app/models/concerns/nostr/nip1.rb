@@ -146,17 +146,17 @@ module Nostr
           end
 
           if key == "ids"
-            rel = rel.where("UPPER(events.sha256) LIKE ANY (ARRAY[?])", value.map { |id| "#{id}%".upcase })
+            rel = rel.where("events.sha256 LIKE ANY (ARRAY[?])", value.map { |id| "#{id}%" })
           end
 
           if key == "authors"
             # NIP-26
-            authors_to_search = value.map { |author| "#{author}%".upcase }
+            authors_to_search = value.map { |author| "#{author}%" }
             where_clause = <<~SQL
               (
-                UPPER(authors.pubkey) LIKE ANY (ARRAY[:values])) OR
+                authors.pubkey LIKE ANY (ARRAY[:values])) OR
                   (
-                    UPPER(delegation_tags.value) LIKE ANY (ARRAY[:values]
+                    delegation_tags.value LIKE ANY (ARRAY[:values]
                   )
               )
             SQL
@@ -167,7 +167,7 @@ module Nostr
 
           if /\A#[a-zA-Z]\Z/.match?(key)
             # NIP-12 + #e #p #d
-            rel = rel.joins(:searchable_tags).where("searchable_tags.name = '#{key.last}' AND UPPER(searchable_tags.value) LIKE ANY (ARRAY[?])", value.map { |t| "#{t}%".upcase })
+            rel = rel.joins(:searchable_tags).where("searchable_tags.name = '#{key.last}' AND searchable_tags.value LIKE ANY (ARRAY[?])", value.map { |t| "#{t}%" })
           end
 
           rel = rel.where("created_at >= ?", Time.at(value)) if key == "since"

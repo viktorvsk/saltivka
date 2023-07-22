@@ -29,5 +29,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/${{ github.repository }}:${{ steps.extract_version_tag.outputs.version_tag }}
+            ${{ github.repository }}:${{ steps.extract_version_tag.outputs.version_tag }}
           tags: ${{ steps.meta.outputs.tags }}

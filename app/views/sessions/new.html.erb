@@ -1,6 +1,6 @@
 <h1 class="title is-1">Sign In</h1>
 
-<%= form_for :user, url: session_path, html: { class: 'box mt-6 mb-6', data: { turbo: false } } do |f| %>
+<%= form_for :user, url: session_path, html: { class: 'box mt-6 mb-6' } do |f| %>
   <div class="field">
     <%= f.label :email, class: 'label' %>
     <div class="control">

@@ -8,7 +8,12 @@ class SessionsController < ApplicationController
       redirect_back_or_to(:root, notice: "Login successful")
     else
       flash.now[:alert] = "Login failed"
-      render action: "new"
+      respond_to do |format|
+        format.html do
+          render action: "new"
+        end
+        format.turbo_stream
+      end
     end
   end
 

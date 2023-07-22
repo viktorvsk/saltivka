@@ -1,6 +1,6 @@
 class Admin::TrustedAuthorsController < AdminController
   def index
-    @trusted_authors = TrustedAuthor.includes(:author).order(created_at: :desc)
+    @pagy, @trusted_authors = pagy(TrustedAuthor.includes(:author).order(created_at: :desc))
   end
 
   def destroy

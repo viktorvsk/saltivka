@@ -16,6 +16,8 @@
     </div>
   <% end %>
 
+  <%== pagy_bulma_nav(@pagy) if @pagy.pages > 1 %>
+
   <%= form_for :trusted_author, url: admin_trusted_authors_path, html: { class: 'box mt-6 mb-6' } do |f| %>
     <div class="field">
       <%= f.label :pubkey, class: 'label' %>

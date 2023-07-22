@@ -21,6 +21,7 @@ gem "redis", "~> 5.0"
 gem "hiredis-client"
 gem "sidekiq", "~> 7"
 gem "sorcery"
+gem "pagy"
 
 gem "bip-schnorr"
 gem "json_schemer"

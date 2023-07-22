@@ -1,6 +1,6 @@
 class Admin::AuthorSubscriptionsController < AdminController
   def index
-    @author_subscriptions = AuthorSubscription.order(created_at: :desc).all
+    @pagy, @author_subscriptions = pagy(AuthorSubscription.order(created_at: :desc).all)
   end
 
   def show

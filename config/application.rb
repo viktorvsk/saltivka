@@ -46,7 +46,8 @@ module Saltivka
         enable_starttls_auto: ENV.fetch("SMTP_SSL", true)
       }
       config.action_mailer.default_url_options = {
-        host: ENV["DEFAULT_MAILER_HOST"]
+        host: ENV["DEFAULT_MAILER_HOST"],
+        protocol: Rails.env.development? ? :http : :https
       }
     end
 

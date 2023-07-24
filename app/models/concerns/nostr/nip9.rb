@@ -31,13 +31,9 @@ module Nostr
 
     def process_delete_event_nip_9
       events_ids_to_delete = tags.select { |tag| tag.first === "e" && tag.last =~ /\A[0-9a-f]{64}\Z/ }.map(&:last)
-      events_ids_to_delete.each do |id_to_delete|
-        ApplicationRecord.transaction do
-          author = Author.create_or_find_by!(pubkey: pubkey)
-          DeleteEvent.create_or_find_by!(author: author, sha256: id_to_delete)
-        end
-      end
+      delete_events_to_upsert = events_ids_to_delete.map { |digest| {sha256: digest, author_id: author.id} }
 
+      DeleteEvent.upsert_all(delete_events_to_upsert, unique_by: %i[sha256 author_id])
       Event.joins(:author).where(authors: {pubkey: pubkey}, sha256: events_ids_to_delete).where.not(kind: 5).destroy_all
     end
   end

@@ -96,13 +96,19 @@ module Nostr
       end
 
       def sig_must_match_payload
-        schnorr_params = [
-          [sha256].pack("H*"),
-          [pubkey].pack("H*"),
-          [sig].pack("H*")
-        ]
+        schnorr_params = {
+          message: [sha256].pack("H*"),
+          pubkey: [pubkey].pack("H*"),
+          sig: [sig].pack("H*")
+        }
 
-        errors.add(:sig, "must match payload") unless Schnorr.valid_sig?(*schnorr_params)
+        sig_is_valid = begin
+          Secp256k1::SchnorrSignature.from_data(schnorr_params[:sig]).verify(schnorr_params[:message], Secp256k1::XOnlyPublicKey.from_data(schnorr_params[:pubkey]))
+        rescue Secp256k1::DeserializationError
+          false
+        end
+
+        errors.add(:sig, "must match payload") unless sig_is_valid
       end
     end
 

@@ -69,8 +69,6 @@ GEM
     ast (2.4.2)
     bcrypt (3.1.19)
     bindex (0.8.1)
-    bip-schnorr (0.6.0)
-      ecdsa_ext (~> 0.5.0)
     bootsnap (1.16.0)
       msgpack (~> 1.2)
     builder (3.2.4)
@@ -87,9 +85,6 @@ GEM
     dotenv-rails (2.8.1)
       dotenv (= 2.8.1)
       railties (>= 3.2)
-    ecdsa (1.2.0)
-    ecdsa_ext (0.5.0)
-      ecdsa (~> 1.2.0)
     erubi (1.12.0)
     eventmachine (1.2.7)
     factory_bot (6.2.1)
@@ -181,6 +176,7 @@ GEM
       ast (~> 2.4.1)
       racc
     pg (1.5.3)
+    pkg-config (1.5.2)
     puma (5.6.6)
       nio4r (~> 2.0)
     racc (1.7.1)
@@ -219,6 +215,10 @@ GEM
       zeitwerk (~> 2.5)
     rainbow (3.1.1)
     rake (13.0.6)
+    rbsecp256k1 (6.0.0)
+      mini_portile2 (~> 2.8)
+      pkg-config (~> 1.5)
+      rubyzip (~> 2.3)
     redis (5.0.6)
       redis-client (>= 0.9.0)
     redis-client (0.14.1)
@@ -261,6 +261,7 @@ GEM
       rubocop-ast (>= 0.4.0)
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
+    rubyzip (2.3.2)
     sentry-ruby (5.10.0)
       concurrent-ruby (~> 1.0, >= 1.0.2)
     sentry-sidekiq (5.10.0)
@@ -338,7 +339,6 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  bip-schnorr
   bootsnap
   debug
   dotenv-rails
@@ -354,6 +354,7 @@ DEPENDENCIES
   puma (~> 5.0)
   rack-cors
   rails (~> 7.0.5)
+  rbsecp256k1
   redis (~> 5.0)
   rspec-rails (~> 6.0.0)
   sentry-ruby

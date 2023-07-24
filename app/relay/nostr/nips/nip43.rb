@@ -24,13 +24,17 @@ module Nostr
 
         errors.push("Id is invalid") unless id_matches_payload
 
-        schnorr_params = [
-          [event["id"]].pack("H*"),
-          [event["pubkey"]].pack("H*"),
-          [event["sig"]].pack("H*")
-        ]
+        schnorr_params = {
+          message: [event["id"]].pack("H*"),
+          pubkey: [event["pubkey"]].pack("H*"),
+          sig: [event["sig"]].pack("H*")
+        }
 
-        sig_matches_id = Schnorr.valid_sig?(*schnorr_params)
+        sig_matches_id = begin
+          Secp256k1::SchnorrSignature.from_data(schnorr_params[:sig]).verify(schnorr_params[:message], Secp256k1::XOnlyPublicKey.from_data(schnorr_params[:pubkey]))
+        rescue Secp256k1::DeserializationError
+          false
+        end
 
         errors.push("Signature is invalid") unless sig_matches_id
 

@@ -14,11 +14,11 @@ module Nostr
         delegation_pubkey, condition_string, delegation_sig = delegation_tag[1..]
         delegation_string = "nostr:delegation:#{delegation_pubkey}:#{condition_string}"
 
-        schnorr_params = [
-          [Digest::SHA256.hexdigest(delegation_string)].pack("H*"),
-          [delegation_pubkey].pack("H*"),
-          [delegation_sig].pack("H*")
-        ]
+        schnorr_params = {
+          message: [Digest::SHA256.hexdigest(delegation_string)].pack("H*"),
+          pubkey: [delegation_pubkey].pack("H*"),
+          sig: [delegation_sig].pack("H*")
+        }
 
         delegated_kinds = condition_string.scan(/kind=(\d{1,})/)
         min_created_at = condition_string.scan(/created_at>(\d{1,})/).flatten.first&.to_i
@@ -37,7 +37,13 @@ module Nostr
           errors.add(:tags, "'delegation' pubkey must be a valid 64 characters hex")
         end
 
-        unless Schnorr.valid_sig?(*schnorr_params)
+        sig_is_valid = begin
+          Secp256k1::SchnorrSignature.from_data(schnorr_params[:sig]).verify(schnorr_params[:message], Secp256k1::XOnlyPublicKey.from_data(schnorr_params[:pubkey]))
+        rescue Secp256k1::DeserializationError
+          false
+        end
+
+        unless sig_is_valid
           errors.add(:tags, "'delegation' signature must be valid")
         end
       end

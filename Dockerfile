@@ -1,6 +1,6 @@
 FROM ruby:3.2.2-alpine AS Builder
 
-ENV BUILD_PACKAGES="build-base postgresql-dev shared-mime-info"
+ENV BUILD_PACKAGES="build-base postgresql-dev shared-mime-info build-base automake libtool libffi-dev gmp-dev openssl-dev pkgconfig autoconf"
 
 ENV BUNDLER_VERSION="2.4.13"
 

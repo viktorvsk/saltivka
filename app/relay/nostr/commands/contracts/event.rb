@@ -26,12 +26,19 @@ module Nostr
           add_error("/0/id", "property '/0/id' doesn't match") unless id_is_valid
 
           if event["id"].present? && id_is_valid
-            schnorr_params = [
-              [event["id"]].pack("H*"),
-              [event["pubkey"]].pack("H*"),
-              [event["sig"]].pack("H*")
-            ]
-            add_error("/0/sig", "property '/0/sig' doesn't match") unless Schnorr.valid_sig?(*schnorr_params)
+            schnorr_params = {
+              message: [event["id"]].pack("H*"),
+              pubkey: [event["pubkey"]].pack("H*"),
+              sig: [event["sig"]].pack("H*")
+            }
+
+            sig_is_valid = begin
+              Secp256k1::SchnorrSignature.from_data(schnorr_params[:sig]).verify(schnorr_params[:message], Secp256k1::XOnlyPublicKey.from_data(schnorr_params[:pubkey]))
+            rescue Secp256k1::DeserializationError
+              false
+            end
+
+            add_error("/0/sig", "property '/0/sig' doesn't match") unless sig_is_valid
           end
         end
       end

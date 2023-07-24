@@ -23,7 +23,7 @@ gem "sidekiq", "~> 7"
 gem "sorcery"
 gem "pagy"
 
-gem "bip-schnorr"
+gem "rbsecp256k1"
 gem "json_schemer"
 
 gem "sentry-ruby"

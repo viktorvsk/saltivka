@@ -39,7 +39,11 @@ RSpec.describe("NIP-01") do
     let(:sk) { "945e01e37662430162121b804d3645a86d97df9d256917d86735d0eb219393eb" }
     let(:pk) { "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95" }
     let(:sha256) { "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f" }
-    let(:sig) { Schnorr.sign([sha256].pack("H*"), [sk].pack("H*")).encode.unpack1("H*") }
+    let(:sig) do
+      ctx = Secp256k1::Context.new
+      key_pair = ctx.key_pair_from_private_key([sk].pack("H*"))
+      ctx.sign_schnorr(key_pair, [sha256].pack("H*")).serialized.unpack1("H*")
+    end
 
     let!(:event) do
       event_params = {

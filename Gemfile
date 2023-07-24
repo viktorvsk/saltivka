@@ -35,6 +35,10 @@ group :development, :test do
   gem "factory_bot_rails"
   gem "ffaker"
   gem "rspec-rails", "~> 6.0.0"
+  gem "rack-mini-profiler"
+  gem "memory_profiler"
+  gem "stackprof"
+  gem "ruby-prof"
 end
 
 group :development do

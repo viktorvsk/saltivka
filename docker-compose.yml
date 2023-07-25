@@ -43,7 +43,7 @@ services:
   worker:
     image: saltivka
     env_file: ./demo/.env
-    command: bundle exec sidekiq -q nostr
+    command: bundle exec sidekiq -q nostr -q payment_webhooks
     depends_on:
       - postgresql
       - redis

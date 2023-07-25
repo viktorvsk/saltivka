@@ -54,7 +54,7 @@ Nostr::Relay = lambda do |env|
 
       hearbeat_thread = Thread.new do
         loop do
-          ws.close(3408, "Connection was idle for too long, max amount of time is #{RELAY_CONFIG.heartbeat_interval} seconds") if (Time.now.to_i - last_active_at) > 5
+          ws.close(3408, "Connection was idle for too long, max amount of time is #{RELAY_CONFIG.heartbeat_interval} seconds") if (Time.now.to_i - last_active_at) > RELAY_CONFIG.heartbeat_interval
           sleep(RELAY_CONFIG.heartbeat_interval)
         end
       end

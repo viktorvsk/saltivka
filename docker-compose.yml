@@ -25,14 +25,14 @@ services:
     environment:
       - REDIS_ARGS=--maxmemory 2GB --maxmemory-policy noeviction --maxclients 10000 --tcp-backlog 511 # https://github.com/redis-stack/redis-stack/issues/110
   db-migration:
-    image: saltivka
+    image: viktorvsk/saltivka
     env_file: ./demo/.env
     command: sh -c "until bundle exec rails db:migrate db:seed; do sleep 5; done"
     depends_on:
       - postgresql
       - redis
   webserver:
-    image: saltivka
+    image: viktorvsk/saltivka
     env_file: ./demo/.env
     ports:
       - 3000:3000
@@ -41,7 +41,7 @@ services:
       - redis
       - db-migration
   worker:
-    image: saltivka
+    image: viktorvsk/saltivka
     env_file: ./demo/.env
     command: bundle exec sidekiq -q nostr.nip01.req -q nostr.nip01.event -q nostr.nip40 -q nostr.nip42 -q nostr.nip45 -q payment_webhooks
     depends_on:

@@ -23,7 +23,7 @@ module Nostr
           redis.multi do |t|
             t.sadd("client_reqs:#{connection_id}", subscription_id)
             t.hset("subscriptions", pubsub_id, filters_json_string)
-            t.lpush("queue:nostr", {class: "NewSubscription", args: [connection_id, subscription_id, filters_json_string]}.to_json)
+            t.lpush("queue:nostr.nip01.req", {class: "NewSubscription", args: [connection_id, subscription_id, filters_json_string]}.to_json)
           end
         end
       end
@@ -39,7 +39,7 @@ module Nostr
       end
 
       def event_command(nostr_event, _block)
-        redis.lpush("queue:nostr", {class: "NewEvent", args: [connection_id, nostr_event.first.to_json]}.to_json)
+        redis.lpush("queue:nostr.nip01.event", {class: "NewEvent", args: [connection_id, nostr_event.first.to_json]}.to_json)
       end
     end
   end

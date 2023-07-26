@@ -16,7 +16,7 @@ RSpec.describe("NIP-43") do
       it "enqueues AuthorizationRequest job" do
         event = build(:event, kind: 22242, tags: [["relay", "http://localhost"]], created_at: 5.seconds.ago)
         payload = CGI.escape(event.to_json)
-        nostr_queue = Sidekiq::Queue.new("nostr")
+        nostr_queue = Sidekiq::Queue.new("nostr.nip42")
 
         expect {
           subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION)

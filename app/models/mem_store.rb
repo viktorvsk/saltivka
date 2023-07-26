@@ -46,7 +46,7 @@ class MemStore
       Sidekiq.redis do |c|
         c.multi do |t|
           t.hset("authentications", cid, pubkey)
-          t.lpush("queue:nostr", {class: "AuthorizationRequest", args: [cid, event_sha256, pubkey]}.to_json)
+          t.lpush("queue:nostr.nip42", {class: "AuthorizationRequest", args: [cid, event_sha256, pubkey]}.to_json)
         end
       end
     end

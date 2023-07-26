@@ -1,6 +1,6 @@
 class CountRequest
   include Sidekiq::Worker
-  sidekiq_options queue: "nostr"
+  sidekiq_options queue: "nostr.nip45"
 
   def perform(connection_id, subscription_id, filters)
     filters = begin

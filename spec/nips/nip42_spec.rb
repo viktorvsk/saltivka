@@ -15,7 +15,7 @@ RSpec.describe("NIP-42") do
       it "adds Sidekiq job to Authorize Request" do
         REDIS_TEST_CONNECTION.sadd("connections", "CONN_ID")
         event = build(:event, kind: 22242, tags: [["relay", "http://localhost"], ["challenge", "CONN_ID"]])
-        nostr_queue = Sidekiq::Queue.new("nostr")
+        nostr_queue = Sidekiq::Queue.new("nostr.nip42")
 
         expect(MemStore).to receive(:authenticate!).with(cid: "CONN_ID", event_sha256: event.sha256, pubkey: event.pubkey).and_call_original
         expect(nostr_queue.size).to be_zero

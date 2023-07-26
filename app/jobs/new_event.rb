@@ -1,6 +1,6 @@
 class NewEvent
   include Sidekiq::Worker
-  sidekiq_options queue: "nostr"
+  sidekiq_options queue: "nostr.nip01.event"
 
   def perform(connection_id, event_json)
     event_params = JSON.parse(event_json)

@@ -1,6 +1,6 @@
 class AuthorizationRequest
   include Sidekiq::Worker
-  sidekiq_options queue: "nostr"
+  sidekiq_options queue: "nostr.nip42"
 
   # TODO: consider update active connections based on data changes
   # i.e. when TrustedAuthor record is created check if there are

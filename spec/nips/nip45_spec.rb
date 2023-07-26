@@ -65,8 +65,8 @@ RSpec.describe("NIP-45") do
 
       subject
 
-      assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr"), 1
-      assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr"), {class: "CountRequest", args: ["CONN_ID", "SUBID", "[{}]"]}.to_json
+      assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr.nip45"), 1
+      assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr.nip45"), {class: "CountRequest", args: ["CONN_ID", "SUBID", "[{}]"]}.to_json
       assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), []
       assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {}
     end

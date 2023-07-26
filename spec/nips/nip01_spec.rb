@@ -149,8 +149,8 @@ RSpec.describe("NIP-01") do
 
         subject
 
-        assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr"), 1
-        assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", "[{}]"]}.to_json
+        assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr.nip01.req"), 1
+        assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr.nip01.req"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", "[{}]"]}.to_json
         assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"]
         assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => "[{}]"}
       end
@@ -161,8 +161,8 @@ RSpec.describe("NIP-01") do
 
         subject
 
-        assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr"), 1
-        assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", [filters].to_json]}.to_json
+        assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr.nip01.req"), 1
+        assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr.nip01.req"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", [filters].to_json]}.to_json
         assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"]
         assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => [filters].to_json}
       end
@@ -241,8 +241,8 @@ RSpec.describe("NIP-01") do
 
           subject
 
-          assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr"), 1
-          assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr"), {class: "NewEvent", args: ["CONN_ID", @valid_event]}.to_json
+          assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr.nip01.event"), 1
+          assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr.nip01.event"), {class: "NewEvent", args: ["CONN_ID", @valid_event]}.to_json
         end
       end
 

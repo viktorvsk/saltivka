@@ -1,6 +1,6 @@
 class NewSubscription
   include Sidekiq::Worker
-  sidekiq_options queue: "nostr"
+  sidekiq_options queue: "nostr.nip01.req"
 
   def perform(connection_id, subscription_id, filters)
     filters = begin

@@ -48,7 +48,7 @@ module Nostr
           t.hset("authentications", connection_id, pubkey)
 
           # put event to Sidekiq
-          t.lpush("queue:nostr", {class: "AuthorizationRequest", args: [connection_id, event["id"], event["pubkey"]]}.to_json)
+          t.lpush("queue:nostr.nip42", {class: "AuthorizationRequest", args: [connection_id, event["id"], event["pubkey"]]}.to_json)
         end
 
         if RELAY_CONFIG.forced_min_auth_level > 0

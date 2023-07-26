@@ -28,6 +28,7 @@ gem "json_schemer"
 
 gem "sentry-ruby"
 gem "sentry-sidekiq"
+gem 'newrelic_rpm'
 
 group :development, :test do
   gem "debug", platforms: %i[mri mingw x64_mingw]

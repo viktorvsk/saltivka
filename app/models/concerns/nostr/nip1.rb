@@ -114,7 +114,7 @@ module Nostr
 
     class_methods do
       def by_nostr_filters(filter_set, subscriber_pubkey = nil)
-        rel = all.distinct(:id).order(created_at: :desc)
+        rel = all.select("events.id, events.created_at").distinct(:id).order("events.created_at DESC, events.id DESC")
         filter_set.stringify_keys!
 
         if RELAY_CONFIG.enforce_kind_4_authentication && filter_set["kinds"].blank?

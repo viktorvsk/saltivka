@@ -81,6 +81,7 @@ Now let's briefly review general app settings:
 | RAILS_ENV | environment to run application, most of the time should be left default | production |
 | RAILS\_SERVE\_STATIC_FILES | Make Rails serve static file in `/public` directory. Most of the time Rails should run behind reverse proxy with this parameter set to `false` and reverse proxy to serve static assets |
 | RAILS_LOG\_TO\_STDOUT | logs destination |
+| RAILS_LOG\_LEVEL | logs level | warn |
 | SECRET\_KEY_BASE | some random secret string for sessions and other stuff |
 | SENTRY_DSN | Sentry integration |
 | CI | run full tests suite on CI |

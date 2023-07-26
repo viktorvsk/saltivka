@@ -84,5 +84,8 @@ Now let's briefly review general app settings:
 | RAILS_LOG\_LEVEL | logs level | warn |
 | SECRET\_KEY_BASE | some random secret string for sessions and other stuff |
 | SENTRY_DSN | Sentry integration |
+| NEW_RELIC_LICENSE_KEY= | Newrelic integration |
+| NEW_RELIC_APP_NAME= | Newrelic app name |
+| NEW_RELIC_LOG_LEVEL= | Newrelic logs level |
 | CI | run full tests suite on CI |
 | RUBY_YJIT\_ENABLE | enable YJIT for Ruby, its Docker-image-dependent, usually should be left default| true |

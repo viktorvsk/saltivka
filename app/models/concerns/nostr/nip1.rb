@@ -164,17 +164,18 @@ module Nostr
           end
 
           if key == "ids"
-            rel = rel.where("events.sha256 LIKE ANY (ARRAY[?])", value.map { |id| "#{id}%" })
+            rel = rel.where("events.sha256 LIKE ANY (ARRAY[?])", value.map { |id| "#{id}%".first(64) }) # sha256 max length is 64 so we don't need % in this case
           end
 
           if key == "authors"
-            authors_to_search = value.map { |author| "#{author}%" }
+            authors_to_search = value.map { |author| "#{author}%".first(64) } # pubkey max length is 64 so we don't need % in this case
             rel = rel.joins(:author).where("authors.pubkey LIKE ANY (ARRAY[:values])", values: authors_to_search)
           end
 
           if /\A#[a-zA-Z]\Z/.match?(key)
             # NIP-12 + #e #p #d
-            rel = rel.joins(:searchable_tags).where("searchable_tags.name = '#{key.last}' AND searchable_tags.value LIKE ANY (ARRAY[?])", value.map { |t| "#{t}%" })
+            tags_values = value.map { |t| key.last.in?(%w[e p]) ? "#{t}%".first(64) : "#{t}%" } # #e and #p tags refer to sha256 and pubkey so their max length is 64 and we don't need % in this case
+            rel = rel.joins(:searchable_tags).where("searchable_tags.name = '#{key.last}' AND searchable_tags.value LIKE ANY (ARRAY[?])", tags_values)
           end
 
           rel = rel.where("created_at >= ?", Time.at(value)) if key == "since"
@@ -190,7 +191,7 @@ module Nostr
         if filter_set.key?("authors")
 
           # NIP-26
-          authors_to_search = filter_set["authors"].map { |author| "#{author}%" }
+          authors_to_search = filter_set["authors"].map { |author| "#{author}%".first(64) } # pubkey max length is 64 so we don't need % in this case
 
           delegator_rel = by_nostr_filters(filter_set.except("authors"), subscriber_pubkey).joins(:author)
             .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")

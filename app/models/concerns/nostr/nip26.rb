@@ -4,6 +4,15 @@ module Nostr
 
     included do
       validate :validate_delegation_nip26
+      has_one :event_delegator, dependent: :destroy
+      before_create do
+        if tags.any? { |t| t.first === "delegation" }
+
+          delegator_pubkey = tags.find { |t| t.first === "delegation" }.second
+
+          build_event_delegator(author: Author.create_or_find_by(pubkey: delegator_pubkey))
+        end
+      end
 
       private
 

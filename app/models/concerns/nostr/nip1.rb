@@ -136,12 +136,23 @@ module Nostr
                   where_clause = <<~SQL
                     events.kind IN (:kinds) OR
                       (
-                        events.kind = 4 AND (authors.pubkey = :pubkey OR delegation_or_p_tags.value = :pubkey)
+                        events.kind = 4 AND (authors.pubkey = :pubkey OR delegator_authors.pubkey = :pubkey OR p_tags.value = :pubkey)
                       )
                   SQL
-                  rel.joins(:author).joins("LEFT JOIN searchable_tags AS delegation_or_p_tags ON delegation_or_p_tags.event_id = events.id AND delegation_or_p_tags.name IN ('p', 'delegation')").where(where_clause, kinds: value, pubkey: subscriber_pubkey)
+                  # NIP-26
+                  rel
+                    .joins(:author)
+                    .joins("LEFT JOIN searchable_tags AS p_tags ON p_tags.event_id = events.id AND p_tags.name = 'p'")
+                    .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
+                    .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
+                    .where(where_clause, kinds: value, pubkey: subscriber_pubkey)
                 else
-                  rel.joins(:author).joins("LEFT JOIN searchable_tags AS delegation_or_p_tags ON delegation_or_p_tags.event_id = events.id AND delegation_or_p_tags.name IN ('p', 'delegation')").where("events.kind = 4 AND (authors.pubkey = :pubkey OR delegation_or_p_tags.value = :pubkey)", pubkey: subscriber_pubkey)
+                  rel
+                    .joins(:author)
+                    .joins("LEFT JOIN searchable_tags AS p_tags ON p_tags.event_id = events.id AND p_tags.name = 'p'")
+                    .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
+                    .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
+                    .where("events.kind = 4 AND (authors.pubkey = :pubkey OR delegator_authors.pubkey = :pubkey OR p_tags.value = :pubkey)", pubkey: subscriber_pubkey)
                 end
               else
                 rel.where(kind: value)
@@ -159,15 +170,11 @@ module Nostr
             # NIP-26
             authors_to_search = value.map { |author| "#{author}%" }
             where_clause = <<~SQL
-              (
-                authors.pubkey LIKE ANY (ARRAY[:values])) OR
-                  (
-                    delegation_tags.value LIKE ANY (ARRAY[:values]
-                  )
-              )
+              authors.pubkey LIKE ANY (ARRAY[:values]) OR delegator_authors.pubkey LIKE ANY (ARRAY[:values])
             SQL
             rel = rel.joins(:author)
-              .joins("LEFT JOIN searchable_tags AS delegation_tags ON delegation_tags.event_id = events.id AND delegation_tags.name = 'delegation'")
+              .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
+              .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
               .where(where_clause, values: authors_to_search)
           end
 

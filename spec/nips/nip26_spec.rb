@@ -13,8 +13,8 @@ RSpec.describe "NIP-26" do
       describe SearchableTag do
         it "indexes second value" do
           event = create(:event, :delegated_event, kind: 1, created_at: Time.at(1687949586 - 100))
-          expect(event.searchable_tags.count).to eq(1)
-          expect(event.searchable_tags.first.value).to eq(NIP_26_TAG[:pk])
+          expect(event.event_delegator).to be_present
+          expect(event.event_delegator.author.pubkey).to eq(NIP_26_TAG[:pk])
         end
       end
     end

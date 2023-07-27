@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_22_095546) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_26_191618) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "plpgsql"
@@ -33,6 +33,13 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_22_095546) do
     t.citext "sha256", null: false
     t.bigint "author_id", null: false
     t.index ["sha256", "author_id"], name: "index_delete_events_on_sha256_and_author_id", unique: true
+  end
+
+  create_table "event_delegators", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "author_id", null: false
+    t.index ["event_id", "author_id"], name: "index_event_delegators_on_event_id_and_author_id"
+    t.index ["event_id"], name: "index_event_delegators_on_event_id", unique: true
   end
 
   create_table "events", force: :cascade do |t|
@@ -113,6 +120,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_22_095546) do
 
   add_foreign_key "author_subscriptions", "authors"
   add_foreign_key "delete_events", "authors"
+  add_foreign_key "event_delegators", "authors"
+  add_foreign_key "event_delegators", "events"
   add_foreign_key "events", "authors"
   add_foreign_key "invoices", "authors"
   add_foreign_key "searchable_tags", "events"

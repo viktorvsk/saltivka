@@ -17,9 +17,7 @@ module Nostr
           tag_name, tag_value = tag
           tag_value_too_long = tag_value && tag.second.size > RELAY_CONFIG.max_searchable_tag_value_length
           next if tag_value_too_long
-          satisfies_nip_12 = tag_name.size > 1 # NIP-12 populate searchable filters for every single letter tag
-          satisfies_nip_26 = tag_name != "delegation" # indexes delegation pubkey for search
-          next if !satisfies_nip_12 && !satisfies_nip_26
+          next if tag_name.size != 1 # NIP-12 populate searchable filters for every single letter tag
           tag_value ||= ""
 
           searchable_tags.new(name: tag_name, value: tag_value)

@@ -140,6 +140,7 @@ module Nostr
                       )
                   SQL
                   # NIP-26
+                  # TODO: check performance
                   rel
                     .joins(:author)
                     .joins("LEFT JOIN searchable_tags AS p_tags ON p_tags.event_id = events.id AND p_tags.name = 'p'")
@@ -167,15 +168,8 @@ module Nostr
           end
 
           if key == "authors"
-            # NIP-26
             authors_to_search = value.map { |author| "#{author}%" }
-            where_clause = <<~SQL
-              authors.pubkey LIKE ANY (ARRAY[:values]) OR delegator_authors.pubkey LIKE ANY (ARRAY[:values])
-            SQL
-            rel = rel.joins(:author)
-              .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
-              .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
-              .where(where_clause, values: authors_to_search)
+            rel = rel.joins(:author).where("authors.pubkey LIKE ANY (ARRAY[:values])", values: authors_to_search)
           end
 
           if /\A#[a-zA-Z]\Z/.match?(key)
@@ -193,7 +187,29 @@ module Nostr
           RELAY_CONFIG.default_filter_limit
         end
 
-        rel.limit(filter_limit)
+        if filter_set.key?("authors")
+
+          # NIP-26
+          authors_to_search = filter_set["authors"].map { |author| "#{author}%" }
+
+          delegator_rel = by_nostr_filters(filter_set.except("authors"), subscriber_pubkey).joins(:author)
+            .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
+            .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
+            .where("delegator_authors.pubkey LIKE ANY (ARRAY[:values])", values: authors_to_search)
+
+          union = <<~SQL
+            (#{rel.limit(filter_limit).to_sql})
+
+            UNION
+
+            (#{delegator_rel.limit(filter_limit).to_sql})
+          SQL
+
+          LazySql.new(klass: "Event", sql: union)
+
+        else
+          rel.limit(filter_limit)
+        end
       end
     end
   end

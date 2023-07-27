@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_26_191618) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_27_102633) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "plpgsql"
@@ -24,9 +24,9 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_26_191618) do
   end
 
   create_table "authors", force: :cascade do |t|
-    t.citext "pubkey", null: false
-    t.index ["pubkey"], name: "index_authors_for_prefix_search_on_pubkey", opclass: :varchar_pattern_ops
-    t.index ["pubkey"], name: "index_authors_on_pubkey", unique: true
+    t.text "pubkey", null: false
+    t.index "lower(pubkey) varchar_pattern_ops", name: "index_authors_for_prefix_search_on_pubkey"
+    t.index "lower(pubkey)", name: "index_authors_on_lower_pubkey", unique: true
   end
 
   create_table "delete_events", id: false, force: :cascade do |t|
@@ -47,14 +47,14 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_26_191618) do
     t.jsonb "tags", default: []
     t.binary "content"
     t.bigint "author_id", null: false
-    t.citext "sha256", null: false
+    t.text "sha256", null: false
     t.citext "sig", null: false
     t.datetime "created_at"
+    t.index "lower(sha256) varchar_pattern_ops", name: "index_events_for_prefix_search_on_sha256"
+    t.index "lower(sha256)", name: "index_events_on_lower_sha256", unique: true
     t.index ["author_id"], name: "index_events_on_author_id"
     t.index ["created_at", "kind"], name: "index_events_on_created_at_and_kind"
     t.index ["kind"], name: "index_events_on_kind"
-    t.index ["sha256"], name: "index_events_for_prefix_search_on_sha256", opclass: :varchar_pattern_ops
-    t.index ["sha256"], name: "index_events_on_sha256", unique: true
     t.index ["sig"], name: "index_events_on_sig", unique: true
   end
 
@@ -80,9 +80,9 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_26_191618) do
   create_table "searchable_tags", id: false, force: :cascade do |t|
     t.bigint "event_id", null: false
     t.string "name", null: false
-    t.string "value", null: false
-    t.index ["event_id", "name", "value"], name: "index_searchable_tags_on_event_id_and_name_and_value", unique: true
-    t.index ["value"], name: "index_searchable_tags_for_prefix_search_on_value", opclass: :varchar_pattern_ops
+    t.text "value", null: false
+    t.index "event_id, name, lower(value)", name: "index_searchable_tags_on_event_id_and_name_and_value", unique: true
+    t.index "lower(value) varchar_pattern_ops", name: "index_searchable_tags_for_prefix_search_on_value"
   end
 
   create_table "trusted_authors", force: :cascade do |t|

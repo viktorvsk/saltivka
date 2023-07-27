@@ -109,8 +109,8 @@ RSpec.describe("NIP-01") do
         event_params = parsed_json.merge("sha256" => parsed_json.delete("id"), "created_at" => Time.at(parsed_json["created_at"]))
         Event.create!(event_params)
 
-        expect(Event.by_nostr_filters({"authors" => ["09cd08d"]}).count).to eq(1)
         expect(Event.by_nostr_filters({"authors" => ["8e0d3"]}).count).to eq(1)
+        expect(Event.by_nostr_filters({"authors" => ["09cd08d"]}).count).to eq(1)
         expect(Event.by_nostr_filters({}).count).to eq(3)
         expect(Event.by_nostr_filters({limit: 1}).count).to eq(1)
         expect(Event.by_nostr_filters({kinds: 0}).count).to eq(1)

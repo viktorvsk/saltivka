@@ -83,6 +83,8 @@ Now let's briefly review general app settings:
 | RAILS_LOG\_TO\_STDOUT | logs destination |
 | RAILS_LOG\_LEVEL | logs level | warn |
 | ACTIVE\_RECORD\_LOG\_LEVEL | database logs level | warn |
+| ACTIVE\_RECORD\_SLOW\_QUERIES\_THRESHOLD | determines which queries are slow and should be logged (ms) | 1000 |
+| ACTIVE\_RECORD_LOG\_SLOW\_QUERIES | whether to log slow queries or not (true/false) | false |
 | SECRET\_KEY_BASE | some random secret string for sessions and other stuff |
 | SENTRY_DSN | Sentry integration |
 | NEW_RELIC_LICENSE_KEY= | Newrelic integration |

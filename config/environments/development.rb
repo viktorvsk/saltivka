@@ -63,7 +63,7 @@ Rails.application.configure do
     logger = ActiveSupport::Logger.new($stdout)
     logger.formatter = config.log_formatter
     config.logger = ActiveSupport::TaggedLogging.new(logger)
-    config.logger.level = :debug
+    config.logger.level = ENV.fetch("RAILS_LOG_LEVEL", "debug").to_sym
   end
 
   # Raises error for missing translations.

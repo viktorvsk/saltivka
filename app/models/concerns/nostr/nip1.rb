@@ -165,14 +165,14 @@ module Nostr
 
           if key == "ids"
             # sha256 max length is 64 so we don't need a predicate match in this case
-            where_clause = value.uniq.map { |id| "events.sha256 #{(id.length == 64) ? "=" : "^@"} '#{id.downcase}'" }.join(" OR ")
+            where_clause = value.uniq.map { |id| "LOWER(events.sha256) #{(id.length == 64) ? "=" : "^@"} '#{id.downcase}'" }.join(" OR ")
 
             rel = rel.where(where_clause)
           end
 
           if key == "authors"
             # pubkey max length is 64 so we don't need a predicate match in this case
-            where_clause = value.uniq.map { |pubkey| "authors.pubkey #{(pubkey.length == 64) ? "=" : "^@"} '#{pubkey.downcase}'" }.join(" OR ")
+            where_clause = value.uniq.map { |pubkey| "LOWER(authors.pubkey) #{(pubkey.length == 64) ? "=" : "^@"} '#{pubkey.downcase}'" }.join(" OR ")
 
             rel = rel.joins(:author).where(where_clause)
           end
@@ -181,9 +181,9 @@ module Nostr
             # value of #e and #p tags max length is 64 so we don't need a predicate match in this case
             where_clause = value.map do |t|
               if key.last.in?(%w[e p])
-                "searchable_tags.value #{(t.length == 64) ? "=" : "^@"} '#{t.downcase}'"
+                "LOWER(searchable_tags.value) #{(t.length == 64) ? "=" : "^@"} '#{t.downcase}'"
               else
-                "searchable_tags.value ^@ '#{t}'"
+                "LOWER(searchable_tags.value) ^@ '#{t}'"
               end
             end
             where_clause = where_clause.join(" OR ")

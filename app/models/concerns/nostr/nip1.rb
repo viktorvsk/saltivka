@@ -164,18 +164,31 @@ module Nostr
           end
 
           if key == "ids"
-            rel = rel.where("events.sha256 LIKE ANY (ARRAY[?])", value.map { |id| "#{id}%".first(64) }) # sha256 max length is 64 so we don't need % in this case
+            # sha256 max length is 64 so we don't need a predicate match in this case
+            where_clause = value.map { |id| "events.sha256 #{(id.length == 64) ? "=" : "^@"} '#{id.downcase}'" }.join(" OR ")
+
+            rel = rel.where(where_clause)
           end
 
           if key == "authors"
-            authors_to_search = value.map { |author| "#{author}%".first(64) } # pubkey max length is 64 so we don't need % in this case
-            rel = rel.joins(:author).where("authors.pubkey LIKE ANY (ARRAY[:values])", values: authors_to_search)
+            # pubkey max length is 64 so we don't need a predicate match in this case
+            where_clause = value.map { |pubkey| "authors.pubkey #{(pubkey.length == 64) ? "=" : "^@"} '#{pubkey.downcase}'" }.join(" OR ")
+
+            rel = rel.joins(:author).where(where_clause)
           end
 
           if /\A#[a-zA-Z]\Z/.match?(key)
-            # NIP-12 + #e #p #d
-            tags_values = value.map { |t| key.last.in?(%w[e p]) ? "#{t}%".first(64) : "#{t}%" } # #e and #p tags refer to sha256 and pubkey so their max length is 64 and we don't need % in this case
-            rel = rel.joins(:searchable_tags).where("searchable_tags.name = '#{key.last}' AND searchable_tags.value LIKE ANY (ARRAY[?])", tags_values)
+            # value of #e and #p tags max length is 64 so we don't need a predicate match in this case
+            where_clause = value.map do |t|
+              if key.last.in?(%w[e p])
+                "searchable_tags.name = '#{key.last}' AND searchable_tags.value #{(t.length == 64) ? "=" : "^@"} '#{t.downcase}'"
+              else
+                "searchable_tags.name = '#{key.last}' AND searchable_tags.value ^@ '#{t}'"
+              end
+            end
+            where_clause = where_clause.join(" OR ")
+
+            rel = rel.joins(:searchable_tags).where(where_clause)
           end
 
           rel = rel.where("created_at >= ?", Time.at(value)) if key == "since"
@@ -191,13 +204,14 @@ module Nostr
         if filter_set.key?("authors")
 
           # NIP-26
-          authors_to_search = filter_set["authors"].map { |author| "#{author}%".first(64) } # pubkey max length is 64 so we don't need % in this case
+
+          # pubkey max length is 64 so we don't need a predicate match in this case
+          where_clause = filter_set["authors"].map { |pubkey| "delegator_authors.pubkey #{(pubkey.length == 64) ? "=" : "^@"} '#{pubkey.downcase}'" }.join(" OR ")
 
           delegator_rel = by_nostr_filters(filter_set.except("authors"), subscriber_pubkey).joins(:author)
             .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
             .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
-            .where("delegator_authors.pubkey LIKE ANY (ARRAY[:values])", values: authors_to_search)
-
+            .where(where_clause)
           union = <<~SQL
             (#{rel.limit(filter_limit).to_sql})
 

@@ -12,8 +12,8 @@ module Nostr
     private
 
     def process_replaceable_nip_1_nip_2_nip_16
-      Event.joins(:author).where(authors: {pubkey: pubkey}, kind: kind).where("events.created_at < ?", created_at).destroy_all
-      Event.joins(:author).where(authors: {pubkey: pubkey}, kind: kind, created_at: created_at).where("events.sha256 > ?", sha256).destroy_all
+      Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind).where("events.created_at < ?", created_at).destroy_all
+      Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, created_at: created_at).where("LOWER(events.sha256) > ?", sha256.downcase).destroy_all
     end
 
     def must_not_be_ephemeral_nip16
@@ -27,11 +27,11 @@ module Nostr
     def must_be_newer_than_existing_replaceable_nip16
       should_not_save = false
 
-      newer_exists = Event.joins(:author).where(authors: {pubkey: pubkey}, kind: kind).where("events.created_at > ?", created_at).exists?
+      newer_exists = Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind).where("events.created_at > ?", created_at).exists?
       should_not_save = true if newer_exists
 
       # Looks a bit ugly but in this we only make second check if required
-      should_not_save ||= Event.joins(:author).where(authors: {pubkey: pubkey}, kind: kind, created_at: created_at).where("events.sha256 < ?", sha256).exists?
+      should_not_save ||= Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, created_at: created_at).where("LOWER(events.sha256) < ?", sha256.downcase).exists?
 
       # We add such a strange error key in order for client to receive OK message with duplicate: prefix
       # We kinda say that "This event already exists" which is technically not true

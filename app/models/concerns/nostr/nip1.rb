@@ -136,7 +136,7 @@ module Nostr
                   where_clause = <<~SQL
                     events.kind IN (:kinds) OR
                       (
-                        events.kind = 4 AND (authors.pubkey = :pubkey OR delegator_authors.pubkey = :pubkey OR p_tags.value = :pubkey)
+                        events.kind = 4 AND (LOWER(authors.pubkey) = :pubkey OR LOWER(delegator_authors.pubkey) = :pubkey OR LOWER(p_tags.value) = :pubkey)
                       )
                   SQL
                   # NIP-26
@@ -146,14 +146,14 @@ module Nostr
                     .joins("LEFT JOIN searchable_tags AS p_tags ON p_tags.event_id = events.id AND p_tags.name = 'p'")
                     .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
                     .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
-                    .where(where_clause, kinds: value, pubkey: subscriber_pubkey)
+                    .where(where_clause, kinds: value, pubkey: subscriber_pubkey.downcase)
                 else
                   rel
                     .joins(:author)
                     .joins("LEFT JOIN searchable_tags AS p_tags ON p_tags.event_id = events.id AND p_tags.name = 'p'")
                     .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
                     .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
-                    .where("events.kind = 4 AND (authors.pubkey = :pubkey OR delegator_authors.pubkey = :pubkey OR p_tags.value = :pubkey)", pubkey: subscriber_pubkey)
+                    .where("events.kind = 4 AND (LOWER(authors.pubkey) = :pubkey OR LOWER(delegator_authors.pubkey) = :pubkey OR LOWER(p_tags.value) = :pubkey)", pubkey: subscriber_pubkey.downcase)
                 end
               else
                 rel.where(kind: value)
@@ -183,12 +183,12 @@ module Nostr
               if key.last.in?(%w[e p])
                 "LOWER(searchable_tags.value) #{(t.length == 64) ? "=" : "^@"} '#{t.downcase}'"
               else
-                "LOWER(searchable_tags.value) ^@ '#{t}'"
+                "LOWER(searchable_tags.value) ^@ '#{t.downcase}'"
               end
             end
             where_clause = where_clause.join(" OR ")
 
-            rel = rel.joins(:searchable_tags).where(searchable_tags: { name: key.last }).where(where_clause)
+            rel = rel.joins(:searchable_tags).where(searchable_tags: {name: key.last}).where(where_clause)
           end
 
           rel = rel.where("created_at >= ?", Time.at(value)) if key == "since"
@@ -206,7 +206,7 @@ module Nostr
           # NIP-26
 
           # pubkey max length is 64 so we don't need a predicate match in this case
-          where_clause = filter_set["authors"].map { |pubkey| "delegator_authors.pubkey #{(pubkey.length == 64) ? "=" : "^@"} '#{pubkey.downcase}'" }.join(" OR ")
+          where_clause = filter_set["authors"].map { |pubkey| "LOWER(delegator_authors.pubkey) #{(pubkey.length == 64) ? "=" : "^@"} '#{pubkey.downcase}'" }.join(" OR ")
 
           delegator_rel = by_nostr_filters(filter_set.except("authors"), subscriber_pubkey).joins(:author)
             .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")

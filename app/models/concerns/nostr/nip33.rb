@@ -14,8 +14,8 @@ module Nostr
 
       d_tag_value = d_tag.second.to_s
 
-      Event.joins(:author, :searchable_tags).where(authors: {pubkey: pubkey}, kind: kind, searchable_tags: {name: "d", value: d_tag_value}).where("events.created_at < ?", created_at).destroy_all
-      Event.joins(:author, :searchable_tags).where(authors: {pubkey: pubkey}, kind: kind, created_at: created_at, searchable_tags: {name: "d", value: d_tag_value}).where("events.sha256 > ?", sha256).destroy_all
+      Event.joins(:author, :searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, searchable_tags: {name: "d"}).where("events.created_at < ?", created_at).destroy_all
+      Event.joins(:author, :searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, created_at: created_at, searchable_tags: {name: "d"}).where("LOWER(events.sha256) > ?", sha256.downcase).destroy_all
     end
 
     def must_be_newer_than_existing_parameterized_replaceable_nip33
@@ -25,11 +25,19 @@ module Nostr
 
       d_tag_value = d_tag.second.to_s
 
-      newer_exists = Event.joins(:author, :searchable_tags).where(authors: {pubkey: pubkey}, searchable_tags: {name: "d", value: d_tag_value}, kind: kind).where("events.created_at > ?", created_at).exists?
+      newer_exists = Event.joins(:author, :searchable_tags)
+        .where(searchable_tags: {name: "d"}, kind: kind)
+        .where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase)
+        .where("LOWER(authors.pubkey) = ?", pubkey.downcase)
+        .where("events.created_at > ?", created_at).exists?
       should_not_save = true if newer_exists
 
       # Looks a bit ugly but in this we only make second check if required
-      should_not_save ||= Event.joins(:author, :searchable_tags).where(authors: {pubkey: pubkey}, searchable_tags: {name: "d", value: d_tag_value}, kind: kind, created_at: created_at).where("events.sha256 < ?", sha256).exists?
+      should_not_save ||= Event.joins(:author, :searchable_tags)
+        .where(searchable_tags: {name: "d"}, kind: kind, created_at: created_at)
+        .where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase)
+        .where("LOWER(authors.pubkey) = ?", pubkey.downcase)
+        .where("LOWER(events.sha256) < ?", sha256.downcase).exists?
 
       # We add such a strange error key in order for client to receive OK message with duplicate: prefix
       # We kinda say that "This event already exists" which is technically not true

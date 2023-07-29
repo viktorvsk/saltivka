@@ -9,14 +9,14 @@ class AuthorizationRequest
   # NOTE: it seems it makes sense to notify client AUTH is succesful, but NIP-16/NIP-20 tell us not to fanout ephemeral events
   # MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event_sha256, true, ""].to_json)
   def perform(connection_id, event_sha256, pubkey)
-    if TrustedAuthor.joins(:author).where(authors: {pubkey: pubkey}).exists?
+    if TrustedAuthor.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).exists?
       MemStore.authorize!(cid: connection_id, level: "4")
-    elsif AuthorSubscription.active.joins(:author).where(authors: {pubkey: pubkey}).exists?
+    elsif AuthorSubscription.active.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).exists?
       MemStore.authorize!(cid: connection_id, level: "3")
 
-    elsif User.active.joins(:authors).where(authors: {pubkey: pubkey}).where("users.id IN (#{User.active.select(:id).joins(authors: :author_subscription).where("author_subscriptions.expires_at > ?", Time.current).to_sql})").exists? # TODO: finish
+    elsif User.active.joins(:authors).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where("users.id IN (#{User.active.select(:id).joins(authors: :author_subscription).where("author_subscriptions.expires_at > ?", Time.current).to_sql})").exists? # TODO: finish
       MemStore.authorize!(cid: connection_id, level: "3")
-    elsif User.active.joins(:authors).where(authors: {pubkey: pubkey}).exists?
+    elsif User.active.joins(:authors).where("LOWER(authors.pubkey) = ?", pubkey.downcase).exists?
       MemStore.authorize!(cid: connection_id, level: "2")
     else
       # assign level 1 if user is a guest but with authenticated public key

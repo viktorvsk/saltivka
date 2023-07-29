@@ -51,11 +51,11 @@ Some thoughts and hints on production deployment may be found [here](/docs/DEPLO
 * Live instance could be found at [https://saltivka.org](https://saltivka.org) and relay address is `wss://saltivka.org`
 
 ## Docker Compose (demo)
-1. Prepare a host with docker environment installed (something like [this](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04)). Demo setup expects approximately 8 GB of RAM
+1. Prepare a host with docker environment installed (something like [this](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04)). Demo setup expects approximately 8 GB of RAM and 4vCPU
 2. SSH into this host
 3. ```git clone https://github.com/viktorvsk/saltivka.git```
 4. ```cd saltivka```
-6. ```docker compose up --build --scale worker=4```
+6. ```docker compose up --build```
 
 That's it! Wait a minute or two until database is ready. Now you should have HTTP/WS server available at `localhost:3000` and HTTPS/WSS at `localhost:2402`. Ensure ports are open on your server. Both commands should work and let you start working with Nostr:
 

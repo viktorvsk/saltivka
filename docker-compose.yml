@@ -20,30 +20,101 @@ services:
       POSTGRES_USER: nostr
       POSTGRES_DB: saltivka_development
       POSTGRES_HOST_AUTH_METHOD: trust
+    command:
+      - "docker-entrypoint.sh"
+      - "-c"
+      - "max_connections=300"
+      - "-c"
+      - "shared_buffers=1280MB"
+      - "-c"
+      - "effective_cache_size=3840MB"
+      - "-c"
+      - "maintenance_work_mem=320MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "work_mem=3276kB"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "max_wal_size=4GB"
+      - "-c"
+      - "max_worker_processes=4"
+      - "-c"
+      - "max_parallel_workers_per_gather=2"
+      - "-c"
+      - "max_parallel_workers=4"
+      - "-c"
+      - "max_parallel_maintenance_workers=2"
+
   redis:
     image: redis/redis-stack-server
     environment:
-      - REDIS_ARGS=--maxmemory 2GB --maxmemory-policy noeviction --maxclients 10000 --tcp-backlog 511 # https://github.com/redis-stack/redis-stack/issues/110
+      - REDIS_ARGS=--io-threads 1 --io-threads-do-reads no --appendonly yes --maxmemory 1536mb --maxmemory-policy noeviction --bind 0.0.0.0 --requirepass redispass --maxclients 10000 --tcp-backlog 511 # https://github.com/redis-stack/redis-stack/issues/110
   db-migration:
-    image: viktorvsk/saltivka
+    image: viktorvsk/saltivka:latest
     env_file: ./demo/.env
     command: sh -c "until bundle exec rails db:migrate db:seed; do sleep 5; done"
     depends_on:
       - postgresql
       - redis
   webserver:
-    image: viktorvsk/saltivka
+    image: viktorvsk/saltivka:latest
     env_file: ./demo/.env
+    environment:
+      POSTGRES_POOL: "16"
+      RAILS_MAX_THREADS: "16"
+      RAILS_MIN_THREADS: "16"
+      WEB_CONCURRENCY: '6'
     ports:
       - 3000:3000
     depends_on:
       - postgresql
       - redis
       - db-migration
-  worker:
-    image: viktorvsk/saltivka
+  worker-default:
+    image: viktorvsk/saltivka:latest
     env_file: ./demo/.env
-    command: bundle exec sidekiq -q nostr.nip01.req -q nostr.nip01.event -q nostr.nip40 -q nostr.nip42 -q nostr.nip45 -q payment_webhooks
+    environment:
+      POSTGRES_POOL: 25
+      RAILS_MAX_THREADS: 25
+      RAILS_MIN_THREADS: 25
+      WEB_CONCURRENCY: 0
+    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip40", "-q", "nostr.nip42,100", "-q", "nostr.nip45", "-q", "payment_webhooks,10", "-c", "25"]
+    depends_on:
+      - postgresql
+      - redis
+      - db-migration
+  worker-new-events:
+    image: viktorvsk/saltivka:latest
+    env_file: ./demo/.env
+    environment:
+      POSTGRES_POOL: 25
+      RAILS_MAX_THREADS: 25
+      RAILS_MIN_THREADS: 25
+      WEB_CONCURRENCY: 0
+    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip01.event", "-c", "25"]
+    depends_on:
+      - postgresql
+      - redis
+      - db-migration
+  worker-new-subscriptions:
+    image: viktorvsk/saltivka:latest
+    env_file: ./demo/.env
+    environment:
+      POSTGRES_POOL: 5
+      RAILS_MAX_THREADS: 5
+      RAILS_MIN_THREADS: 5
+      WEB_CONCURRENCY: 0
+    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip01.req -c 5"]
     depends_on:
       - postgresql
       - redis

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_27_102633) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_29_132200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "plpgsql"
@@ -25,8 +25,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_27_102633) do
 
   create_table "authors", force: :cascade do |t|
     t.text "pubkey", null: false
-    t.index "lower(pubkey) varchar_pattern_ops", name: "index_authors_for_prefix_search_on_pubkey"
-    t.index "lower(pubkey)", name: "index_authors_on_lower_pubkey", unique: true
+    t.index "lower(pubkey) varchar_pattern_ops", name: "index_authors_on_lower_pubkey_varchar_pattern_ops", unique: true
   end
 
   create_table "delete_events", id: false, force: :cascade do |t|
@@ -50,12 +49,10 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_27_102633) do
     t.text "sha256", null: false
     t.citext "sig", null: false
     t.datetime "created_at"
-    t.index "lower(sha256) varchar_pattern_ops", name: "index_events_for_prefix_search_on_sha256"
-    t.index "lower(sha256)", name: "index_events_on_lower_sha256", unique: true
+    t.index "lower(sha256) varchar_pattern_ops", name: "index_events_on_lower_sha256_varchar_pattern_ops", unique: true
     t.index ["author_id"], name: "index_events_on_author_id"
     t.index ["created_at", "kind"], name: "index_events_on_created_at_and_kind"
     t.index ["kind"], name: "index_events_on_kind"
-    t.index ["sig"], name: "index_events_on_sig", unique: true
   end
 
   create_table "invoices", force: :cascade do |t|

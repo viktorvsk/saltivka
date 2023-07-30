@@ -14,8 +14,12 @@ module Nostr
 
       d_tag_value = d_tag.second.to_s
 
-      Event.joins(:author, :searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, searchable_tags: {name: "d"}).where("events.created_at < ?", created_at).destroy_all
-      Event.joins(:author, :searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, created_at: created_at, searchable_tags: {name: "d"}).where("LOWER(events.sha256) > ?", sha256.downcase).destroy_all
+      to_delete = [
+        Event.joins(:author, :searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, searchable_tags: {name: "d"}).where("events.created_at < ?", created_at).pluck(:id),
+        Event.joins(:author, :searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, created_at: created_at, searchable_tags: {name: "d"}).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
+      ].flatten.reject(&:blank?)
+
+      Event.where(id: to_delete).destroy_all
     end
 
     def must_be_newer_than_existing_parameterized_replaceable_nip33

@@ -12,8 +12,12 @@ module Nostr
     private
 
     def process_replaceable_nip_1_nip_2_nip_16
-      Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind).where("events.created_at < ?", created_at).destroy_all
-      Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, created_at: created_at).where("LOWER(events.sha256) > ?", sha256.downcase).destroy_all
+      to_delete = [
+        Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind).where("events.created_at < ?", created_at).pluck(:id),
+        Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, created_at: created_at).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
+      ].flatten.reject(&:blank?)
+
+      Event.where(id: to_delete.uniq).destroy_all
     end
 
     def must_not_be_ephemeral_nip16

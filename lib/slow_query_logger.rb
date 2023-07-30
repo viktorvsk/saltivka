@@ -25,7 +25,7 @@ class SlowQueryLogger
       hash: Digest::SHA1.hexdigest(payload[:sql]),
       time: start.iso8601,
       pid: Process.pid,
-      pname: $PROGRAM_NAME,
+      pname: $PROGRAM_NAME
     }.compact
 
     @logger.warn(data)

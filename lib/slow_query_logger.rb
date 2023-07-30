@@ -22,7 +22,7 @@ class SlowQueryLogger
       length: payload[:sql].size,
       cached: payload[:cache] ? true : false,
       query: JSON.dump(payload[:sql].strip.gsub(/(^(\s+)?$\n)/, "")),
-      hash: Digest::SHA1.hexdigest(payload[:sql])
+      hash: Digest::SHA1.hexdigest(payload[:sql]),
       time: start.iso8601,
       pid: Process.pid,
       pname: $PROGRAM_NAME,

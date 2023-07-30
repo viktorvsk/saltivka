@@ -78,7 +78,7 @@ module Nostr
       end
 
       def pubkey=(value)
-        self.author = Author.create_or_find_by(pubkey: value)
+        self.author_id = Author.select(:id).create_or_find_by(pubkey: value).id
       end
 
       def created_at=(value)

@@ -10,7 +10,7 @@ module Nostr
 
           delegator_pubkey = tags.find { |t| t.first === "delegation" }.second
 
-          build_event_delegator(author: Author.create_or_find_by(pubkey: delegator_pubkey))
+          build_event_delegator(author_id: Author.select(:id).create_or_find_by(pubkey: delegator_pubkey).id)
         end
       end
 

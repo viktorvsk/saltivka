@@ -18,14 +18,14 @@ class SlowQueryLogger
     return unless duration >= @threshold
 
     data = {
+      duration: duration,
+      length: payload[:sql].size,
+      cached: payload[:cache] ? true : false,
+      query: JSON.dump(payload[:sql].strip.gsub(/(^(\s+)?$\n)/, "")),
+      hash: Digest::SHA1.hexdigest(payload[:sql])
       time: start.iso8601,
       pid: Process.pid,
       pname: $PROGRAM_NAME,
-      duration: duration,
-      query: payload[:sql].strip.gsub(/(^(\s+)?$\n)/, ""),
-      length: payload[:sql].size,
-      cached: payload[:cache] ? true : false,
-      hash: Digest::SHA1.hexdigest(payload[:sql])
     }.compact
 
     @logger.warn(data)
@@ -34,6 +34,8 @@ class SlowQueryLogger
   private
 
   def formatter(severity, time, progname, data)
-    "[SLOW] payload=#{JSON.dump(data)}" + "\n"
+    params_string = data.map { |pair| pair.join("=") }.join(" ")
+
+    "[SLOW] #{params_string}" + "\n"
   end
 end

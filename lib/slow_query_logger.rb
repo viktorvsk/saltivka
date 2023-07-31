@@ -18,7 +18,7 @@ class SlowQueryLogger
     return unless duration >= @threshold
 
     data = {
-      duration: duration,
+      duration: duration.to_i,
       length: payload[:sql].size,
       cached: payload[:cache] ? true : false,
       query: JSON.dump(payload[:sql].strip.gsub(/(^(\s+)?$\n)/, "")),

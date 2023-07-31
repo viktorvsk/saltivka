@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_29_132200) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_31_011311) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "plpgsql"
@@ -72,6 +72,14 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_29_132200) do
     t.index ["author_id"], name: "index_invoices_on_author_id"
     t.index ["external_id", "provider"], name: "index_invoices_on_external_id_and_provider", unique: true
     t.index ["order_id"], name: "index_invoices_on_order_id", unique: true
+  end
+
+  create_table "relay_mirrors", force: :cascade do |t|
+    t.string "url", null: false
+    t.boolean "active", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["url"], name: "index_relay_mirrors_on_url", unique: true
   end
 
   create_table "searchable_tags", id: false, force: :cascade do |t|

@@ -3,7 +3,7 @@ require "admin_constraint"
 
 Rails.application.routes.draw do
   mount Nostr::Relay, at: "/", constraints: ->(request) { Faye::WebSocket.websocket?(request.env) || request.env["HTTP_ACCEPT"] === "application/nostr+json" }
-  mount Sidekiq::Web => "/sidekiq", :constraints => AdminConstraint.new
+  mount Sidekiq::Web => "/sidekiq", :constraints => AdminConstraint.new, as: :sidekiq
 
   root to: "homes#show"
 

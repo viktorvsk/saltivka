@@ -3,7 +3,7 @@ require "admin_constraint"
 
 Rails.application.routes.draw do
   mount Nostr::Relay, at: "/", constraints: ->(request) { Faye::WebSocket.websocket?(request.env) || request.env["HTTP_ACCEPT"] === "application/nostr+json" }
-  mount Sidekiq::Web => "/sidekiq", :constraints => AdminConstraint.new, as: :sidekiq
+  mount Sidekiq::Web => "/sidekiq", :constraints => AdminConstraint.new, :as => :sidekiq
 
   root to: "homes#show"
 
@@ -25,6 +25,10 @@ Rails.application.routes.draw do
     resources :trusted_authors, only: %i[index create destroy]
     resources :connections, only: %i[index destroy]
     resources :author_subscriptions, only: %i[index show create destroy]
+    resources :relay_mirrors, except: %i[show edit update] do
+      put :activate, on: :member
+      put :deactivate, on: :member
+    end
     resource :configuration, only: %i[show update]
     root to: "connections#index"
   end

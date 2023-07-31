@@ -1,0 +1,21 @@
+<tr>
+  <td>
+    <span class="tag is-link"><%= relay_mirror.url %></span>
+    <span class="tag <%= relay_mirror.active ? "is-primary is-light" : "is-warning is-light" %>"><%= relay_mirror.active ? "Active" : "Inactive" %></span>
+    <% if relay_mirror.oldest.to_i.positive? %>
+      <span class="tag">since <%= Time.at(relay_mirror.oldest) %></span>
+    <% end %>
+    <% if relay_mirror.newest.to_i.positive? %>
+      <span class="tag">until <%= Time.at(relay_mirror.newest) %></span>
+    <% end %>
+  </td>
+
+  <td class="is-flex">
+    <%= button_to "Delete", admin_relay_mirror_path(relay_mirror), method: :delete, class: 'button is-danger is-small mr-1' %>
+    <% if relay_mirror.active? %>
+      <%= button_to "Deactivate", deactivate_admin_relay_mirror_path(relay_mirror), method: :put, class: 'button is-warning is-small mr-1' %>
+    <% else %>
+      <%= button_to "Activate", activate_admin_relay_mirror_path(relay_mirror), method: :put, class: 'button is-info is-small mr-1' %>
+    <% end %>
+  </td>
+</tr>

@@ -1,0 +1,100 @@
+<div class="content">
+  <h1 class="title is-1">Relay Mirrors</h1>
+
+  <h2 class="title is-2">Future</h2>
+  <% if @relay_mirrors.select { |rm| rm.mirror_type == "future" }.present? %>
+    <div class="table-container">
+      <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+        <thead>
+          <tr>
+            <th>Mirror</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%= render @relay_mirrors.select { |rm| rm.mirror_type == "future" } %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <h2 class="title is-2">Past</h2>
+  <% if @relay_mirrors.select { |rm| rm.mirror_type == "past" }.present? %>
+    <div class="table-container">
+      <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+        <thead>
+          <tr>
+            <th>Mirror</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%= render @relay_mirrors.select { |rm| rm.mirror_type == "past" } %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <%= form_for :relay_mirror, url: admin_relay_mirrors_path, html: { class: 'box mt-6 mb-6' } do |f| %>
+
+  <% if @relay_mirror.errors.any? %>
+    <div id="error_explanation" class="box has-background-danger p-3 has-text-light">
+      <h2 class="has-text-light"><%= pluralize(@relay_mirror.errors.count, "error") %> prohibited this relay mirror from being saved:</h2>
+
+      <ul>
+      <% @relay_mirror.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+    <div class="field">
+      <%= f.label :url, class: 'label' %>
+      <div class="control">
+        <%= f.text_field :url, class: 'input', required: true, pattern: /^ws(s)?:\/\/.*$/, placeholder: "wss://saltivka.org" %>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="control is-horizontal">
+        <%= f.label :mirror_type, nil, class: 'radio' do %>
+          <%= f.radio_button :mirror_type, "past", checked: false %>
+          Past
+        <% end %>
+        <%= f.label :mirror_type, nil, class: 'radio' do %>
+          <%= f.radio_button :mirror_type, "future", checked: true %>
+          Future
+        <% end %>
+      </div>
+    </div>
+
+    <div class="field">
+      <%= f.label :active, class: 'checkbox' do %>
+        <%= f.check_box :active %>
+        Active
+      <% end %>
+    </div>
+
+    <div class="is-flex is-justify-content-space-between">
+      <div class="field">
+        <%= f.label :oldest, class: 'label' %>
+        <div class="control">
+          <%= f.date_select :oldest, include_blank: true %>
+        </div>
+      </div>
+      <div class="field">
+        <%= f.label :newest, class: 'label' %>
+        <div class="control">
+          <%= f.date_select :newest, include_blank: true, selected: Time.now %>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="control">
+        <%= f.submit 'Add Relay Mirror', class: 'button is-primary' %>
+      </div>
+    </div>
+  <% end %>
+</div>

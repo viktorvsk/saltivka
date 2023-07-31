@@ -16,7 +16,7 @@ class CountRequest
 
     subscriber_pubkey = MemStore.pubkey_for(cid: connection_id)
 
-    union = filters.map { |filter_set| "(#{Event.by_nostr_filters(filter_set, subscriber_pubkey).to_sql})" }.join("\nUNION\n")
+    union = filters.map { |filter_set| "(#{Event.by_nostr_filters(filter_set, subscriber_pubkey, true).to_sql})" }.join("\nUNION\n")
 
     count = Event.from("(#{union}) AS t").count
 

@@ -113,7 +113,7 @@ module Nostr
     end
 
     class_methods do
-      def by_nostr_filters(filter_set, subscriber_pubkey = nil)
+      def by_nostr_filters(filter_set, subscriber_pubkey = nil, count_request = nil)
         rel = all.select("events.id, events.created_at").distinct(:id).order("events.created_at DESC, events.id DESC")
         filter_set.stringify_keys!
 
@@ -195,7 +195,9 @@ module Nostr
           rel = rel.where("created_at <= ?", Time.at(value)) if key == "until"
         end
 
-        filter_limit = if filter_set["limit"].to_i > 0
+        filter_limit = if count_request
+          nil
+        elsif filter_set["limit"].to_i > 0
           [filter_set["limit"].to_i, RELAY_CONFIG.max_limit].min
         else
           RELAY_CONFIG.default_filter_limit

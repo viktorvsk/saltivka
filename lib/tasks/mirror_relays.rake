@@ -12,7 +12,7 @@ def sync_future_events(relay_url)
 
     case command.upcase
     when "EVENT"
-      if Sidekiq.redis { |c| c.call("BF.ADD", "seen-events", message.last["id"]) }.positive?
+      if Sidekiq.redis { |c| c.call("BF.ADD", "seen-events", message.last["id"]) }
         NewEvent.perform_async("INTERNAL", message.last.to_json)
         Rails.logger.debug("+")
       else

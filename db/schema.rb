@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_31_011311) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_31_115310) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "plpgsql"
@@ -79,7 +79,9 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_31_011311) do
     t.boolean "active", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["url"], name: "index_relay_mirrors_on_url", unique: true
+    t.string "mirror_type"
+    t.integer "oldest"
+    t.integer "newest"
   end
 
   create_table "searchable_tags", id: false, force: :cascade do |t|

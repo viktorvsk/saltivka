@@ -3,4 +3,5 @@ class RelayMirror < ApplicationRecord
   validates :mirror_type, inclusion: {in: %w[past future]}
   validates :oldest, :newest, numericality: {only_integer: true}
   validates :newest, comparison: {greater_than: :oldest}
+  validates :url, uniqueness: {scope: :mirror_type}
 end

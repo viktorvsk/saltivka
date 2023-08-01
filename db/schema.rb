@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_31_115310) do
+ActiveRecord::Schema[7.0].define(version: 2023_08_01_100507) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "plpgsql"
@@ -82,6 +82,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_31_115310) do
     t.string "mirror_type"
     t.integer "oldest"
     t.integer "newest"
+    t.datetime "session_started_at"
+    t.index ["url", "mirror_type"], name: "index_relay_mirrors_on_url_and_mirror_type", unique: true
   end
 
   create_table "searchable_tags", id: false, force: :cascade do |t|

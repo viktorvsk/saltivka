@@ -59,7 +59,7 @@ RSpec.describe("NIP-01") do
       Event.create!(event_params)
     end
 
-    describe "#pubkey=", focus: true do
+    describe "#pubkey=" do
       it "assigns author if pubkey is already taken" do
         event = create(:event, pubkey: FAKE_CREDENTIALS[:alice][:pk])
         event_params = build(:event, pubkey: FAKE_CREDENTIALS[:alice][:pk]).attributes.except("id", "author_id").merge({

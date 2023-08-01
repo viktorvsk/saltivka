@@ -59,6 +59,19 @@ RSpec.describe("NIP-01") do
       Event.create!(event_params)
     end
 
+    describe "#pubkey=", focus: true do
+      it "assigns author if pubkey is already taken" do
+        event = create(:event, pubkey: FAKE_CREDENTIALS[:alice][:pk])
+        event_params = build(:event, pubkey: FAKE_CREDENTIALS[:alice][:pk]).attributes.except("id", "author_id").merge({
+          pubkey: FAKE_CREDENTIALS[:alice][:pk]
+        })
+        other_event = Event.create(event_params)
+
+        expect(other_event).to be_persisted
+        expect(other_event.pubkey).to eq(event.pubkey)
+      end
+    end
+
     describe "#to_nostr_serialized" do
       it "matches payload digest" do
         assert event.persisted?

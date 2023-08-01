@@ -10,7 +10,13 @@ module Nostr
 
           delegator_pubkey = tags.find { |t| t.first === "delegation" }.second
 
-          build_event_delegator(author_id: Author.select(:id).create_or_find_by(pubkey: delegator_pubkey).id)
+          author_from_pubkey = begin
+            Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", delegator_pubkey).first_or_create(pubkey: delegator_pubkey)
+          rescue ActiveRecord::RecordNotUnique
+            Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", delegator_pubkey).first
+          end
+
+          build_event_delegator(author: author_from_pubkey)
         end
       end
 

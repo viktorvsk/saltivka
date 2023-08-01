@@ -13,5 +13,7 @@ if ENV["SENTRY_DSN"].present?
     config.traces_sampler = lambda do |_context|
       true
     end
+
+    config.logger = Rails.logger
   end
 end

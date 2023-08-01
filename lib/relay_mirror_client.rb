@@ -82,7 +82,7 @@ class RelayMirrorClient
         Rails.logger.debug("Stop syncing #{relay_url} because relay doesn't want us to")
         RelayMirror.where(url: relay_url, mirror_type: :past).update_all(active: false, newest: newest)
       elsif event.code == 1000
-        RelayMirror.where(url: relay_url, mirror_type: :past, active: true).update_all(newest: newest)
+        RelayMirror.where(url: relay_url, mirror_type: :past, active: false).update_all(newest: newest)
         Rails.logger.debug("Stop syncing #{relay_url} because settings changed")
       else
         EM.add_timer(1) do

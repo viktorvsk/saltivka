@@ -37,7 +37,7 @@ namespace :relays do
         EM.add_periodic_timer(5) do
           new_mirrors = RelayMirror.where(active: true, mirror_type: :past)
 
-          if mirrors.pluck(:url, :oldest, :newest).sort != new_mirrors.pluck(:url, :oldest, :newest).sort
+          if mirrors.pluck(:url).sort != new_mirrors.pluck(:url).sort
             websockets.each { |ws| ws.close }
             websockets = new_mirrors.map do |mirror|
               RelayMirrorClient.sync_past_events(relay_url: mirror.url, oldest: mirror.oldest, newest: mirror.newest)

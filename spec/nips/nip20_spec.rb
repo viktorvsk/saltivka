@@ -13,7 +13,7 @@ RSpec.describe("NIP-20") do
     it "fanout with duplicate: OK message" do
       event = create(:event)
 
-      expect(MemStore).to receive(:fanout).with(cid: "CONN_ID", command: :ok, payload: ["OK", event.sha256, false, "duplicate: this event is already present in the database"].to_json)
+      expect(MemStore).to receive(:fanout).with(cid: "CONN_ID", command: :ok, payload: ["OK", event.sha256, false, "duplicate: this event is already present in the database (for replaceable and parameterized replaceable events it may mean newer events are present)"].to_json)
 
       subject.perform("CONN_ID", event.to_json)
     end

@@ -7,6 +7,7 @@ module Nostr
       validate :tags_must_be_array
       validate :id_must_match_payload, if: proc { |_event| RELAY_CONFIG.validate_id_on_server }
       validate :sig_must_match_payload, if: proc { |_event| RELAY_CONFIG.validate_sig_on_server }
+      validate :lower_sha256_uniqueness, on: :create
       validates :sig, presence: true, length: {is: 128}
       validates :sha256, presence: true, length: {is: 64}
       validates :content, length: {maximum: RELAY_CONFIG.max_content_length}
@@ -92,6 +93,12 @@ module Nostr
       end
 
       private
+
+      def lower_sha256_uniqueness
+        if Event.where("LOWER(events.sha256) = ?", sha256).exists?
+          errors.add(:sha256, "has already been taken")
+        end
+      end
 
       def tags_must_be_array
         errors.add(:tags, "must be an array") unless tags.is_a?(Array)

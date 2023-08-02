@@ -38,6 +38,6 @@ class NewEvent
     event
   rescue ActiveRecord::RecordNotUnique => _e
     Sentry.capture_message("[NewEvent][DuplicateEvent] event=#{event.to_json}", level: :warning)
-    MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, false, "duplicate: this event is already present in the database"].to_json)
+    MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, false, "duplicate: this event is already present in the database (for replaceable and parameterized replaceable events it may mean newer events are present)"].to_json)
   end
 end

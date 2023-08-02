@@ -14,6 +14,9 @@ class SlowQueryLogger
     # Skip transaction start/end statements
     return if /BEGIN|COMMIT/.match?(payload[:sql])
 
+    # TODO: Temporarily avoid logging INSERT and DELETE SQL slow logs
+    return if /DELETE|INSERT/.match?(payload[:sql])
+
     duration = ((finish - start) * 1000).round(4)
     return unless duration >= @threshold
 

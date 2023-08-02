@@ -127,7 +127,11 @@ module Nostr
 
     class_methods do
       def by_nostr_filters(filter_set, subscriber_pubkey = nil, count_request = nil)
-        rel = all.select("events.id, events.created_at").distinct(:id).order("events.created_at DESC, events.id DESC")
+        rel = if count_request
+          all.select(:id).distinct(:id)
+        else
+          all.select("events.id, events.created_at").distinct(:id).order("events.created_at DESC, events.id DESC")
+        end
         filter_set.stringify_keys!
 
         if RELAY_CONFIG.enforce_kind_4_authentication && filter_set["kinds"].blank?
@@ -223,7 +227,7 @@ module Nostr
           # pubkey max length is 64 so we don't need a predicate match in this case
           where_clause = filter_set["authors"].map { |pubkey| "LOWER(delegator_authors.pubkey) #{(pubkey.length == 64) ? "=" : "^@"} '#{pubkey.downcase}'" }.join(" OR ")
 
-          delegator_rel = by_nostr_filters(filter_set.except("authors"), subscriber_pubkey).joins(:author)
+          delegator_rel = by_nostr_filters(filter_set.except("authors"), subscriber_pubkey, count_request).joins(:author)
             .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
             .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
             .where(where_clause)

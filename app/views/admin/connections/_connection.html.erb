@@ -1,17 +1,25 @@
 <tr>
-  <td><%= connection[:id] %></td>
-  <td><%= connection[:auth_level] %></td>
-  <td><%= connection[:pubkey] %></td>
-  <td><%= connection[:auth_event_22242] %></td>
+  <td>
+    <span class="tag is-light is-info"><%= connection[:id] %></span>
+
+    <% if connection[:auth_level].to_i.positive? %>
+      <span class="tag"><b>Authorization Level:</b> <%= connection[:auth_level] %></span>
+      <span class="tag"><b>Public Key:</b> <%= connection[:pubkey] %></span>
+      <span class="tag"><b>Event-22242:</b> <%= connection[:auth_event_22242] %></span>
+    <% end %>
+
+  </td>
   <td>
     <% connection[:subscriptions].each do |sub| %>
       <span class="tag"><%= sub %></span>
     <% end %>
   </td>
-  <td><%= connection[:requests] %></td>
-  <td><%= connection[:incoming_traffic] %></td>
-  <td><%= connection[:outgoing_traffic] %></td>
-  <td><%= connection[:ip] %></td>
+  <td>
+    <span class="tag is-dark"><%= connection[:ip] %></span>
+    <span class="tag"><%= number_to_human connection[:requests] %> <%= "request".pluralize(connection[:requests].to_i) %></span>
+    <span class="tag is-warning is-light">In: <%= number_to_human_size connection[:incoming_traffic] %></span>
+    <span class="tag is-success is-light">Out: <%= number_to_human_size connection[:outgoing_traffic] %></span>
+  </td>
   <td><%= time_ago_in_words Time.at(connection[:starts].to_i) %></td>
   <td><%= button_to "Close", admin_connection_path(connection[:id]), method: :delete, class: 'button is-danger is-small' %></td>
 </tr>

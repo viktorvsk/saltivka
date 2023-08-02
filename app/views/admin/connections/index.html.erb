@@ -1,3 +1,5 @@
+<% @layout_container_class = 'is-fluid' %>
+
 <div class="content">
   <h1 class="title is-1">Connections</h1>
   <% if @connections.present? %>
@@ -5,15 +7,9 @@
       <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
         <thead>
           <tr>
-            <th>Connection ID</th>
-            <th>Authorization level</th>
-            <th>Pubkey</th>
-            <th>Auth Event ID (22242)</th>
+            <th>Connection</th>
             <th>Subscriptions</th>
-            <th>Requests #</th>
-            <th>Incoming Traffic, bytes</th>
-            <th>Outgoing Traffic, bytes</th>
-            <th>IP</th>
+            <th>Traffic</th>
             <th>Active for</th>
             <th>Actions</th>
           </tr>

@@ -14,7 +14,7 @@
 
   <body>
     <%= render "layouts/navbar" %>
-    <div class="container is-max-desktop">
+    <div class="container <%= @layout_container_class || "is-max-desktop" %>">
 
       <%= render "layouts/flash" %>
 

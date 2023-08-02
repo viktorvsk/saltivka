@@ -16,6 +16,7 @@ gem "sprockets-rails"
 
 gem "puma", "~> 5.0"
 gem "faye-websocket"
+gem "permessage_deflate"
 gem "pg", "~> 1.1"
 gem "redis", "~> 5.0"
 gem "hiredis-client"

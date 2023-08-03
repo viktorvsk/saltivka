@@ -113,9 +113,10 @@ class RelayConfig
   end
 
   def supported_nips
-    nips = Set.new(%w[1 9 11 13 16 20 22 26 28 33 40 42 43 45])
+    available_filters_normalized = available_filters.map { |f| f.gsub(/#/, "") }
+    nips = Set.new(%w[1 2 9 11 13 15 16 20 22 26 28 33 40 42 43 45])
     nips.add(4) if enforce_kind_4_authentication
-    nips.add(12) if ("a".."z").to_a.concat(("A".."Z").to_a).all? { |f| f.in?(available_filters) }
+    nips.add(12) if ("a".."z").to_a.concat(("A".."Z").to_a).all? { |f| f.in?(available_filters_normalized) }
     nips.add(65) if kinds_exempt_of_auth.include?(10002)
 
     nips.map(&:to_i).sort

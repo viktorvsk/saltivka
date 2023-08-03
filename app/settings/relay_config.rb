@@ -221,4 +221,17 @@ class RelayConfig
   def smtp_password
     ENV["SMTP_PASSWORD"]
   end
+
+  def ws_deflate_enabled
+    val = ENV.fetch("WS_DEFLATE_ENABLED", "true")
+    ActiveRecord::Type::Boolean.new.cast(val)
+  end
+
+  def ws_deflate_level
+    ENV.fetch("WS_DEFLATE_LEVEL", "9").to_i
+  end
+
+  def ws_deflate_max_window_bits
+    ENV.fetch("WS_DEFLATE_MAX_WINDOW_BITS", "15").to_i
+  end
 end

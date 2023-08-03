@@ -1,6 +1,6 @@
 Nostr::Relay = lambda do |env|
   if Faye::WebSocket.websocket?(env)
-    ws = Faye::WebSocket.new(env, [], extensions: [PermessageDeflate]) # standard websocket connection object
+    ws = Faye::WebSocket.new(env, [], extensions: WebsocketExtensions.all) # standard websocket connection object
     remote_ip = ActionDispatch::Request.new(env).remote_ip
 
     redis_subscriber = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)

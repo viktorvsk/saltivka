@@ -33,7 +33,7 @@ module Nostr
         pubsub_id = "#{connection_id}:#{subscription_id}"
 
         redis.multi do |t|
-          t.del("client_reqs:#{connection_id}")
+          t.srem("client_reqs:#{connection_id}", subscription_id)
           t.hdel("subscriptions", pubsub_id)
         end
       end

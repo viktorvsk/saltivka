@@ -228,7 +228,7 @@ RSpec.describe("NIP-01") do
 
         subject
 
-        assert_nil REDIS_TEST_CONNECTION.get("client_reqs:CONN_ID")
+        refute REDIS_TEST_CONNECTION.sismember("client_reqs:CONN_ID", "XYZ123")
         assert_empty REDIS_TEST_CONNECTION.hkeys("subscriptions")
       end
 

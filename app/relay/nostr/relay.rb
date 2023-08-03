@@ -4,7 +4,7 @@ Nostr::Relay = lambda do |env|
     remote_ip = ActionDispatch::Request.new(env).remote_ip
 
     redis_subscriber = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
-    rate_limited = redis_subscriber.sismember("unlimited_ips", remote_ip)
+    rate_limited = !redis_subscriber.sismember("unlimited_ips", remote_ip)
     controller = Nostr::RelayController.new(remote_ip: remote_ip, rate_limited: rate_limited)
     relay_response = Nostr::RelayResponse.new
     connection_id = controller.connection_id

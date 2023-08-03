@@ -14,7 +14,6 @@ services:
     image: postgres:15
     volumes:
       - ./demo/docker/pg-data:/var/lib/postgresql/data
-      - ./demo/postgresql.conf:/etc/postgresql/postgresql.conf
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: nostr
@@ -39,13 +38,13 @@ services:
       - "-c"
       - "random_page_cost=1.1"
       - "-c"
-      - "effective_io_concurrency=200"
+      - "effective_io_concurrency=300"
       - "-c"
       - "work_mem=3276kB"
       - "-c"
-      - "min_wal_size=1GB"
+      - "min_wal_size=2GB"
       - "-c"
-      - "max_wal_size=4GB"
+      - "max_wal_size=8GB"
       - "-c"
       - "max_worker_processes=4"
       - "-c"
@@ -73,7 +72,7 @@ services:
       POSTGRES_POOL: "16"
       RAILS_MAX_THREADS: "16"
       RAILS_MIN_THREADS: "16"
-      WEB_CONCURRENCY: '6'
+      WEB_CONCURRENCY: "6"
     ports:
       - 3000:3000
     depends_on:
@@ -84,11 +83,8 @@ services:
     image: viktorvsk/saltivka:latest
     env_file: ./demo/.env
     environment:
-      POSTGRES_POOL: 25
-      RAILS_MAX_THREADS: 25
-      RAILS_MIN_THREADS: 25
-      WEB_CONCURRENCY: 0
-    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip40", "-q", "nostr.nip42,100", "-q", "nostr.nip45", "-q", "payment_webhooks,10", "-c", "25"]
+      WEB_CONCURRENCY: "0"
+    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip40", "-q", "nostr.nip42,100", "-q", "nostr.nip45", "-q", "payment_webhooks,10"]
     depends_on:
       - postgresql
       - redis
@@ -97,11 +93,8 @@ services:
     image: viktorvsk/saltivka:latest
     env_file: ./demo/.env
     environment:
-      POSTGRES_POOL: 25
-      RAILS_MAX_THREADS: 25
-      RAILS_MIN_THREADS: 25
-      WEB_CONCURRENCY: 0
-    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip01.event", "-c", "25"]
+      WEB_CONCURRENCY: "0"
+    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip01.event"]
     depends_on:
       - postgresql
       - redis
@@ -110,11 +103,40 @@ services:
     image: viktorvsk/saltivka:latest
     env_file: ./demo/.env
     environment:
-      POSTGRES_POOL: 5
-      RAILS_MAX_THREADS: 5
-      RAILS_MIN_THREADS: 5
-      WEB_CONCURRENCY: 0
-    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip01.req -c 5"]
+      WEB_CONCURRENCY: "0"
+    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip01.req"]
+    depends_on:
+      - postgresql
+      - redis
+      - db-migration
+  worker-importer:
+    image: viktorvsk/saltivka:latest
+    env_file: ./demo/.env
+    environment:
+      WEB_CONCURRENCY: "0"
+    command: ["bundle", "exec", "sidekiq", "-q", "nostr.import-event"]
+    depends_on:
+      - postgresql
+      - redis
+      - db-migration
+  worker-mirror-relays-future:
+    image: viktorvsk/saltivka:latest
+    restart: always
+    env_file: ./demo/.env
+    environment:
+      WEB_CONCURRENCY: "0"
+    command: ["bundle", "exec", "rails", "relays:mirror:new"]
+    depends_on:
+      - postgresql
+      - redis
+      - db-migration
+  worker-mirror-relays-past:
+    image: viktorvsk/saltivka:latest
+    restart: always
+    env_file: ./demo/.env
+    environment:
+      WEB_CONCURRENCY: "0"
+    command: ["bundle", "exec", "rails", "relays:mirror:old"]
     depends_on:
       - postgresql
       - redis

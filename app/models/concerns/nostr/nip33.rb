@@ -17,8 +17,8 @@ module Nostr
       d_tag_value = d_tag.second.to_s
 
       to_delete = [
-        Event.joins(:searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where(author_id: Author.select(:id).where("LOWER(pubkey) = ?", pubkey.downcase), kind: kind, searchable_tags: {name: "d"}).where("events.created_at < ?", created_at).pluck(:id),
-        Event.joins(:searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where(author_id: Author.select(:id).where("LOWER(pubkey) = ?", pubkey.downcase), kind: kind, created_at: created_at, searchable_tags: {name: "d"}).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
+        Event.joins(:searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where(author_id: author_id, kind: kind, searchable_tags: {name: "d"}).where("events.created_at < ?", created_at).pluck(:id),
+        Event.joins(:searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where(author_id: author_id, kind: kind, created_at: created_at, searchable_tags: {name: "d"}).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
       ].flatten.reject(&:blank?)
 
       Event.where(id: to_delete).destroy_all
@@ -32,14 +32,14 @@ module Nostr
       d_tag_value = d_tag.second.to_s
 
       newer_exists = Event.joins(:searchable_tags)
-        .where(author_id: Author.select(:id).where("LOWER(pubkey) = ?", pubkey.downcase), searchable_tags: {name: "d"}, kind: kind)
+        .where(author_id: author_id, searchable_tags: {name: "d"}, kind: kind)
         .where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase)
         .where("events.created_at > ?", created_at).exists?
       should_not_save = true if newer_exists
 
       # Looks a bit ugly but in this we only make second check if required
       should_not_save ||= Event.joins(:searchable_tags)
-        .where(author_id: Author.select(:id).where("LOWER(pubkey) = ?", pubkey.downcase), searchable_tags: {name: "d"}, kind: kind, created_at: created_at)
+        .where(author_id: author_id, searchable_tags: {name: "d"}, kind: kind, created_at: created_at)
         .where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase)
         .where("LOWER(events.sha256) < ?", sha256.downcase).exists?
 

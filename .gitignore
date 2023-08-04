@@ -38,3 +38,4 @@
 *.DS_Store
 
 /demo/docker/pg-data
+/demo/docker/redis-data

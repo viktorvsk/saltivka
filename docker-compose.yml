@@ -56,6 +56,8 @@ services:
 
   redis:
     image: redis/redis-stack-server
+    volumes:
+      - ./demo/docker/redis-data:/data
     environment:
       - REDIS_ARGS=--io-threads 1 --io-threads-do-reads no --appendonly yes --maxmemory 1536mb --maxmemory-policy noeviction --bind 0.0.0.0 --requirepass redispass --maxclients 10000 --tcp-backlog 511 # https://github.com/redis-stack/redis-stack/issues/110
   db-migration:

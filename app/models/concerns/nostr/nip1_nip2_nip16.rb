@@ -13,8 +13,8 @@ module Nostr
 
     def process_replaceable_nip_1_nip_2_nip_16
       to_delete = [
-        Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind).where("events.created_at < ?", created_at).pluck(:id),
-        Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, created_at: created_at).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
+        Event.where(author_id: Author.select(:id).where("LOWER(pubkey) = ?", pubkey.downcase)).where(kind: kind).where("events.created_at < ?", created_at).pluck(:id),
+        Event.where(author_id: Author.select(:id).where("LOWER(pubkey) = ?", pubkey.downcase)).where(kind: kind, created_at: created_at).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
       ].flatten.reject(&:blank?)
 
       Event.where(id: to_delete.uniq).destroy_all
@@ -31,11 +31,11 @@ module Nostr
     def must_be_newer_than_existing_replaceable_nip16
       should_not_save = false
 
-      newer_exists = Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind).where("events.created_at > ?", created_at).exists?
+      newer_exists = Event.where(author_id: Author.select(:id).where("LOWER(pubkey) = ?", pubkey.downcase)).where(kind: kind).where("events.created_at > ?", created_at).exists?
       should_not_save = true if newer_exists
 
       # Looks a bit ugly but in this we only make second check if required
-      should_not_save ||= Event.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(kind: kind, created_at: created_at).where("LOWER(events.sha256) < ?", sha256.downcase).exists?
+      should_not_save ||= Event.where(author_id: Author.select(:id).where("LOWER(pubkey) = ?", pubkey.downcase)).where(kind: kind, created_at: created_at).where("LOWER(events.sha256) < ?", sha256.downcase).exists?
 
       # We add such a strange error key in order for client to receive OK message with duplicate: prefix
       # We kinda say that "This event already exists" which is technically not true

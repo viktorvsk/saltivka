@@ -18,12 +18,14 @@ module Nostr
       @redis = redis
       ts = Time.now.to_i
 
-      return block.call notice!("rate-limited: take it easy") if rate_limited && exceeds_window_quota?
+      if rate_limited
+        return block.call notice!("rate-limited: take it easy") if exceeds_window_quota?
 
-      redis.multi do |t|
-        t.zadd("requests:#{remote_ip}", ts, ts)
-        t.hincrby("requests", connection_id, 1)
-        t.hincrby("incoming_traffic", connection_id, event_data.bytesize)
+        redis.pipelined do
+          redis.zadd("requests:#{remote_ip}", ts, ts)
+          redis.hincrby("requests", connection_id, 1)
+          redis.hincrby("incoming_traffic", connection_id, event_data.bytesize)
+        end
       end
 
       if event_data.bytesize > RELAY_CONFIG.max_message_length
@@ -65,7 +67,7 @@ module Nostr
     def terminate(event:, redis:)
       Rails.logger.info("[TERMINATING] connection_id=#{connection_id}")
 
-      redis.multi do
+      redis.pipelined do
         pubsub_ids = redis.smembers("client_reqs:#{connection_id}").map { |req| "#{connection_id}:#{req}" }
         event22242_id = redis.hget("connections_authenticators", connection_id)
 
@@ -92,10 +94,12 @@ module Nostr
     end
 
     def authorized?(command, nostr_event)
+      required_auth_level = RELAY_CONFIG.send("required_auth_level_for_#{command.downcase}")
+      return true if required_auth_level.zero?
       return true if Nostr::Nips::Nip65.call(command, nostr_event)
 
       level = redis.hget("authorizations", connection_id).to_i # nil.to_i === 0
-      level >= RELAY_CONFIG.send("required_auth_level_for_#{command.downcase}")
+      level >= required_auth_level
     end
 
     def notice!(text)

@@ -13,11 +13,11 @@ module Nostr
 
     def process_replaceable_nip_1_nip_2_nip_16
       to_delete = [
-        Event.where(author_id: author_id).where(kind: kind).where("events.created_at < ?", created_at).pluck(:id),
-        Event.where(author_id: author_id).where(kind: kind, created_at: created_at).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
+        Event.where(author_id: author_id, kind: kind).where("events.created_at < ?", created_at).pluck(:id),
+        Event.where(author_id: author_id, kind: kind, created_at: created_at).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
       ].flatten.reject(&:blank?)
 
-      Event.where(id: to_delete.uniq).destroy_all
+      Event.where(id: to_delete.uniq).destroy_all if to_delete.present?
     end
 
     def must_not_be_ephemeral_nip16
@@ -29,19 +29,15 @@ module Nostr
     end
 
     def must_be_newer_than_existing_replaceable_nip16
-      should_not_save = false
+      newer = Event.where(author_id: author_id, kind: kind).where("events.created_at > ?", created_at)
 
-      newer_exists = Event.where(author_id: author_id).where(kind: kind).where("events.created_at > ?", created_at).exists?
-      should_not_save = true if newer_exists
-
-      # Looks a bit ugly but in this we only make second check if required
-      should_not_save ||= Event.where(author_id: author_id).where(kind: kind, created_at: created_at).where("LOWER(events.sha256) < ?", sha256.downcase).exists?
+      leixically_lower = Event.where(author_id: author_id, kind: kind, created_at: created_at).where("LOWER(events.sha256) < ?", sha256.downcase)
 
       # We add such a strange error key in order for client to receive OK message with duplicate: prefix
       # We kinda say that "This event already exists" which is technically not true
       # because its a different event with different ID but since its replaceable
       # newer event is treated as "the same existing"
-      errors.add(:sha256, "has already been taken") if should_not_save
+      errors.add(:sha256, "has already been taken") if newer.exists? || leixically_lower.exists?
     end
   end
 end

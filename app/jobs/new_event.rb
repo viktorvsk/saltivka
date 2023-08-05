@@ -4,8 +4,18 @@ class NewEvent
 
   def perform(connection_id, event_json)
     event_params = JSON.parse(event_json)
-    event_params["created_at"] = Time.at(event_params["created_at"])
-    event_params["sha256"] = event_params.delete("id")
+    pubkey = event_params.delete("pubkey")
+    author = begin
+      Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", pubkey.downcase).first_or_create(pubkey: pubkey.downcase)
+    rescue ActiveRecord::RecordNotUnique
+      Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", pubkey.downcase).first
+    end
+
+    event_params.merge!({
+      "created_at" => Time.at(event_params["created_at"]),
+      "sha256" => event_params.delete("id"),
+      "author_id" => author.id
+    })
 
     event = Event.new(event_params)
     should_fanout_without_save = event.kinda?(:ephemeral) && event.valid?

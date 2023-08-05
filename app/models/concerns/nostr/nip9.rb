@@ -11,7 +11,7 @@ module Nostr
     private
 
     def must_not_store_deleted_event
-      event_was_deleted = DeleteEvent.joins(:author).where("LOWER(authors.pubkey) = ?", pubkey.downcase).where(sha256: sha256).exists?
+      event_was_deleted = DeleteEvent.where(author_id: author.id).where(sha256: sha256).exists?
       errors.add(:id, "is already listed as deleted") if event_was_deleted
     end
 

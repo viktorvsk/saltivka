@@ -14,7 +14,7 @@ class NewEvent
     event_params.merge!({
       "created_at" => Time.at(event_params["created_at"]),
       "sha256" => event_params.delete("id"),
-      "author_id" => author.id
+      "author" => author
     })
 
     event = Event.new(event_params)

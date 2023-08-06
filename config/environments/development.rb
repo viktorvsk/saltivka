@@ -59,7 +59,7 @@ Rails.application.configure do
   # Suppress logger output for asset requests.
   config.assets.quiet = true
 
-  if ENV["RAILS_LOG_TO_STDOUT"].present?
+  if ActiveRecord::Type::Boolean.new.cast(ENV.fetch("RAILS_LOG_TO_STDOUT", "true"))
     logger = ActiveSupport::Logger.new($stdout)
     logger.formatter = config.log_formatter
     config.logger = ActiveSupport::TaggedLogging.new(logger)

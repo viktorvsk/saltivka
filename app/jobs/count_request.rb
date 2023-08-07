@@ -18,7 +18,7 @@ class CountRequest
 
     union = filters.map { |filter_set| "(#{Event.by_nostr_filters(filter_set, subscriber_pubkey, true).to_sql})" }.join("\nUNION\n")
 
-    count = Event.from("(#{union}) AS t").count
+    count = Event.includes(:author).from("(#{union}) AS t").count
 
     MemStore.fanout(cid: connection_id, sid: subscription_id, command: :count, payload: count.to_s)
     count

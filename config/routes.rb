@@ -21,6 +21,10 @@ Rails.application.routes.draw do
   resources :email_confirmations, only: %i[show create]
   resources :password_resets, only: %i[create edit update new]
 
+  namespace :api do
+    resources :events, only: %i[index show]
+  end
+
   namespace :admin do
     resources :trusted_authors, only: %i[index create destroy]
     resources :connections, only: %i[index destroy]

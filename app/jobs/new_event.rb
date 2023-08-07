@@ -43,7 +43,11 @@ class NewEvent
       MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, false, "error: #{Nostr::Presenters::Errors.new(event.errors.to_hash(full: true))}"].to_json)
     end
 
-    Sentry.capture_message("[NewEvent][InvalidEvent] event=#{event.to_json}", level: :warning) unless event.valid?
+    if event.valid?
+      MemStore.add_latest_event(event: event.to_json)
+    else
+      Sentry.capture_message("[NewEvent][InvalidEvent] event=#{event.to_json}", level: :warning)
+    end
 
     event
   rescue ActiveRecord::RecordNotUnique => _e

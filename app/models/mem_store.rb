@@ -114,5 +114,18 @@ class MemStore
     def confirm_email(token)
       Sidekiq.redis { |c| c.del("email_confirmations:#{token}") }
     end
+
+    def latest_events
+      Sidekiq.redis { |c| c.lrange("latest-events", "0", "99") }
+    end
+
+    def add_latest_event(event:)
+      Sidekiq.redis do |c|
+        c.multi do |t|
+          t.lpush("latest-events", event)
+          t.ltrim("latest-events", "0", "99")
+        end
+      end
+    end
   end
 end

@@ -1,0 +1,62 @@
+<h1 class="title is-1">100 Latest Events</h1>
+
+<% @latest_events.each do |event| %>
+  <div class="box pb-6 mb-6">
+    <div class="field is-grouped is-grouped-multiline mt-2 mb-2">
+      <div class="control">
+        <div class="tags has-addons">
+
+          <span class="tag is-link">ID</span>
+          <span class="tag is-link is-light"><%= event["id"] %></span>
+
+
+        </div>
+      </div>
+      <div class="control">
+        <div class="tags has-addons">
+
+          <span class="tag is-link">Sig</span>
+          <span class="tag is-link is-light"><%= event["sig"] %></span>
+
+
+        </div>
+      </div>
+      <div class="control">
+        <div class="tags has-addons">
+
+          <span class="tag is-link">Pubkey</span>
+          <span class="tag is-link is-light"><%= event["pubkey"] %></span>
+
+
+        </div>
+      </div>
+    </div>
+
+    <% if event["content"].present? %>
+      <div class="notification is-light is-primary" style="word-break: break-all;"><%= event["content"] %></div>
+    <% end %>
+
+    <div class="field is-grouped is-grouped-multiline mt-2 mb-2">
+      <% event["tags"].each do |tag| %>
+        <div class="control">
+          <div class="tags has-addons">
+            <span class="tag is-info"><%= tag.first %></span>
+            <span class="tag is-info is-light"><%= tag.last %></span>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <span class="tag is-pulled-right"><%= Time.at(event["created_at"]) %></span>
+
+    <div class="field is-grouped is-grouped-multiline mt-2 mb-2 is-pulled-left">
+      <div class="control">
+        <div class="tags has-addons">
+          <span class="tag is-primary">Kind</span>
+          <span class="tag is-primary is-light"><%= event["kind"] %></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+<% end %>

@@ -29,6 +29,7 @@ Rails.application.routes.draw do
       put :activate, on: :member
       put :deactivate, on: :member
     end
+    resource :latest_events, only: %i[show]
     resource :configuration, only: %i[show update]
     root to: "connections#index"
   end

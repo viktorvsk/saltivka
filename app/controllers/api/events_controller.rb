@@ -1,4 +1,4 @@
-class Api::EventsController < ApplicationController
+class Api::EventsController < ApiController
   def index
     filters = if params[:req].present?
       JSON.parse(params[:req])[2..]

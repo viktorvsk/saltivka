@@ -2,21 +2,24 @@
 
 require_relative "config/environment"
 
-map "/" do
-  run proc { |env|
-    if Faye::WebSocket.websocket?(env) || env["HTTP_ACCEPT"] === "application/nostr+json"
-      use Rack::Cors do
-        allow do
-          origins "*"
-          resource "*", headers: :any, methods: [:get, :post]
-        end
-      end
-      Nostr::Relay.call(env)
-    else
-      Rails.application.call(env)
+websocket_server = Rack::Builder.new do |builder|
+  builder.use Rack::Cors do
+    allow do
+      origins "*"
+      resource "*", headers: :any, methods: [:get, :post]
     end
-  }
+  end
+  builder.run Nostr::Relay
 end
 
-run Rails.application
+both_apps = lambda do |env|
+  if Faye::WebSocket.websocket?(env) || env["HTTP_ACCEPT"] === "application/nostr+json"
+    websocket_server.call(env)
+  else
+    Rails.application.call(env)
+  end
+end
+
+run both_apps
+
 Rails.application.load_server

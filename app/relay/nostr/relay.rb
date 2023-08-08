@@ -13,10 +13,13 @@ Nostr::Relay = lambda do |env|
     last_active_at = Time.now.to_i
 
     ws.on :open do |event|
-      maintenance, max_allowed_connections, connections_count = redis_subscriber.multi do |t|
-        t.get("maintenance")
-        t.get("max_allowed_connections")
-        t.scard("connections")
+      maintenance, max_allowed_connections, connections_count = redis_subscriber.pipelined do
+        redis_subscriber.get("maintenance")
+        redis_subscriber.get("max_allowed_connections")
+        redis_subscriber.scard("connections")
+        redis_subscriber.sadd("connections", connection_id)
+        redis_subscriber.hset("connections_ips", connection_id, controller.remote_ip)
+        redis_subscriber.hset("connections_starts", connection_id, Time.now.to_i.to_s)
       end
 
       ws.close(3503, "restricted: server is on maintenance, please try again later") if ActiveRecord::Type::Boolean.new.cast(maintenance)
@@ -30,10 +33,6 @@ Nostr::Relay = lambda do |env|
           ws.send(event.to_json)
         end
       end
-
-      redis_subscriber.sadd("connections", connection_id)
-      redis_subscriber.hset("connections_ips", connection_id, controller.remote_ip)
-      redis_subscriber.hset("connections_starts", connection_id, Time.now.to_i.to_s)
 
       redis_thread = Thread.new do
         redis_subscriber.psubscribe("events:#{connection_id}:*") do |on|

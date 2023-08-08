@@ -2,9 +2,8 @@ Nostr::Relay = lambda do |env|
   if Faye::WebSocket.websocket?(env)
     ws = Faye::WebSocket.new(env, [], extensions: WebsocketExtensions.all) # standard websocket connection object
     remote_ip = ActionDispatch::Request.new(env).remote_ip
-
-    redis_subscriber = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
-    rate_limited = !redis_subscriber.sismember("unlimited_ips", remote_ip)
+    redis_subscriber = nil
+    rate_limited = Sidekiq.redis { |c| !c.sismember("unlimited_ips", remote_ip) }
     controller = Nostr::RelayController.new(remote_ip: remote_ip, rate_limited: rate_limited)
     relay_response = Nostr::RelayResponse.new
     connection_id = controller.connection_id
@@ -13,28 +12,35 @@ Nostr::Relay = lambda do |env|
     last_active_at = Time.now.to_i
 
     ws.on :open do |event|
-      maintenance, max_allowed_connections, connections_count = redis_subscriber.pipelined do
-        redis_subscriber.get("maintenance")
-        redis_subscriber.get("max_allowed_connections")
-        redis_subscriber.scard("connections")
-        redis_subscriber.sadd("connections", connection_id)
-        redis_subscriber.hset("connections_ips", connection_id, controller.remote_ip)
-        redis_subscriber.hset("connections_starts", connection_id, Time.now.to_i.to_s)
+      Thread.new do
+        Sidekiq.redis do |c|
+          maintenance, max_allowed_connections, connections_count = c.pipelined do
+            c.get("maintenance")
+            c.get("max_allowed_connections")
+            c.scard("connections")
+            c.sadd("connections", connection_id)
+            c.hset("connections_ips", connection_id, controller.remote_ip)
+            c.hset("connections_starts", connection_id, Time.now.to_i.to_s)
+          end
+
+          ws.close(3503, "restricted: server is on maintenance, please try again later") if ActiveRecord::Type::Boolean.new.cast(maintenance)
+          ws.close(3503, "restricted: server is busy, please try again later") if max_allowed_connections.to_i != 0 && connections_count.to_i >= max_allowed_connections.to_i
+        end
       end
 
-      ws.close(3503, "restricted: server is on maintenance, please try again later") if ActiveRecord::Type::Boolean.new.cast(maintenance)
-      ws.close(3503, "restricted: server is busy, please try again later") if max_allowed_connections.to_i != 0 && connections_count.to_i >= max_allowed_connections.to_i
-
-      Nostr::AuthenticationFlow.new.call(ws_url: ws.url, connection_id: connection_id, redis: redis_subscriber) do |event|
-        if event.first === "TERMINATE"
-          ws.close(3403, "restricted: #{event.last}")
-        else
-          redis_subscriber.hincrby("outgoing_traffic", connection_id, event.to_json.bytesize)
-          ws.send(event.to_json)
+      Sidekiq.redis do |c|
+        Nostr::AuthenticationFlow.new.call(ws_url: ws.url, connection_id: connection_id, redis: c) do |event|
+          if event.first === "TERMINATE"
+            ws.close(3403, "restricted: #{event.last}")
+          else
+            c.hincrby("outgoing_traffic", connection_id, event.to_json.bytesize)
+            ws.send(event.to_json)
+          end
         end
       end
 
       redis_thread = Thread.new do
+        redis_subscriber = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
         redis_subscriber.psubscribe("events:#{connection_id}:*") do |on|
           on.pmessage do |pattern, channel, event|
             _namespace, _connection_id, subscription_id, command = channel.split(":")

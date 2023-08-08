@@ -2,5 +2,15 @@
 
 require_relative "config/environment"
 
+map "/" do
+  run proc { |env|
+    if Faye::WebSocket.websocket?(env) || env["HTTP_ACCEPT"] === "application/nostr+json"
+      Nostr::Relay.call(env)
+    else
+      Rails.application.call(env)
+    end
+  }
+end
+
 run Rails.application
 Rails.application.load_server

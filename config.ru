@@ -5,6 +5,7 @@ require_relative "config/environment"
 map "/" do
   run proc { |env|
     if Faye::WebSocket.websocket?(env) || env["HTTP_ACCEPT"] === "application/nostr+json"
+      Rails.application.config.middleware = []
       Nostr::Relay.call(env)
     else
       Rails.application.call(env)

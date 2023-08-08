@@ -5,7 +5,12 @@ require_relative "config/environment"
 map "/" do
   run proc { |env|
     if Faye::WebSocket.websocket?(env) || env["HTTP_ACCEPT"] === "application/nostr+json"
-      Rails.application.config.middleware = [Rack::Cors]
+      use Rack::Cors do
+        allow do
+          origins "*"
+          resource "*", headers: :any, methods: [:get, :post]
+        end
+      end
       Nostr::Relay.call(env)
     else
       Rails.application.call(env)

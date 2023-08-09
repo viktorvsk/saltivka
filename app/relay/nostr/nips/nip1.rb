@@ -39,18 +39,7 @@ module Nostr
       end
 
       def event_command(nostr_event, block)
-        event_sha256 = nostr_event.first["id"]
-
-        # Note: this is a performance optimization that does not align with the goal
-        # of websocket server part to be as independent from main (Rails) server as possible
-        # but in case someone uploads big amount of events that are
-        # already saved (i.e. making a backup) — this may significantly improve performance
-        # So for this case we make an exclusion from the "independen websocket server" rule
-        if Event.where("LOWER(sha256) = ?", event_sha256).exists?
-          block.call ["OK", event_sha256, false, "duplicate: this event is already present in the database (for replaceable and parameterized replaceable events it may mean newer events are present)"].to_json
-        else
-          redis.lpush("queue:nostr.nip01.event", {class: "NewEvent", args: [connection_id, nostr_event.first.to_json]}.to_json)
-        end
+        redis.lpush("queue:nostr.nip01.event", {class: "NewEvent", args: [connection_id, nostr_event.first.to_json]}.to_json)
       end
     end
   end

@@ -47,7 +47,12 @@ module Nostr
         if contract_result.success?
           controller_action = "#{command.downcase}_command"
           if authorized?(command, nostr_event)
-            send(controller_action, nostr_event, block)
+            begin
+              send(controller_action, nostr_event, block)
+            rescue => e
+              Sentry.capture_exception(e)
+              block.call notice!("error: unknown error")
+            end
           else
             block.call notice!("restricted: your account doesn't have required authorization level")
           end

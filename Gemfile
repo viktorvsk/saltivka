@@ -14,7 +14,7 @@ gem "bootsnap", require: false
 gem "importmap-rails"
 gem "sprockets-rails"
 
-gem "puma", "~> 5.0"
+gem "puma"
 gem "faye-websocket"
 gem "permessage_deflate"
 gem "pg", "~> 1.1"

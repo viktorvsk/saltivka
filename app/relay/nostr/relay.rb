@@ -2,7 +2,7 @@ Nostr::Relay = lambda do |env|
   if Faye::WebSocket.websocket?(env)
     ws = Faye::WebSocket.new(env, [], extensions: WebsocketExtensions.all) # standard websocket connection object
     remote_ip = ActionDispatch::Request.new(env).remote_ip
-    redis_subscriber = nil
+    redis_subscriber = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
     rate_limited = Sidekiq.redis { |c| c.sismember("unlimited_ips", remote_ip).zero? }
     controller = Nostr::RelayController.new(remote_ip: remote_ip, rate_limited: rate_limited)
     relay_response = Nostr::RelayResponse.new
@@ -40,7 +40,6 @@ Nostr::Relay = lambda do |env|
       end
 
       redis_thread = Thread.new do
-        redis_subscriber = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
         redis_subscriber.psubscribe("events:#{connection_id}:*") do |on|
           on.pmessage do |pattern, channel, event|
             _namespace, _connection_id, subscription_id, command = channel.split(":")

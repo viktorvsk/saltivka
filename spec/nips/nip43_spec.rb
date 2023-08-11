@@ -164,7 +164,7 @@ RSpec.describe("NIP-43") do
       previous_connection_disconnected = false
 
       Thread.new do
-        Redis.new.subscribe("events:FIRST_CONN_ID:_:terminate") do |on|
+        Redis.new(url: ENV["REDIS_URL"]).subscribe("events:FIRST_CONN_ID:_:terminate") do |on|
           on.message do |channel, message|
             expect(message).to eq([3403, "restricted: event with id #{event.sha256} was used for authentication twice"].to_json)
             previous_connection_disconnected = true

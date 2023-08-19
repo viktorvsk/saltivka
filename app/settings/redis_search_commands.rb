@@ -6,7 +6,7 @@ class RedisSearchCommands
     SCHEMA $.kinds AS kinds TAG
            $.ids AS ids TAG
            $.authors AS authors TAG
-           $.tags AS tags TAG
+           $.tags AS tags TAG CASESENSITIVE
            $.since AS since NUMERIC SORTABLE
            $.until AS until NUMERIC SORTABLE
   REDIS

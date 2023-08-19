@@ -35,18 +35,27 @@ RSpec.describe "NIP-12" do
     end
   end
 
-  describe Event do
-    let!(:event) { create(:event, kind: 123, tags: [["r", "payload"]]) }
-    describe "#matches_nostr_filter_set?" do
-      it "matches events by tag" do
-        assert event.matches_nostr_filter_set?({"#r" => ["payload"]})
-        assert event.matches_nostr_filter_set?({"#r" => ["one of options is", "payload", "other"]})
-        assert event.matches_nostr_filter_set?({"#r" => ["paylo"]})
+  describe MemStore do
+    describe ".matching_pubsubs_for" do
+      it "matches by tags filter" do
+        event = create(:event, kind: 123, tags: [["r", "payload"]])
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#r" => ["payload"]])
+        MemStore.subscribe(cid: "C1", sid: "S2", filters: ["#r" => ["one of options is", "payload", "other"]])
+        MemStore.subscribe(cid: "C1", sid: "S3", filters: ["#r" => ["paylo"]])
+        expect(MemStore.matching_pubsubs_for(event)).to match_array(["C1:S1", "C1:S2"])
+      end
+      it "matches by tags filter with special characters" do
+        event = create(:event, kind: 123, tags: [["r", "#something"]])
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#r" => ["#something"]])
+        expect(MemStore.matching_pubsubs_for(event)).to match_array(["C1:S1"])
       end
     end
+  end
 
+  describe Event do
     describe ".by_nostr_filters" do
       it "finds events by tag" do
+        create(:event, kind: 123, tags: [["r", "payload"]])
         expect(Event.by_nostr_filters({"#r" => ["payload"]}).count).to eq(1)
         expect(Event.by_nostr_filters({"#r" => ["one of options is", "payload", "other"]}).count).to eq(1)
         expect(Event.by_nostr_filters({"#r" => ["paylo"]}).count).to eq(1)

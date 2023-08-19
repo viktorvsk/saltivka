@@ -20,10 +20,10 @@ RSpec.describe("NIP-20") do
 
     context "given ephemeral event" do
       it "doesn't fanout OK on success and does not store event in database" do
-        REDIS_TEST_CONNECTION.hset("subscriptions", "CONN_ID:SUBID", "[{\"kinds\": [20000]}]")
+        MemStore.subscribe(cid: "CONN_ID", sid: "SUBID", filters: [{kinds: [20000]}])
         event = build(:event, kind: 20000)
 
-        expect(MemStore).to receive(:fanout).with(cid: "CONN_ID", sid: "SUBID", command: :found_event, payload: event.to_json)
+        expect(MemStore).to receive(:fanout).with(cid: "CONN_ID", sid: "SUBID", command: :found_event, payload: event.to_json, conn: anything)
 
         subject.perform("CONN_ID", event.to_json)
         expect(Event.where(sha256: event.sha256)).to_not be_exists

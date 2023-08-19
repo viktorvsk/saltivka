@@ -31,10 +31,10 @@ RSpec.describe("NIP-04") do
 
       it "is only fanout for matching pubkey with matching filters" do
         event = build(:event, kind: 4, tags: [["p", FAKE_CREDENTIALS[:alice][:pk]]])
-        REDIS_TEST_CONNECTION.hset("subscriptions", "CONN_ID:SUBID", [{kind: 4}].to_json)
+        MemStore.subscribe(cid: "CONN_ID", sid: "SUBID", filters: [{kinds: [4]}])
         REDIS_TEST_CONNECTION.hset("authentications", "CONN_ID", FAKE_CREDENTIALS[:alice][:pk])
 
-        expect(MemStore).to receive(:fanout).once.with(cid: "CONN_ID", sid: "SUBID", command: :found_event, payload: event.to_json)
+        expect(MemStore).to receive(:fanout).once.with(cid: "CONN_ID", sid: "SUBID", command: :found_event, payload: event.to_json, conn: anything)
         expect(MemStore).to receive(:fanout).once.with(cid: "CONN_ID", command: :ok, payload: ["OK", event.sha256, true, ""].to_json)
 
         subject.perform("CONN_ID", event.to_json)

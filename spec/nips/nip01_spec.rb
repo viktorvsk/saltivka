@@ -1,6 +1,15 @@
 require "rails_helper"
 
 RSpec.describe("NIP-01") do
+  let(:sk) { "945e01e37662430162121b804d3645a86d97df9d256917d86735d0eb219393eb" }
+  let(:pk) { "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95" }
+  let(:sha256) { "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f" }
+  let(:sig) do
+    ctx = Secp256k1::Context.new
+    key_pair = ctx.key_pair_from_private_key([sk].pack("H*"))
+    ctx.sign_schnorr(key_pair, [sha256].pack("H*")).serialized.unpack1("H*")
+  end
+
   describe NewSubscription do
     context "fanout to subscribers when" do
       let(:event) { create(:event, kind: 0, pubkey: FAKE_CREDENTIALS[:alice][:pk]) }
@@ -36,15 +45,6 @@ RSpec.describe("NIP-01") do
   end
 
   describe Event do
-    let(:sk) { "945e01e37662430162121b804d3645a86d97df9d256917d86735d0eb219393eb" }
-    let(:pk) { "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95" }
-    let(:sha256) { "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f" }
-    let(:sig) do
-      ctx = Secp256k1::Context.new
-      key_pair = ctx.key_pair_from_private_key([sk].pack("H*"))
-      ctx.sign_schnorr(key_pair, [sha256].pack("H*")).serialized.unpack1("H*")
-    end
-
     let!(:event) do
       event_params = {
         created_at: Time.at(1687183979),
@@ -79,41 +79,6 @@ RSpec.describe("NIP-01") do
       end
     end
 
-    describe "#matches_nostr_filter_set?" do
-      it "verifies a single event against a given filter_set" do
-        event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
-
-        parsed_json = JSON.parse(File.read(Rails.root.join(*%w[spec support nostr_event_delegated.json])))
-        delegated_event_params = parsed_json.merge("sha256" => parsed_json.delete("id"), "created_at" => Time.at(parsed_json["created_at"]))
-        delegated_event = Event.new(delegated_event_params)
-
-        assert delegated_event.matches_nostr_filter_set?({"authors" => ["8e0d3d"]})
-        assert delegated_event.matches_nostr_filter_set?({"authors" => ["09cd08d"]})
-
-        assert event.matches_nostr_filter_set?({"ids" => ["bf84a73"]})
-        assert event.matches_nostr_filter_set?({"authors" => ["a19f19f"]})
-        refute event.matches_nostr_filter_set?({"authors" => ["_a19f19f"]})
-
-        assert event_with_tags.matches_nostr_filter_set?({"#e" => ["bf84a"]})
-        assert event_with_tags.matches_nostr_filter_set?({"#p" => ["a19f19"]})
-        refute event_with_tags.matches_nostr_filter_set?({"#e" => ["a19f19"]})
-
-        assert build(:event, kind: 4).matches_nostr_filter_set?({"kinds" => [4]})
-        refute build(:event, kind: 3).matches_nostr_filter_set?({"kinds" => [4]})
-        refute build(:event, kind: 4, created_at: 1.hour.ago).matches_nostr_filter_set?({"kinds" => [4], "until" => 2.days.ago.to_i})
-        assert build(:event, kind: 4, created_at: 1.day.ago).matches_nostr_filter_set?({"kinds" => [4], "until" => 2.hours.ago.to_i})
-        assert build(:event, created_at: 1.hour.ago).matches_nostr_filter_set?({"since" => 2.days.ago.to_i})
-        refute build(:event, created_at: 1.day.ago).matches_nostr_filter_set?({"since" => 2.hours.ago.to_i})
-      end
-
-      # Here we test a use case where we have implemented a new filter,
-      # added it to AVAILABLE FILTERS, but for some reason missed to handle it
-      it "does not match an event if filter is not implemented" do
-        allow(RELAY_CONFIG).to receive(:available_filters).and_return(%w[kinds ids authors #e #p since until edge_filter])
-        refute build(:event).matches_nostr_filter_set?({"edge_filter" => 2.hours.ago.to_i})
-      end
-    end
-
     describe ".by_nostr_filters" do
       it "finds events matching filter_set in the database" do
         event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
@@ -141,6 +106,79 @@ RSpec.describe("NIP-01") do
     end
   end
 
+  describe MemStore do
+    let!(:event) do
+      event_params = {
+        created_at: Time.at(1687183979),
+        kind: 0,
+        tags: [],
+        content: "",
+        sha256: sha256,
+        sig: sig,
+        pubkey: pk
+      }
+
+      Event.create!(event_params)
+    end
+    describe ".matching_pubsubs_for" do
+      it "matches empty filters with any event" do
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: [])
+        expect(MemStore.matching_pubsubs_for(event)).to match_array("C1:S1")
+      end
+
+      it "matches author filter when author is delegated" do
+        parsed_json = JSON.parse(File.read(Rails.root.join(*%w[spec support nostr_event_delegated.json])))
+        delegated_event_params = parsed_json.merge("sha256" => parsed_json.delete("id"), "created_at" => Time.at(parsed_json["created_at"]))
+        delegated_event = Event.new(delegated_event_params)
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["authors" => ["09cd08d416b78dd3e1d6c00c9e14087d803df6360fbf0acdb30106ca042ee81e"]])
+        MemStore.subscribe(cid: "C1", sid: "S2", filters: ["authors" => ["8e0d3d3eb2881ec137a11debe736a9086715a8c8beeeda615780064d68bc25dd"]])
+
+        expect(MemStore.matching_pubsubs_for(delegated_event)).to match_array(["C1:S1", "C1:S2"])
+      end
+
+      it "matches #e and #p filters" do
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#e" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"]])
+        MemStore.subscribe(cid: "C1", sid: "S2", filters: ["#p" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
+        event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
+
+        expect(MemStore.matching_pubsubs_for(event_with_tags)).to match_array(["C1:S1", "C1:S2"])
+      end
+
+      it "matches authors filter" do
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
+        expect(MemStore.matching_pubsubs_for(event)).to match_array("C1:S1")
+        # refute event.matches_nostr_filter_set?({"authors" => ["_a19f19f"]})
+      end
+
+      it "matches ids filter" do
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"]])
+        expect(MemStore.matching_pubsubs_for(event)).to match_array(["C1:S1"])
+      end
+
+      it "matches kinds filter" do
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["kinds" => ["4"]])
+
+        expect(MemStore.matching_pubsubs_for(build(:event, kind: 4))).to match_array(["C1:S1"])
+        expect(MemStore.matching_pubsubs_for(build(:event, kind: 3))).to match_array([])
+      end
+
+      it "matches since filter" do
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["since" => 2.days.ago.to_i])
+        MemStore.subscribe(cid: "C1", sid: "S2", filters: ["since" => 2.hours.ago.to_i])
+        expect(MemStore.matching_pubsubs_for(build(:event, created_at: 1.day.ago))).to match_array(["C1:S1"])
+        expect(MemStore.matching_pubsubs_for(build(:event, created_at: 1.hour.ago))).to match_array(["C1:S1", "C1:S2"])
+      end
+
+      it "matches until filter" do
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["until" => 2.days.ago.to_i, :kinds => [4]])
+        MemStore.subscribe(cid: "C1", sid: "S2", filters: ["until" => 2.hours.ago.to_i, :kinds => [4]])
+
+        expect(MemStore.matching_pubsubs_for(build(:event, kind: 4, created_at: 1.day.ago))).to match_array(["C1:S2"])
+        expect(MemStore.matching_pubsubs_for(build(:event, kind: 4, created_at: 1.hour.ago))).to match_array([])
+      end
+    end
+  end
+
   describe Nostr::RelayController do
     before do
       @random_connection_id = "CONN_ID"
@@ -164,8 +202,8 @@ RSpec.describe("NIP-01") do
 
         assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr.nip01.req"), 1
         assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr.nip01.req"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", "[{}]"]}.to_json
-        assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"]
-        assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => "[{}]"}
+        # assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"] # business logic changed
+        # assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => "[{}]"}
       end
 
       it "filters Events by kinds" do
@@ -176,8 +214,8 @@ RSpec.describe("NIP-01") do
 
         assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr.nip01.req"), 1
         assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr.nip01.req"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", [filters].to_json]}.to_json
-        assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"]
-        assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => [filters].to_json}
+        # assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"] # business logic changed
+        # assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => [filters].to_json}
       end
 
       context "with settings" do

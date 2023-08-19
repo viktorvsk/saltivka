@@ -1,5 +1,5 @@
 class SubscriptionMatcherQueryBuilder
-  REDIS_SEARCH_SPECIAL_CHARACTERS = %w[, . < > { } [ ] " ' : ; ! @ # $ % ^ & * ( ) - + = ~].map { |c| "\\#{c}" }
+  REDIS_SEARCH_SPECIAL_CHARACTERS = %w[, . < > { } [ ] " ' : ; ! @ # $ % ^ & * ( ) - + = ~].map { |c| "\\#{c}" }.concat([" "])
   attr_reader :query
 
   def initialize(event)

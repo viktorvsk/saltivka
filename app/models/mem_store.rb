@@ -1,41 +1,67 @@
 class MemStore
   class << self
-    def fanout(cid:, command:, payload:, sid: "_")
-      Sidekiq.redis { |c| c.publish("events:#{cid}:#{sid}:#{command}", payload) }
+    def fanout(cid:, command:, payload:, sid: "_", conn: nil)
+      if conn # Reuse connection if possible
+        conn.publish("events:#{cid}:#{sid}:#{command}", payload)
+      else
+        Sidekiq.redis { |c| c.publish("events:#{cid}:#{sid}:#{command}", payload) }
+      end
     end
 
-    # TODO: This should be a LUA script
     def fanout_new_event_to_all_active_subscriptions(event)
-      subscriptions.each do |pubsub_id, filters|
-        matches = JSON.parse(filters).any? { |filter_set| event.matches_nostr_filter_set?(filter_set) }
-        next unless matches
-        subscriber_cid, subscriber_sid = pubsub_id.split(":")
-        subscriber_pubkey = pubkey_for(cid: subscriber_cid)
+      pubsubs = matching_pubsubs_for(event)
+      authenticated_pubsubs = pubkeys_for(pubsubs: pubsubs)
+      to_fanount = pubsubs.select { |pubsub_id| event.should_fanout?(authenticated_pubsubs[pubsub_id]) }
 
-        fanout(cid: subscriber_cid, sid: subscriber_sid, command: :found_event, payload: event.to_json) if should_fanout?(event, subscriber_pubkey)
+      Sidekiq.redis do |c|
+        c.pipelined do
+          to_fanount.each do |pubsub_id|
+            cid, sid = pubsub_id.split(":")
+            fanout(cid: cid, sid: sid, command: :found_event, payload: event.to_json, conn: c)
+          end
+        end
       end
     end
 
-    def should_fanout?(event, subscriber_pubkey)
-      return true unless RELAY_CONFIG.enforce_kind_4_authentication
-      return true unless event.kind === 4
+    def subscribe(cid:, sid:, filters:)
+      filters = [{}] if filters.blank?
+      queries = filters.map { |f| SubscriptionQueryBuilder.new(f).query }
 
-      event_p_tag = event.tags.find { |t| t.first == "p" }
-
-      if event_p_tag.blank?
-        Sentry.capture_message("[NewEvent][InvalidKind4Event] event=#{event.to_json}", level: :warning)
-        return false
+      Sidekiq.redis do |c|
+        c.pipelined do
+          c.sadd("client_reqs:#{cid}", sid)
+          queries.each { |query| c.call("JSON.SET", "subscriptions:#{cid}:#{sid}", "$", query) }
+        end
       end
-
-      receiver_pubkey = event_p_tag.second
-
-      # TODO: consider delegation
-      subscriber_pubkey.in?([receiver_pubkey, event.pubkey])
     end
-    ### ENDTODO
+
+    def matching_pubsubs_for(event)
+      query = SubscriptionMatcherQueryBuilder.new(event).query
+
+      subscriptions = Sidekiq.redis { |c| c.call("FT.SEARCH", "subscriptions_idx", query, "NOCONTENT") }
+
+      # Removing unnecessary parts to return pubsubs
+      subscriptions.shift # First argument is Redis specific return value
+      subscriptions.map! { |r| r.gsub(/\Asubscriptions:/, "") } # Redis returns full keys name including "namespace" subscriptions:
+
+      subscriptions
+    end
 
     def pubkey_for(cid:)
       Sidekiq.redis { |c| c.hget("authentications", cid) }
+    end
+
+    def pubkeys_for(pubsubs:)
+      res = {}
+      return res if pubsubs.blank?
+      connection_ids = pubsubs.map { |ps| ps.split(":").first }
+      auth_pubsubs = Sidekiq.redis { |c| c.hmget("authentications", *connection_ids) }
+
+      pubsubs.each_with_index do |pubsub_id, index|
+        res[pubsub_id] = auth_pubsubs[index]
+      end
+
+      res
     end
 
     def pubkey?(cid:)
@@ -59,10 +85,6 @@ class MemStore
           t.expire("authorization_result:#{cid}", RELAY_CONFIG.authorization_timeout.to_s)
         end
       end
-    end
-
-    def subscriptions
-      Sidekiq.redis { |c| c.hgetall("subscriptions") }
     end
 
     def connected?(cid:)

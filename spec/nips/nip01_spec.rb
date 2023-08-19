@@ -120,6 +120,7 @@ RSpec.describe("NIP-01") do
 
       Event.create!(event_params)
     end
+
     describe ".matching_pubsubs_for" do
       it "matches empty filters with any event" do
         MemStore.subscribe(cid: "C1", sid: "S1", filters: [])
@@ -142,6 +143,21 @@ RSpec.describe("NIP-01") do
         event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
 
         expect(MemStore.matching_pubsubs_for(event_with_tags)).to match_array(["C1:S1", "C1:S2"])
+      end
+
+      it "matches either #e or #p filter" do
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: [
+          "#e" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"],
+          "#p" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]
+        ])
+
+        e_tag_event = build(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"]])
+        p_tag_event = build(:event, kind: 1, tags: [["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
+        e_p_tag_event = build(:event, kind: 1, tags: [["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"], ["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"]])
+
+        expect(MemStore.matching_pubsubs_for(e_tag_event)).to match_array([])
+        expect(MemStore.matching_pubsubs_for(p_tag_event)).to match_array([])
+        expect(MemStore.matching_pubsubs_for(e_p_tag_event)).to match_array(["C1:S1"])
       end
 
       it "matches authors filter" do

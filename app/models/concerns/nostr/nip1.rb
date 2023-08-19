@@ -18,43 +18,6 @@ module Nostr
 
       validates_associated :author
 
-      def matches_nostr_filter_set?(filter_set)
-        filter_set.transform_keys(&:downcase).slice(*RELAY_CONFIG.available_filters).all? do |filter_type, filter_value|
-          case filter_type
-          when "kinds"
-            # We don't check relation between the subscriber authenticated pubkey
-            # and event's pubkey or p tag or delegation because this will be
-            # check right before sending event to listeners if it matches their filters
-            kind.in?(filter_value)
-          when "ids"
-            filter_value.any? { |prefix| sha256.starts_with?(prefix) }
-          when "authors"
-            filter_value.any? do |prefix|
-              return true if pubkey.starts_with?(prefix)
-
-              # NIP-26
-              delegation_tag = tags.find { |k, v| k === "delegation" }
-              return false unless delegation_tag
-              return delegation_tag.second.starts_with?(prefix)
-            end
-          when /\A#[a-zA-Z]\Z/
-            # NIP-12 search single letter filters
-            filter_value.any? do |prefix|
-              searchable_tags.any? do |t|
-                t.name == filter_type.last && t.value.starts_with?(prefix)
-              end
-            end
-          when "since"
-            created_at.to_i >= filter_value
-          when "until"
-            created_at.to_i <= filter_value
-          else
-            Rails.logger.warn("Unhandled available filter: #{filter_type}")
-            false
-          end
-        end
-      end
-
       def to_nostr_serialized
         [
           0,

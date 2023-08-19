@@ -44,9 +44,22 @@ RSpec.describe "NIP-12" do
         MemStore.subscribe(cid: "C1", sid: "S3", filters: ["#r" => ["paylo"]])
         expect(MemStore.matching_pubsubs_for(event)).to match_array(["C1:S1", "C1:S2"])
       end
+
       it "matches by tags filter with special characters" do
         event = create(:event, kind: 123, tags: [["r", "#something"]])
         MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#r" => ["#something"]])
+        expect(MemStore.matching_pubsubs_for(event)).to match_array(["C1:S1"])
+      end
+
+      it "matches by tags filter with spaces" do
+        event = create(:event, kind: 123, tags: [["r", "some sentence with spaces"]])
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#r" => ["some sentence with spaces"]])
+        expect(MemStore.matching_pubsubs_for(event)).to match_array(["C1:S1"])
+      end
+
+      it "matches by tags filter with commas" do
+        event = create(:event, kind: 123, tags: [["r", "some sentence, with commas"]])
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#r" => ["some sentence, with commas"]])
         expect(MemStore.matching_pubsubs_for(event)).to match_array(["C1:S1"])
       end
     end

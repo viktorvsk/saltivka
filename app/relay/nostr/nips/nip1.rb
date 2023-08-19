@@ -6,7 +6,6 @@ module Nostr
       def req_command(nostr_event, block)
         subscription_id, filters = nostr_event.first, nostr_event[1..]
         filters_json_string = filters.to_json # only Array of filter_sets (filters) should be stored in Redis
-        pubsub_id = "#{connection_id}:#{subscription_id}"
 
         r1, r2 = redis.multi do |t|
           t.sismember("client_reqs:#{connection_id}", subscription_id)
@@ -20,11 +19,7 @@ module Nostr
           # NIP-11
           block.call notice!("error: Reached maximum of #{RELAY_CONFIG.max_subscriptions} subscriptions")
         else
-          redis.multi do |t|
-            t.sadd("client_reqs:#{connection_id}", subscription_id)
-            t.hset("subscriptions", pubsub_id, filters_json_string)
-            t.lpush("queue:nostr.nip01.req", {class: "NewSubscription", args: [connection_id, subscription_id, filters_json_string]}.to_json)
-          end
+          redis.lpush("queue:nostr.nip01.req", {class: "NewSubscription", args: [connection_id, subscription_id, filters_json_string]}.to_json)
         end
       end
 

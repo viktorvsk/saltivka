@@ -62,7 +62,22 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
   config.filter_rails_from_backtrace!
 
-  config.before(:each) { REDIS_TEST_CONNECTION.flushdb }
+  config.before(:each) do
+    REDIS_TEST_CONNECTION.flushdb
+    begin
+      Sidekiq.redis do |c|
+        c.pipelined do
+          c.select("0")
+          c.call(RedisSearchCommands::CREATE_SCHEMA_COMMAND.split(" "))
+        end
+      end
+    rescue RedisClient::CommandError => e
+      if e.message != "Index already exists"
+        raise(e)
+      end
+    end
+  end
+
   config.after(:each) { REDIS_TEST_CONNECTION.flushdb }
 
   include FactoryBot::Syntax::Methods

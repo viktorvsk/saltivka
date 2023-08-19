@@ -38,29 +38,33 @@ RSpec.describe "NIP-12" do
   describe MemStore do
     describe ".matching_pubsubs_for" do
       it "matches by tags filter" do
-        event = create(:event, kind: 123, tags: [["r", "payload"]])
         MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#r" => ["payload"]])
         MemStore.subscribe(cid: "C1", sid: "S2", filters: ["#r" => ["one of options is", "payload", "other"]])
         MemStore.subscribe(cid: "C1", sid: "S3", filters: ["#r" => ["paylo"]])
-        expect(MemStore.matching_pubsubs_for(event)).to match_array(["C1:S1", "C1:S2"])
+        expect(MemStore.matching_pubsubs_for(build(:event, kind: 123, tags: [["r", "payload"]]))).to match_array(["C1:S1", "C1:S2"])
       end
 
       it "matches by tags filter with special characters" do
-        event = create(:event, kind: 123, tags: [["r", "#something"]])
         MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#r" => ["#something"]])
-        expect(MemStore.matching_pubsubs_for(event)).to match_array(["C1:S1"])
+        expect(MemStore.matching_pubsubs_for(build(:event, kind: 123, tags: [["r", "#something"]]))).to match_array(["C1:S1"])
       end
 
       it "matches by tags filter with spaces" do
-        event = create(:event, kind: 123, tags: [["r", "some sentence with spaces"]])
         MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#r" => ["some sentence with spaces"]])
-        expect(MemStore.matching_pubsubs_for(event)).to match_array(["C1:S1"])
+        expect(MemStore.matching_pubsubs_for(build(:event, kind: 123, tags: [["r", "some sentence with spaces"]]))).to match_array(["C1:S1"])
       end
 
       it "matches by tags filter with commas" do
-        event = create(:event, kind: 123, tags: [["r", "some sentence, with commas"]])
         MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#r" => ["some sentence, with commas"]])
-        expect(MemStore.matching_pubsubs_for(event)).to match_array(["C1:S1"])
+        expect(MemStore.matching_pubsubs_for(build(:event, kind: 123, tags: [["r", "some sentence, with commas"]]))).to match_array(["C1:S1"])
+      end
+
+      it "matches by tags filter with casesensitive content" do
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#r" => ["TeSt"]])
+        MemStore.subscribe(cid: "C1", sid: "S2", filters: ["#r" => ["test"]])
+        expect(MemStore.matching_pubsubs_for(build(:event, kind: 123, tags: [["r", "TEST"]]))).to match_array([])
+        expect(MemStore.matching_pubsubs_for(build(:event, kind: 123, tags: [["r", "TeSt"]]))).to match_array(["C1:S1"])
+        expect(MemStore.matching_pubsubs_for(build(:event, kind: 123, tags: [["r", "test"]]))).to match_array(["C1:S2"])
       end
     end
   end

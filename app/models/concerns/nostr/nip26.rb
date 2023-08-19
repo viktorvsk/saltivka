@@ -20,6 +20,10 @@ module Nostr
         end
       end
 
+      def delegation_tag_pubkey
+        tags.find { |t| t.first == "delegation" }&.second
+      end
+
       private
 
       def validate_delegation_nip26

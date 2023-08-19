@@ -23,6 +23,10 @@ module Nostr
           searchable_tags.new(name: tag_name, value: tag_value)
         end
       end
+
+      def nip12_tags
+        tags.select { |t| t.first =~ /\A[a-zA-Z]\Z/ }.map { |t| [t[0], t[1]] }
+      end
     end
   end
 end

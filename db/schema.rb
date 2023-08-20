@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_08_04_145905) do
+ActiveRecord::Schema[7.0].define(version: 2023_08_19_202002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "plpgsql"
@@ -25,9 +25,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_08_04_145905) do
 
   create_table "authors", force: :cascade do |t|
     t.text "pubkey", null: false
-    t.index "lower(pubkey) varchar_pattern_ops", name: "index_authors_on_lower_pubkey_varchar_pattern_ops", unique: true
+    t.index "lower(pubkey)", name: "index_authors_on_lower_pubkey", unique: true
     t.index ["id", "pubkey"], name: "index_authors_on_id_include_pubkey"
-    t.index ["pubkey"], name: "index_authors_on_pubkey_varchar_pattern_ops", opclass: :varchar_pattern_ops
   end
 
   create_table "delete_events", id: false, force: :cascade do |t|
@@ -52,7 +51,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_08_04_145905) do
     t.text "sha256", null: false
     t.citext "sig", null: false
     t.datetime "created_at"
-    t.index "lower(sha256) varchar_pattern_ops", name: "index_events_on_lower_sha256_varchar_pattern_ops", unique: true
+    t.index "lower(sha256)", name: "index_events_on_lower_sha256", unique: true
     t.index ["author_id", "created_at", "kind"], name: "index_events_for_replaceable", where: "((kind = ANY (ARRAY[0, 3, 41])) OR ((kind >= 10000) AND (kind <= 19999)) OR ((kind >= 30000) AND (kind <= 39999)))"
     t.index ["author_id"], name: "index_events_on_author_id"
     t.index ["created_at", "kind"], name: "index_events_on_created_at_and_kind"
@@ -95,11 +94,10 @@ ActiveRecord::Schema[7.0].define(version: 2023_08_04_145905) do
     t.string "name", null: false
     t.text "value", null: false
     t.index "event_id, name, lower(value)", name: "index_searchable_tags_on_event_id_and_name_and_value", unique: true
-    t.index "lower(value) varchar_pattern_ops", name: "index_searchable_tags_for_prefix_search_on_value"
-    t.index "lower(value) varchar_pattern_ops, event_id", name: "index_searchable_tags_on_e_tag", where: "((name)::text = 'e'::text)"
-    t.index "lower(value) varchar_pattern_ops, event_id", name: "index_searchable_tags_on_other_tags", where: "((name)::text <> ALL ((ARRAY['e'::character varying, 'p'::character varying])::text[]))"
-    t.index "lower(value) varchar_pattern_ops, event_id", name: "index_searchable_tags_on_p_tag", where: "((name)::text = 'p'::text)"
     t.index "lower(value), event_id", name: "index_searchable_tags_on_d_tag", where: "((name)::text = 'd'::text)"
+    t.index "lower(value), event_id", name: "index_searchable_tags_on_e_tag", where: "((name)::text = 'e'::text)"
+    t.index "lower(value), event_id", name: "index_searchable_tags_on_other_tags", where: "((name)::text <> ALL ((ARRAY['e'::character varying, 'p'::character varying])::text[]))"
+    t.index "lower(value), event_id", name: "index_searchable_tags_on_p_tag", where: "((name)::text = 'p'::text)"
     t.index ["event_id"], name: "index_searchable_tags_on_event_id"
   end
 

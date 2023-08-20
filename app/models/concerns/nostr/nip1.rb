@@ -145,30 +145,22 @@ module Nostr
 
           if key == "ids"
             # sha256 max length is 64 so we don't need a predicate match in this case
-            where_clause = value.uniq.map { |id| "LOWER(events.sha256) #{(id.length == 64) ? "=" : "^@"} '#{id.downcase}'" }.join(" OR ")
+            where_clause = value.uniq.map { |id| "LOWER(events.sha256) = ?" }.join(" OR ")
 
-            rel = rel.where(where_clause)
+            rel = rel.where(where_clause, *value.uniq.map(&:downcase))
           end
 
           if key == "authors"
             # pubkey max length is 64 so we don't need a predicate match in this case
-            where_clause = value.uniq.map { |pubkey| "LOWER(authors.pubkey) #{(pubkey.length == 64) ? "=" : "^@"} '#{pubkey.downcase}'" }.join(" OR ")
+            where_clause = value.uniq.map { |pubkey| "LOWER(authors.pubkey) = ?" }.join(" OR ")
 
-            rel = rel.joins(:author).where(where_clause)
+            rel = rel.joins(:author).where(where_clause, *value.uniq.map(&:downcase))
           end
 
           if /\A#[a-zA-Z]\Z/.match?(key)
-            # value of #e and #p tags max length is 64 so we don't need a predicate match in this case
-            where_clause = value.map do |t|
-              if key.last.in?(%w[e p])
-                "LOWER(searchable_tags.value) #{(t.length == 64) ? "=" : "^@"} '#{t.downcase}'"
-              else
-                "LOWER(searchable_tags.value) ^@ '#{t.downcase}'"
-              end
-            end
-            where_clause = where_clause.join(" OR ")
+            where_clause = value.map { |t| "LOWER(searchable_tags.value) = ?" }.join(" OR ")
 
-            rel = rel.joins(:searchable_tags).where(searchable_tags: {name: key.last}).where(where_clause)
+            rel = rel.joins(:searchable_tags).where(searchable_tags: {name: key.last}).where(where_clause, *value.map(&:downcase))
           end
 
           rel = rel.where("created_at >= ?", Time.at(value)) if key == "since"
@@ -188,12 +180,12 @@ module Nostr
           # NIP-26
 
           # pubkey max length is 64 so we don't need a predicate match in this case
-          where_clause = filter_set["authors"].map { |pubkey| "LOWER(delegator_authors.pubkey) #{(pubkey.length == 64) ? "=" : "^@"} '#{pubkey.downcase}'" }.join(" OR ")
+          where_clause = filter_set["authors"].map { |pubkey| "LOWER(delegator_authors.pubkey) = ?" }.join(" OR ")
 
           delegator_rel = by_nostr_filters(filter_set.except("authors"), subscriber_pubkey, count_request).joins(:author)
             .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
             .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
-            .where(where_clause)
+            .where(where_clause, *filter_set["authors"].map(&:downcase))
           union = <<~SQL
             (#{rel.limit(filter_limit).to_sql})
 

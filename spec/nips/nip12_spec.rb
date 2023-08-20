@@ -75,7 +75,7 @@ RSpec.describe "NIP-12" do
         create(:event, kind: 123, tags: [["r", "payload"]])
         expect(Event.by_nostr_filters({"#r" => ["payload"]}).count).to eq(1)
         expect(Event.by_nostr_filters({"#r" => ["one of options is", "payload", "other"]}).count).to eq(1)
-        expect(Event.by_nostr_filters({"#r" => ["paylo"]}).count).to eq(1)
+        expect(Event.by_nostr_filters({"#r" => ["paylo"]}).count).to eq(0)
       end
     end
   end

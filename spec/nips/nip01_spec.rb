@@ -24,7 +24,7 @@ RSpec.describe("NIP-01") do
       end
 
       it "has filter_set hash instead of a filters array" do
-        subject.perform("CONN_ID", "SUBID", {kinds: [0], authors: ["a19f19f"]}.to_json)
+        subject.perform("CONN_ID", "SUBID", {kinds: [0], authors: ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]}.to_json)
       end
 
       it "works with empty filter_set" do
@@ -87,19 +87,23 @@ RSpec.describe("NIP-01") do
         event_params = parsed_json.merge("sha256" => parsed_json.delete("id"), "created_at" => Time.at(parsed_json["created_at"]))
         Event.create!(event_params)
 
-        expect(Event.by_nostr_filters({"authors" => ["8e0d3"]}).count).to eq(1)
-        expect(Event.by_nostr_filters({"authors" => ["09cd08d"]}).count).to eq(1)
+        expect(Event.by_nostr_filters({"authors" => ["8e0d3"]}).count).to eq(0)
+        expect(Event.by_nostr_filters({"authors" => ["8e0d3d3eb2881ec137a11debe736a9086715a8c8beeeda615780064d68bc25dd"]}).count).to eq(1)
+        expect(Event.by_nostr_filters({"authors" => ["09cd08d"]}).count).to eq(0)
+        expect(Event.by_nostr_filters({"authors" => ["09cd08d416b78dd3e1d6c00c9e14087d803df6360fbf0acdb30106ca042ee81e"]}).count).to eq(1)
         expect(Event.by_nostr_filters({}).count).to eq(3)
         expect(Event.by_nostr_filters({limit: 1}).count).to eq(1)
         expect(Event.by_nostr_filters({kinds: 0}).count).to eq(1)
-        expect(Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95", event_with_tags.pubkey.first(5)]}).count).to eq(2)
+        expect(Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95", event_with_tags.pubkey.first(5)]}).count).to eq(1)
+        expect(Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95", event_with_tags.pubkey]}).count).to eq(2)
         expect(Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]}).count).to eq((event_with_tags.pubkey == "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95") ? 2 : 1)
-        expect(Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f", event_with_tags.sha256.first(5)]}).count).to eq(2)
+        expect(Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f", event_with_tags.sha256.first(5)]}).count).to eq(1)
+        expect(Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f", event_with_tags.sha256]}).count).to eq(2)
         expect(Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"]}).count).to eq(1)
         expect(Event.by_nostr_filters({"ids" => []}).count).to eq(3)
         expect(Event.by_nostr_filters({"ids" => ["INVALID"]}).count).to eq(0)
         expect(Event.by_nostr_filters({"#e" => ["s"]}).count).to eq(0)
-        expect(Event.by_nostr_filters({"#e" => ["b"]}).count).to eq(1)
+        expect(Event.by_nostr_filters({"#e" => ["b"]}).count).to eq(0)
         expect(Event.by_nostr_filters({"#p" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]}).count).to eq(1)
         expect(Event.by_nostr_filters({"#p" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"]}).count).to eq(0)
       end

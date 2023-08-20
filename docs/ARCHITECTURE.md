@@ -42,9 +42,15 @@ Connection may be closed due to following reasons:
 * Connection was manually closed from admin UI
 
 ### Redis
-Tested against Redis v7 and [RedisStack](https://redis.io/docs/about/about-stack/). RedisStack will be a preferable way to go since more of its features will be used in future
-Redis is utilized heavily here. 2 main use-cases are:
+Currently [RedisStack](https://redis.io/docs/about/about-stack/) of version 6.2.6 is used because there are plans to use RedisGraph.
+However, in future it is planned to use multiple different Redis instances for different components.
+One Redis for Sidekiq (background jobs) — which will have the strongest persistence possible.
+One for handling Pub/Sub without persistence aiming for the best throughput.
+One for websocket connection business logic with a mixed performance/persitence ration goals.
+One for caching solely etc.
+Redis is utilized heavily here. 3 main use-cases are:
 1. Pub/Sub handler
+2. Websocket connection business logic
 2. Background jobs
 
 But it is also responsible to handle various data structures i.e. expiration keys and rate limiting sorted sets etc.
@@ -114,9 +120,9 @@ It also provides admin dashboard HTTP part and any future extensions i.e.: publi
 
 ### Database
 Tested against 14,15 and 16 versions of PostgreSQL but at the moment there are no version-specific SQL so in theory many versions should be compatible.
-Using Rails ActiveRecord ORM it should also be quite trivial to use other databases but there are no such plans and this repository will only support PostgreSQL.
 
-Database currently has the following table: `authors`, `delete_events`, `events`, `searchable_tags`, `trusted_authors`, `users` and is slightly optimized for storage (by normalizing `authors` public keys for example)
+Database currently has the following core tables: `authors`, `delete_events`, `events`, `searchable_tags`, `event_delegators`, `trusted_authors` which are slightly optimized for storage (by normalizing `authors` public keys for example).
+And secondary, not Nostr-specific tables: `users`, `user_pubkeys`, `relay_mirrors`, `invoices`, `author_subscriptions`.
 Proper indexing strategy is a subject to change.
 
 ## Notes on WebsocketServer implementation

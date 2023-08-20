@@ -45,10 +45,6 @@ This section probably mostly requires NIPs to handle errors in a universal ways 
 
 Next set of tasks is more technical and non-functional
 
-## Performance
-
-- [ ] Use LUA scripting for heavy redis computations
-
 ## Optimized Storage
 
   * `kind` could probably be a 2 byte integer given that unlikely there will be more than 65k different event kinds in the nearest future

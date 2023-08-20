@@ -10,7 +10,7 @@ module Nostr
 
         def validate_dependent(nostr_event)
           # we are confident its exactly event here because we run this validation only if schema is correct
-          event = nostr_event.first
+          event = nostr_event.second
 
           serialized_event = [
             0,
@@ -23,7 +23,7 @@ module Nostr
 
           id_is_valid = Digest::SHA256.hexdigest(JSON.dump(serialized_event)) === event["id"]
 
-          add_error("/0/id", "property '/0/id' doesn't match") unless id_is_valid
+          add_error("/1/id", "property '/1/id' doesn't match") unless id_is_valid
 
           if event["id"].present? && id_is_valid
             schnorr_params = {
@@ -38,7 +38,7 @@ module Nostr
               false
             end
 
-            add_error("/0/sig", "property '/0/sig' doesn't match") unless sig_is_valid
+            add_error("/1/sig", "property '/1/sig' doesn't match") unless sig_is_valid
           end
         end
       end

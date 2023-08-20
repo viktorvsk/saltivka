@@ -4,6 +4,7 @@ module Nostr
     id: "nostr/nips/01/commands/client/REQ/",
     type: "array",
     items: [
+      {const: "REQ", required: true},
       {type: "string", minLength: 1, maxLength: 64, id: "subscription_id"},
       {"$ref": "#/definitions/filter_set"}
     ],
@@ -37,12 +38,12 @@ module Nostr
             type: "array",
             id: "kinds",
             minLength: 1,
-            items: {type: "integer", minimum: 0}
+            items: {type: "integer", minimum: 0, maximum: 65535}
           },
 
           limit: {
             type: :integer,
-            minimum: 1,
+            minimum: 0,
             id: :limit
           },
           "#e": {
@@ -66,8 +67,8 @@ module Nostr
         }
       }
     },
-    minItems: 2,
-    maxLength: RELAY_CONFIG.max_filters + 2
+    minItems: 3,
+    maxItems: RELAY_CONFIG.max_filters + 2
   }.to_json)
 
   CLOSE_SCHEMA = JSONSchemer.schema({
@@ -75,10 +76,11 @@ module Nostr
     id: "nostr/nips/01/commands/client/CLOSE/",
     type: "array",
     items: [
+      {const: "CLOSE", required: true},
       {type: "string", minLength: 1, maxLength: 64, id: "subscription_id"}
     ],
-    minItems: 1,
-    maxItems: 1
+    minItems: 2,
+    maxItems: 2
   }.to_json)
 
   EVENT_SCHEMA = JSONSchemer.schema({
@@ -86,6 +88,7 @@ module Nostr
     id: "nostr/nips/01/commands/client/EVENT/",
     type: "array",
     items: [
+      {const: "EVENT", required: true},
       {
         type: "object",
         id: "event/",
@@ -109,7 +112,8 @@ module Nostr
           kind: {
             type: "integer",
             id: "kind",
-            minimum: 0
+            minimum: 0,
+            maxumum: 65535
           },
           pubkey: {
             type: "string",
@@ -142,8 +146,8 @@ module Nostr
         required: %w[content created_at id kind pubkey sig tags]
       }
     ],
-    minItems: 1,
-    maxItems: 1
+    minItems: 2,
+    maxItems: 2
   }.to_json)
 
   # TODO: refactor later because its completely similar to REQ schema
@@ -153,6 +157,7 @@ module Nostr
     id: "nostr/nips/01/commands/client/COUNT/",
     type: "array",
     items: [
+      {const: "COUNT", required: true},
       {type: "string", minLength: 1, maxLength: 64, id: "subscription_id"},
       {"$ref": "#/definitions/filter_set"}
     ],
@@ -215,7 +220,7 @@ module Nostr
         }
       }
     },
-    minItems: 2,
-    maxLength: RELAY_CONFIG.max_filters + 2
+    minItems: 3,
+    maxItems: RELAY_CONFIG.max_filters + 2
   }.to_json)
 end

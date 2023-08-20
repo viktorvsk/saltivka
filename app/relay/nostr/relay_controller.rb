@@ -38,7 +38,8 @@ module Nostr
         return block.call notice!("error: event must be an Array")
       end
 
-      command = nostr_event.shift
+      command = nostr_event[0]
+      command_args = nostr_event[1..]
 
       if command.present? && command.upcase.in?(COMMANDS)
         contract_class = "Nostr::Commands::Contracts::#{command.downcase.classify}".constantize
@@ -46,9 +47,9 @@ module Nostr
         contract_result = contract.call(nostr_event)
         if contract_result.success?
           controller_action = "#{command.downcase}_command"
-          if authorized?(command, nostr_event)
+          if authorized?(command, command_args)
             begin
-              send(controller_action, nostr_event, block)
+              send(controller_action, command_args, block)
             rescue => e
               Sentry.capture_exception(e)
               block.call notice!("error: unknown error")

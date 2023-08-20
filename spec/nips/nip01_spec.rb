@@ -493,19 +493,19 @@ RSpec.describe("NIP-01") do
 
       context "with invalid arguments, responds with error" do
         it "given multiple filters of invalid type" do
-          @expected_error = %(property '/1' is not of type: object; property '/2' is not of type: object)
+          @expected_error = %(property '/2' is not of type: object; property '/3' is not of type: object)
           @nostr_event = ["REQ", "SUBID", [], "UNKNOWN ARG"].to_json
           subject
         end
 
         it "when some filter_sets are invalid" do
-          @expected_error = %(property '/1' is not of type: object)
+          @expected_error = %(property '/2' is not of type: object)
           @nostr_event = ["REQ", "SUBID", 1].to_json
           subject
         end
 
-        it "when some filter_sets values are invalid" do
-          @expected_error = %(property '/1/kinds/0' is not of type: integer)
+        it "when some filter_sets values are invalid" do # TODO: check later
+          @expected_error = %(property '/2/kinds/0' is not of type: integer)
           @nostr_event = ["REQ", "SUBID", {kinds: [{}]}].to_json
           subject
         end
@@ -540,7 +540,7 @@ RSpec.describe("NIP-01") do
         end
 
         it "given wrong argument" do
-          @expected_error = "property '/0' is not of type: string"
+          @expected_error = "property '/1' is not of type: string"
           @nostr_event = ["CLOSE", 1234].to_json
           subject
         end
@@ -561,13 +561,13 @@ RSpec.describe("NIP-01") do
 
       describe "with invalid event data" do
         it "NOTICEs invalid Event `id` length" do
-          @expected_error = "property '/0/id' is invalid: error_type=minLength"
+          @expected_error = "property '/1/id' is invalid: error_type=minLength"
           @nostr_event = ["EVENT", JSON.parse(@valid_event).merge("id" => "INVALID")].to_json
           subject
         end
 
         it "NOTICEs invalid Event `id`" do
-          @expected_error = "property '/0/id' doesn't match"
+          @expected_error = "property '/1/id' doesn't match"
           @nostr_event = ["EVENT", JSON.parse(@valid_event).merge("id" => "00003ea43d2fd2873a9b3191a8e5fdef381ebf2a1c56ca909861fe9489671c65")].to_json
           subject
         end
@@ -579,25 +579,25 @@ RSpec.describe("NIP-01") do
         end
 
         it "NOTICEs invalid Event `sig` length" do
-          @expected_error = "property '/0/sig' is invalid: error_type=minLength"
+          @expected_error = "property '/1/sig' is invalid: error_type=minLength"
           @nostr_event = ["EVENT", JSON.parse(@valid_event).merge("sig" => "INVALID")].to_json
           subject
         end
 
         it "NOTICEs invalid Event `sig`" do
-          @expected_error = "property '/0/sig' doesn't match"
+          @expected_error = "property '/1/sig' doesn't match"
           @nostr_event = ["EVENT", JSON.parse(@valid_event).merge("sig" => "00000f64cfa9945c4a1ea1f7edea8942a84a1d4ee9b36e4e851bda396590f10a11a49519d4859c7c99c1d180bc3feffcad85b9d62a98748decbfc6ed686f5aeb")].to_json
           subject
         end
 
         it "NOTICEs malformed JSON" do
-          @expected_error = "property '/0' is not of type: object"
+          @expected_error = "property '/1' is not of type: object"
           @nostr_event = ["EVENT", ""].to_json
           subject
         end
 
         it "NOTICEs empty JSON" do
-          @expected_error = "property '/0' is missing required keys: content, created_at, id, kind, pubkey, sig, tags"
+          @expected_error = "property '/1' is missing required keys: content, created_at, id, kind, pubkey, sig, tags"
           @nostr_event = ["EVENT", {}].to_json
           subject
         end

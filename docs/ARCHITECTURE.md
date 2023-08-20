@@ -62,7 +62,8 @@ But it is also responsible to handle various data structures i.e. expiration key
 | `client_reqs:<CONNECTION_ID>` | SET | subscription_id list per connection |
 | `connections` | SET | list of active connections |
 | `connections_authenticators` | HASH | event kind-22242 id that validated connection |
-| `subscriptions` | HASH | contains filters per each `pubsub_id` (which consists of `<CONNECTION_ID>:<SUBSCRIPTION_ID>`) |
+| `subscriptions:<CONNECTION_ID>:<SUBSCRIPTION_ID>` | JSON | contains filters |
+| `subscriptions_idx` | RediSearch Index (`FT.CREATE`) | indexes subscriptions for search using `FT.SEARCH` command |
 | `authentications` | HASH |pubkey per connection |
 | `authorizations` | HASH | `auth_level` per connection |
 | `requests` | HASH | requests count per connection |

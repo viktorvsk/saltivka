@@ -38,7 +38,13 @@ class MemStore
     def matching_pubsubs_for(event)
       query = SubscriptionMatcherQueryBuilder.new(event).query
 
-      subscriptions = Sidekiq.redis { |c| c.call("FT.SEARCH", "subscriptions_idx", query, "NOCONTENT") }
+      begin
+        subscriptions = Sidekiq.redis { |c| c.call("FT.SEARCH", "subscriptions_idx", query, "NOCONTENT") }
+      rescue RedisClient::CommandError => e
+        Sentry.capture_exception(e)
+        Rails.logger.error("[MemStore.matching_pubsubs_for][INVALID_QUERY] query=#{query} event_sha256=#{event.sha256}")
+        subscriptions = []
+      end
 
       # Removing unnecessary parts to return pubsubs
       subscriptions.shift # First argument is Redis specific return value

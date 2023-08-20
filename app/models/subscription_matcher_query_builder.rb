@@ -20,8 +20,7 @@ class SubscriptionMatcherQueryBuilder
 
     SubscriptionQueryBuilder::SINGLE_LETTER_TAGS.each do |tag_name|
       event_tag_values = event.single_letter_tags
-        .select { |t| t.last.present? } # We don't search for empty tags neither we can (currently) subscribe to empty tags
-        .select { |t| t[0] == tag_name }.map(&:last).map { |v| v.gsub(/([#{REDIS_SEARCH_SPECIAL_CHARACTERS.join}])/, '\\\\\1') }
+        .select { |t| t[0] == tag_name }.map(&:last).map { |v| v.present? ? v.gsub(/([#{REDIS_SEARCH_SPECIAL_CHARACTERS.join}])/, '\\\\\1') : SubscriptionQueryBuilder::REDIS_SEARCH_TAG_EMPTY_VALUE }
       values_with_any = [event_tag_values, SubscriptionQueryBuilder::REDIS_SEARCH_TAG_ANY_VALUE].flatten.join(" | ")
       query << "(@#{tag_name}:{#{values_with_any}})"
     end

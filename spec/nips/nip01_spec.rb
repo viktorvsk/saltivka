@@ -438,6 +438,14 @@ RSpec.describe("NIP-01") do
         expect(MemStore.matching_pubsubs_for(build(:event, kind: 123, tags: [["r", "TeSt"]]))).to match_array(["C1:S1"])
         expect(MemStore.matching_pubsubs_for(build(:event, kind: 123, tags: [["r", "test"]]))).to match_array(["C1:S2"])
       end
+
+      it "matches by tags having an empty tag" do
+        MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#t" => ["", "another"]])
+        expect(MemStore.matching_pubsubs_for(build(:event, tags: [["t", ""]]))).to match_array(["C1:S1"])
+        expect(MemStore.matching_pubsubs_for(build(:event, tags: [["t", "another"]]))).to match_array(["C1:S1"])
+        expect(MemStore.matching_pubsubs_for(build(:event, tags: [["t", "another"], ["t", ""]]))).to match_array(["C1:S1"])
+        expect(MemStore.matching_pubsubs_for(build(:event, tags: [["t", "something"]]))).to match_array([])
+      end
     end
   end
 

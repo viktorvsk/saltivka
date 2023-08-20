@@ -17,7 +17,6 @@ module Nostr
             max_filters: RELAY_CONFIG.max_filters,
             max_limit: RELAY_CONFIG.max_limit,
             max_subid_length: 64, # NIP-01 defines it as max of 64
-            min_prefix: RELAY_CONFIG.min_prefix,
             max_event_tags: RELAY_CONFIG.max_event_tags,
             max_content_length: RELAY_CONFIG.max_content_length,
             min_pow_difficulty: RELAY_CONFIG.min_pow,

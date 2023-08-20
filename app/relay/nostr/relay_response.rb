@@ -7,7 +7,7 @@ module Nostr
       when "FOUND_EVENT"
         ["EVENT", subscription_id, JSON.parse(event)].to_json
       when "OK"
-        event # NIP-20
+        event
       when "COUNT"
         ["COUNT", subscription_id, {count: event.to_i}].to_json
       when "NOTICE"

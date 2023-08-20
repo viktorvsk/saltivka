@@ -81,12 +81,6 @@ class RelayConfig
     ActiveRecord::Type::Boolean.new.cast(val)
   end
 
-  def available_filters
-    nip_1_default_filters = "kinds ids authors #e #p since until"
-    nip_12_tags = "#a #b #c #d #f #g #h #i #j #k #l #m #n #o #q #r #s #t #u #v #w #x #y #z #A #B #C #D #E #F #G #H #I #J #K #L #M #N #O #P #Q #R #S #T #U #V #W #X #Y #Z"
-    ENV.fetch("NIP_1_12_AVAILABLE_FILTERS", "#{nip_1_default_filters} #{nip_12_tags}").to_s.split(" ")
-  end
-
   def enforce_kind_4_authentication
     val = ENV.fetch("NIP_04_NIP_42_ENFORCE_KIND_4_AUTHENTICATION", true)
     ActiveRecord::Type::Boolean.new.cast(val)
@@ -113,10 +107,8 @@ class RelayConfig
   end
 
   def supported_nips
-    available_filters_normalized = available_filters.map { |f| f.delete("#") }
-    nips = Set.new(%w[1 2 9 11 13 15 16 20 22 26 28 33 40 42 43 45])
+    nips = Set.new(%w[1 2 9 11 13 15 22 26 28 40 42 43 45])
     nips.add(4) if enforce_kind_4_authentication
-    nips.add(12) if ("a".."z").to_a.concat(("A".."Z").to_a).all? { |f| f.in?(available_filters_normalized) }
     nips.add(65) if kinds_exempt_of_auth.include?(10002)
 
     nips.map(&:to_i).sort
@@ -152,10 +144,6 @@ class RelayConfig
 
   def max_filters
     ENV.fetch("NIP_11_MAX_FILTERS", 100).to_i
-  end
-
-  def min_prefix
-    ENV.fetch("NIP_11_MIN_PREFIX", 4).to_i
   end
 
   def max_event_tags

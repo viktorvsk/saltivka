@@ -20,7 +20,7 @@ module Nostr
             id: :ids,
             items: {
               type: :string,
-              minLength: RELAY_CONFIG.min_prefix,
+              minLength: 64,
               maxLength: 64
             }
           },
@@ -29,7 +29,7 @@ module Nostr
             id: :authors,
             items: {
               type: :string,
-              minLength: RELAY_CONFIG.min_prefix,
+              minLength: 64,
               maxLength: 64
             }
           },
@@ -50,7 +50,7 @@ module Nostr
             id: :tagged_events,
             items: {
               type: :string,
-              minLength: RELAY_CONFIG.min_prefix, # Not part of NIP-11 but it doesn't make sense
+              minLength: 64, # Not part of NIP-11 but it doesn't make sense
               maxLength: 64
             }
           },
@@ -59,7 +59,7 @@ module Nostr
             id: :tagged_pubkeys,
             items: {
               type: :string,
-              minLength: RELAY_CONFIG.min_prefix, # Not part of NIP-11 but it doesn't make sense
+              minLength: 64, # Not part of NIP-11 but it doesn't make sense
               maxLength: 64
             }
           }
@@ -169,7 +169,7 @@ module Nostr
             id: :ids,
             items: {
               type: :string,
-              minLength: RELAY_CONFIG.min_prefix,
+              minLength: 64,
               maxLength: 64
             }
           },
@@ -178,7 +178,7 @@ module Nostr
             id: :authors,
             items: {
               type: :string,
-              minLength: RELAY_CONFIG.min_prefix,
+              minLength: 64,
               maxLength: 64
             }
           },
@@ -199,7 +199,7 @@ module Nostr
             id: :tagged_events,
             items: {
               type: :string,
-              minLength: RELAY_CONFIG.min_prefix,
+              minLength: 64,
               maxLength: 64
             }
           },
@@ -208,7 +208,7 @@ module Nostr
             id: :tagged_pubkeys,
             items: {
               type: :string,
-              minLength: RELAY_CONFIG.min_prefix,
+              minLength: 64,
               maxLength: 64
             }
           }

@@ -1,18 +1,32 @@
 module Nostr
   module Nip1
+    KNOWN_KINDS_TYPES = %w[set_metadata text_note recommend_server delete_event protocol_reserved replaceable ephemeral private parameterized_replaceable unknown]
+    AVAILABLE_FILTERS = SubscriptionQueryBuilder::AVAILABLE_FILTERS.map { |filter_name| /\A[a-zA-Z]\Z/.match?(filter_name) ? "##{filter_name}" : filter_name }
+
     extend ActiveSupport::Concern
 
     included do
+      before_validation :delete_older_replaceable, if: ->(event) { event.kinda?(:replaceable) }
+      before_validation :delete_older_parameterized_replaceable, if: ->(event) { event.kinda?(:parameterized_replaceable) }
+
+      before_create :init_searchable_tags
+
+      before_save :must_not_be_ephemeral
+
       validates :kind, presence: true
-      validate :tags_must_be_array
-      validate :id_must_match_payload, if: proc { |_event| RELAY_CONFIG.validate_id_on_server }
-      validate :sig_must_match_payload, if: proc { |_event| RELAY_CONFIG.validate_sig_on_server }
-      validate :lower_sha256_uniqueness, on: :create
       validates :sig, presence: true, length: {is: 128}
       validates :sha256, presence: true, length: {is: 64}
       validates :content, length: {maximum: RELAY_CONFIG.max_content_length}
 
+      validate :tags_must_be_array
+      validate :id_must_match_payload, if: proc { |_event| RELAY_CONFIG.validate_id_on_server }
+      validate :sig_must_match_payload, if: proc { |_event| RELAY_CONFIG.validate_sig_on_server }
+      validate :lower_sha256_uniqueness, on: :create
+      validate :must_be_newer_than_existing_replaceable, if: ->(event) { event.kinda?(:replaceable) }
+      validate :must_be_newer_than_existing_parameterized_replaceable, if: ->(event) { event.kinda?(:parameterized_replaceable) }
+
       belongs_to :author, autosave: true
+      has_many :searchable_tags, autosave: true, dependent: :delete_all
 
       delegate :pubkey, to: :author, allow_nil: true
 
@@ -55,6 +69,65 @@ module Nostr
         value.is_a?(Numeric) ? super(Time.at(value)) : super(value)
       end
 
+      def init_searchable_tags
+        if kinda?(:parameterized_replaceable) && tags.none? { |t| t.first === "d" }
+          searchable_tags.new(name: "d", value: "")
+        end
+        tag_with_value_only = tags.map { |t| t[..1] }
+        unique_tags = tag_with_value_only.uniq { |tag| tag[0] + tag[1..].map(&:downcase).sort.join }
+        unique_tags.each do |tag|
+          tag_name, tag_value = tag
+          tag_value_too_long = tag_value && tag.second.size > RELAY_CONFIG.max_searchable_tag_value_length
+          next if tag_value_too_long
+
+          # create searchable tags for every single-letter tag
+          next if tag_name.size != 1
+          next unless /\A[a-zA-Z]\Z/.match?(tag_name)
+          tag_value ||= ""
+
+          searchable_tags.new(name: tag_name, value: tag_value)
+        end
+      end
+
+      def single_letter_tags
+        tags.select { |t| t.first =~ /\A[a-zA-Z]\Z/ }.map { |t| [t[0], t[1]] }
+      end
+
+      def kinda?(event_type)
+        raise "Unknown event kind type" unless event_type.to_s.downcase.in?(KNOWN_KINDS_TYPES)
+
+        kind_types = case kind
+        when 0
+          %w[set_metadata protocol_reserved replaceable]
+        when 1
+          %w[text_note protocol_reserved]
+        when 2
+          %w[recommend_server protocol_reserved]
+        when 3
+          %w[contact_list protocol_reserved replaceable]
+        when 5
+          %w[delete_event protocol_reserved]
+        when 41
+          %w[channel_metadata replaceable protocol_reserved]
+        when 0...1000
+          %w[protocol_reserved]
+        when 1000...10000
+          %w[regular]
+        when 10000...20000
+          %w[replaceable]
+        when 22242
+          %w[ephemeral private]
+        when 20000...30000
+          %w[ephemeral]
+        when 30000...40000
+          %w[parameterized_replaceable]
+        else
+          %w[unknown]
+        end
+
+        event_type.to_s.in?(kind_types)
+      end
+
       private
 
       def lower_sha256_uniqueness
@@ -86,6 +159,70 @@ module Nostr
 
         errors.add(:sig, "must match payload") unless sig_is_valid
       end
+
+      def delete_older_replaceable
+        to_delete = [
+          Event.where(author_id: author_id, kind: kind).where("events.created_at < ?", created_at).pluck(:id),
+          Event.where(author_id: author_id, kind: kind, created_at: created_at).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
+        ].flatten.reject(&:blank?)
+
+        Event.where(id: to_delete.uniq).destroy_all if to_delete.present?
+      end
+
+      def must_not_be_ephemeral
+        return unless kinda?(:ephemeral)
+
+        errors.add(:kind, "must not be ephemeral")
+
+        throw(:abort)
+      end
+
+      def must_be_newer_than_existing_replaceable
+        newer = Event.where(author_id: author_id, kind: kind).where("events.created_at > ?", created_at)
+
+        lexically_lower = Event.where(author_id: author_id, kind: kind, created_at: created_at).where("LOWER(events.sha256) < ?", sha256.downcase)
+
+        # We add such a strange error key in order for client to receive OK message with duplicate: prefix
+        # We kinda say that "This event already exists" which is technically not true
+        # because its a different event with different ID but since its replaceable
+        # newer event is treated as "the same existing"
+        errors.add(:sha256, "has already been taken") if newer.exists? || lexically_lower.exists?
+      end
+
+      def delete_older_parameterized_replaceable
+        d_tag = tags.find { |t| t.first === "d" } || ["d"]
+
+        d_tag_value = d_tag.second.to_s
+
+        to_delete = [
+          Event.joins(:searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where(author_id: author_id, kind: kind, searchable_tags: {name: "d"}).where("events.created_at < ?", created_at).pluck(:id),
+          Event.joins(:searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where(author_id: author_id, kind: kind, created_at: created_at, searchable_tags: {name: "d"}).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
+        ].flatten.reject(&:blank?)
+
+        Event.where(id: to_delete).destroy_all
+      end
+
+      def must_be_newer_than_existing_parameterized_replaceable
+        d_tag = tags.find { |t| t.first === "d" } || ["d"]
+
+        d_tag_value = d_tag.second.to_s
+
+        newer = Event.joins(:searchable_tags)
+          .where(author_id: author_id, searchable_tags: {name: "d"}, kind: kind)
+          .where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase)
+          .where("events.created_at > ?", created_at)
+
+        lexically_lower = Event.joins(:searchable_tags)
+          .where(author_id: author_id, searchable_tags: {name: "d"}, kind: kind, created_at: created_at)
+          .where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase)
+          .where("LOWER(events.sha256) < ?", sha256.downcase)
+
+        # We add such a strange error key in order for client to receive OK message with duplicate: prefix
+        # We kinda say that "This event already exists" which is technically not true
+        # because its a different event with different ID but since its replaceable
+        # newer event is treated as "the same existing"
+        errors.add(:sha256, "has already been taken") if newer.exists? || lexically_lower.exists?
+      end
     end
 
     class_methods do
@@ -101,7 +238,7 @@ module Nostr
           rel = rel.where.not(kind: 4)
         end
 
-        filter_set.transform_keys(&:downcase).slice(*RELAY_CONFIG.available_filters).select { |key, value| value.present? }.each do |key, value|
+        filter_set.transform_keys(&:downcase).slice(*AVAILABLE_FILTERS).select { |key, value| value.present? }.each do |key, value|
           if key == "kinds"
             value = Array.wrap(value)
             if RELAY_CONFIG.enforce_kind_4_authentication && value.include?(4)

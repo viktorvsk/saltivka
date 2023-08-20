@@ -33,7 +33,7 @@ class NewEvent
       else
         MemStore.fanout_new_event_to_all_active_subscriptions(event)
 
-        MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, true, ""].to_json) unless event.kinda?(:ephemeral) # NIP-16/NIP-20
+        MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, true, ""].to_json)
       end
     elsif event.errors[:sha256].include?("has already been taken")
       MemStore.fanout(cid: connection_id, command: :ok, payload: ["OK", event.sha256, false, "duplicate: this event is already present in the database (for replaceable and parameterized replaceable events it may mean newer events are present)"].to_json)

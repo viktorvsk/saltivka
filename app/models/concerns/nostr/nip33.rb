@@ -34,7 +34,7 @@ module Nostr
         .where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase)
         .where("events.created_at > ?", created_at)
 
-      leixically_lower = Event.joins(:searchable_tags)
+      lexically_lower = Event.joins(:searchable_tags)
         .where(author_id: author_id, searchable_tags: {name: "d"}, kind: kind, created_at: created_at)
         .where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase)
         .where("LOWER(events.sha256) < ?", sha256.downcase)
@@ -43,7 +43,7 @@ module Nostr
       # We kinda say that "This event already exists" which is technically not true
       # because its a different event with different ID but since its replaceable
       # newer event is treated as "the same existing"
-      errors.add(:sha256, "has already been taken") if newer.exists? || leixically_lower.exists?
+      errors.add(:sha256, "has already been taken") if newer.exists? || lexically_lower.exists?
     end
   end
 end

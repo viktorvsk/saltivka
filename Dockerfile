@@ -41,7 +41,7 @@ COPY --from=Builder --chown=app:app /app /app
 
 WORKDIR /app
 
-RUN bundle exec rake assets:precompile
+RUN BUILD_STEP=true bundle exec rake assets:precompile
 
 USER app
 

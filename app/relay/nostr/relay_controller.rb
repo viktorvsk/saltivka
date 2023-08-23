@@ -73,14 +73,16 @@ module Nostr
     def terminate(event:, redis:)
       Rails.logger.info("[TERMINATING] connection_id=#{connection_id}")
 
-      redis.pipelined do
-        pubsub_ids = redis.smembers("client_reqs:#{connection_id}").map { |req| "#{connection_id}:#{req}" }
-        event22242_id = redis.hget("connections_authenticators", connection_id)
+      # TODO: for some reason it doesn't work in a separate pipelined call
+      # at least in test env
+      event22242_id = redis.hget("connections_authenticators", connection_id)
+      subscriptions_keys = redis.smembers("client_reqs:#{connection_id}").map { |req| "subscriptions:#{connection_id}:#{req}" }
 
+      redis.pipelined do
         redis.del("client_reqs:#{connection_id}")
+        redis.del(subscriptions_keys) if subscriptions_keys.present?
         redis.srem("connections", connection_id)
         redis.hdel("connections_authenticators", connection_id)
-        redis.hdel("subscriptions", pubsub_ids) if pubsub_ids.present?
         redis.hdel("authentications", connection_id) # TODO: check why it wasn't here before
         redis.hdel("authorizations", connection_id)
         redis.hdel("requests", connection_id)

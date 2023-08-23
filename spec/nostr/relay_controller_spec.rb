@@ -44,7 +44,9 @@ RSpec.describe Nostr::RelayController do
       REDIS_TEST_CONNECTION.sadd("connections", "OTHER_CONN_ID")
       REDIS_TEST_CONNECTION.sadd("connections", cid)
       REDIS_TEST_CONNECTION.hset("connections_authenticators", cid, "event22242_id")
-      REDIS_TEST_CONNECTION.hset("subscriptions", "#{cid}:SUBID", "{}")
+      assert REDIS_TEST_CONNECTION.keys("subscriptions:#{cid}:*").count.zero?
+      MemStore.subscribe(cid: cid, sid: "SUBID", filters: nil)
+      assert REDIS_TEST_CONNECTION.keys("subscriptions:#{cid}:*").count.positive?
       REDIS_TEST_CONNECTION.call("SET", "events22242:event22242_id", cid, "EX", "100")
 
       controller = Nostr::RelayController.new
@@ -57,7 +59,7 @@ RSpec.describe Nostr::RelayController do
       refute REDIS_TEST_CONNECTION.sismember("connections", cid)
       assert_equal 1, REDIS_TEST_CONNECTION.scard("connections")
       refute REDIS_TEST_CONNECTION.hexists("connections_authenticators", cid)
-      refute REDIS_TEST_CONNECTION.hexists("subscriptions", "#{cid}:SUBID")
+      assert REDIS_TEST_CONNECTION.keys("subscriptions:#{cid}:*").count.zero?
       assert_equal "", REDIS_TEST_CONNECTION.get("events22242:event22242_id")
       sleep(1)
       assert_includes [99, 98], REDIS_TEST_CONNECTION.ttl("events22242:event22242_id")

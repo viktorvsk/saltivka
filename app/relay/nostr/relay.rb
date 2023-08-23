@@ -75,12 +75,14 @@ Nostr::Relay = lambda do |env|
     end
 
     ws.on :close do |event|
-      redis_subscriber.unsubscribe if redis_subscriber.subscribed?
+      redis_subscriber.punsubscribe if redis_subscriber.subscribed?
       controller.terminate(event: event, redis: redis_subscriber)
+      redis_subscriber.disconnect!
       redis_thread&.exit
       hearbeat_thread&.exit
       redis_thread = nil
       ws = nil
+      redis_subscriber = nil
     end
 
     ws.rack_response # async

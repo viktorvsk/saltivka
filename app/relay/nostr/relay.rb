@@ -48,6 +48,8 @@ Nostr::Relay = lambda do |env|
               code, reason = JSON.parse(event)
               ws.close(code, reason)
               Thread.current.exit
+            elsif command.upcase === "PING"
+              Thread.current.exit unless ws.ping
             else
               Sidekiq.redis { |redis_connection| redis_connection.hincrby("outgoing_traffic", connection_id, event.to_json.bytesize) }
               ws.send(relay_response.call(command.upcase, subscription_id, event))

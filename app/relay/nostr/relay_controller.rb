@@ -76,7 +76,7 @@ module Nostr
       # TODO: for some reason it doesn't work in a separate pipelined call
       # at least in test env
       event22242_id = redis.hget("connections_authenticators", connection_id)
-      subscriptions_keys = redis.smembers("client_reqs:#{connection_id}").map { |req| "subscriptions:#{connection_id}:#{req}" }
+      subscriptions_keys = redis.keys("subscriptions:#{connection_id}:*")
 
       redis.pipelined do
         redis.del("client_reqs:#{connection_id}")

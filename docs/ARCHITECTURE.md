@@ -126,6 +126,8 @@ Database currently has the following core tables: `authors`, `delete_events`, `e
 And secondary, not Nostr-specific tables: `users`, `user_pubkeys`, `relay_mirrors`, `invoices`, `author_subscriptions`.
 Proper indexing strategy is a subject to change.
 
+Keep in mind, applications do need maintenance from time to time. In default setup of Saltivka its PostgreSQL Database which needs it the most. See `config/crontab` for an example of a possible maintenance and adjust it to your specific needs.
+
 ## Notes on WebsocketServer implementation
 This project is aimed to be as standard Ruby on Rails project as possible.
 Meaning if there is a trade-off between **The Rails Way** and something else, most of the time it will be **The Rails Way** unless 20% of efforts allow to gain 80% of profit.

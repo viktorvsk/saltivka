@@ -1,0 +1,21 @@
+# NOTICE, this is an example of what maintenance could be done for PostgreSQL
+# in order to achieve better and more predictable results in the long run
+# There are hundreds of ways to deal with maintenance, so there is no silver bullet
+# and oftentimes even no maintenance could be ok.
+# Also, even if you decide to manage your DB maintenance using this exact Crontab
+# you may need to adjust it to the specific needs of your server.
+
+# REINDEX may sometimes dramatically improve performance
+0 0 * * 1                     psql -U postgres -d $POSTGRES_DB -U $POSTGRES_USER -c 'REINDEX DATABASE CONCURRENTLY $POSTGRES_DB'
+
+# VACUUM ANALYZE helps AUTOVACUUM to better manage space and statistics
+0 0 * * 2                     psql -U postgres -d $POSTGRES_DB -U $POSTGRES_USER -c 'VACUUM ANALYZE'
+
+# CLUSTER physically reorders tables on disk in order to improve disk seek
+0 0 * * 3                     psql -U postgres -d $POSTGRES_DB -U $POSTGRES_USER -c 'CLUSTER'
+
+# ANALYZE collects statistics about a database
+0 * * * *                     psql -U postgres -d $POSTGRES_DB -U $POSTGRES_USER -c 'ANALYZE'
+
+# VACUUM FULL returns physical space on your disk to the operation system. Keep in mind, this is potentially a very slow operation that may completely block your database while running
+0 0 1 * *                     psql -U postgres -d $POSTGRES_DB -U $POSTGRES_USER -c 'VACUUM FULL'

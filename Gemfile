@@ -47,6 +47,7 @@ end
 group :development do
   gem "web-console"
   gem "standardrb", require: false
+  gem "foreman"
 end
 
 group :test do

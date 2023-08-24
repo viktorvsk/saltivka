@@ -23,6 +23,7 @@ gem "hiredis-client"
 gem "sidekiq", "~> 7"
 gem "sorcery"
 gem "pagy"
+gem "clockwork"
 
 gem "rbsecp256k1"
 gem "json_schemer"

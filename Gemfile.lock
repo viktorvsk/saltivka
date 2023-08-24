@@ -72,6 +72,9 @@ GEM
     bootsnap (1.16.0)
       msgpack (~> 1.2)
     builder (3.2.4)
+    clockwork (3.0.2)
+      activesupport
+      tzinfo
     concurrent-ruby (1.2.2)
     connection_pool (2.4.1)
     crass (1.0.6)
@@ -347,6 +350,7 @@ PLATFORMS
 
 DEPENDENCIES
   bootsnap
+  clockwork
   debug
   dotenv-rails
   factory_bot_rails

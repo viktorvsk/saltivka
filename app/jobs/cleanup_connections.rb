@@ -8,7 +8,7 @@ class CleanupConnections
       connections = redis.smembers("connections")
       all_connections = [connections, subscriptions_connections].flatten.uniq
       inactive_connections = all_connections.select { |cid| redis.publish("events:#{cid}:_:ping", "0").zero? }
-      inactive_connections.each { |cid| Nostr::RelayController.new(connection_id: cid).terminate(event: nil, redis: c) }
+      inactive_connections.each { |cid| Nostr::RelayController.new(connection_id: cid).terminate(event: nil, redis: redis) }
     end
   end
 end

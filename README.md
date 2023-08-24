@@ -75,6 +75,6 @@ It's a typical Ruby on Rails application so all defaults mostly apply.
 * [Configuration options](/docs/CONFIGURATION.md)
 * [Architecture details](/docs/ARCHITECTURE.md)
 * [Limitations](/docs/LIMITATIONS.md)
-* [Deployment hints](/docs/DEPLOYMENT.md)
+* [Deployment hints](/docs/deployment/README.md)
 * [Roadmap](/docs/ROADMAP.md)
 * [Contributing](/docs/CONTRIBUTING.md)

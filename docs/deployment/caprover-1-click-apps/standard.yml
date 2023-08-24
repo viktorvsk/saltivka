@@ -66,7 +66,7 @@ services:
       notExposeAsWebApp: true
       dockerfileLines:
         - FROM viktorvsk/saltivka:$$cap_saltivka_version
-        - CMD bundle exec sidekiq -q nostr.nip40 -q nostr.nip42,100 -q nostr.nip45 -q payment_webhooks,10
+        - CMD bin/worker
     environment:
       RAILS_ENV: production
       REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
@@ -94,176 +94,13 @@ services:
     depends_on:
       - $$cap_appname
   # Sidekiq New Events
-  $$cap_appname-worker-new-events:
-    caproverExtra:
-      notExposeAsWebApp: true
-      dockerfileLines:
-        - FROM viktorvsk/saltivka:$$cap_saltivka_version
-        - CMD bundle exec sidekiq -q nostr.nip01.event
-    environment:
-      RAILS_ENV: production
-      REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
-      SECRET_KEY_BASE: $$cap_secret_key_base
-      POSTGRES_PASSWORD: $$cap_postgres_password
-      POSTGRES_HOST: srv-captain--$$cap_appname-postgresql
-      NIP_42_43_SELF_URL: wss://$$cap_appname.$$cap_root_domain
-      MAILER_DEFAULT_FROM: $$cap_mailer_default_from
-      NIP_11_RELAY_NAME: $$cap_nip_11_relay_name
-      NIP_11_DESCRIPTION: $$cap_nip_11_description
-      NIP_11_PUBKEY: $$cap_nip_11_pubkey
-      NIP_11_CONTACT: $$cap_nip_11_contact
-      DEFAULT_INVOICE_AMOUNT: $$cap_default_invoice_amount
-      DEFAULT_INVOICE_PERIOD: $$cap_default_invoice_period
-      PRICE_PER_DAY: $$cap_price_per_day
-      PROVIDER_API_KEY_OPEN_NODE: $$cap_provider_api_key_open_node
-      SMTP_ADDRESS: $$cap_smtp_address
-      SMTP_PORT: $$cap_smtp_port
-      SMTP_USERNAME: $$cap_smtp_username
-      SMTP_PASSWORD: $$cap_smtp_password
-      DEFAULT_MAILER_HOST: $$cap_appname.$$cap_root_domain
-      ADMIN_EMAIL: $$cap_admin_email
-      ADMIN_PASSWORD: $$cap_admin_password
-      TRUSTED_PUBKEYS: $$cap_trusted_pubkeys
-    depends_on:
-      - $$cap_appname
-  # Sidekiq New Subscriptions
-  $$cap_appname-worker-new-subscriptions:
-    caproverExtra:
-      notExposeAsWebApp: true
-      dockerfileLines:
-        - FROM viktorvsk/saltivka:$$cap_saltivka_version
-        - CMD bundle exec sidekiq -q nostr.nip01.req
-    environment:
-      RAILS_ENV: production
-      REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
-      SECRET_KEY_BASE: $$cap_secret_key_base
-      POSTGRES_PASSWORD: $$cap_postgres_password
-      POSTGRES_HOST: srv-captain--$$cap_appname-postgresql
-      NIP_42_43_SELF_URL: wss://$$cap_appname.$$cap_root_domain
-      MAILER_DEFAULT_FROM: $$cap_mailer_default_from
-      NIP_11_RELAY_NAME: $$cap_nip_11_relay_name
-      NIP_11_DESCRIPTION: $$cap_nip_11_description
-      NIP_11_PUBKEY: $$cap_nip_11_pubkey
-      NIP_11_CONTACT: $$cap_nip_11_contact
-      DEFAULT_INVOICE_AMOUNT: $$cap_default_invoice_amount
-      DEFAULT_INVOICE_PERIOD: $$cap_default_invoice_period
-      PRICE_PER_DAY: $$cap_price_per_day
-      PROVIDER_API_KEY_OPEN_NODE: $$cap_provider_api_key_open_node
-      SMTP_ADDRESS: $$cap_smtp_address
-      SMTP_PORT: $$cap_smtp_port
-      SMTP_USERNAME: $$cap_smtp_username
-      SMTP_PASSWORD: $$cap_smtp_password
-      DEFAULT_MAILER_HOST: $$cap_appname.$$cap_root_domain
-      ADMIN_EMAIL: $$cap_admin_email
-      ADMIN_PASSWORD: $$cap_admin_password
-      TRUSTED_PUBKEYS: $$cap_trusted_pubkeys
-    depends_on:
-      - $$cap_appname
-  # Sidekiq Importer
-  $$cap_appname-worker-importer:
-    caproverExtra:
-      notExposeAsWebApp: true
-      dockerfileLines:
-        - FROM viktorvsk/saltivka:$$cap_saltivka_version
-        - CMD bundle exec sidekiq -q nostr.import-event
-    environment:
-      RAILS_ENV: production
-      REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
-      SECRET_KEY_BASE: $$cap_secret_key_base
-      POSTGRES_PASSWORD: $$cap_postgres_password
-      POSTGRES_HOST: srv-captain--$$cap_appname-postgresql
-      NIP_42_43_SELF_URL: wss://$$cap_appname.$$cap_root_domain
-      MAILER_DEFAULT_FROM: $$cap_mailer_default_from
-      NIP_11_RELAY_NAME: $$cap_nip_11_relay_name
-      NIP_11_DESCRIPTION: $$cap_nip_11_description
-      NIP_11_PUBKEY: $$cap_nip_11_pubkey
-      NIP_11_CONTACT: $$cap_nip_11_contact
-      DEFAULT_INVOICE_AMOUNT: $$cap_default_invoice_amount
-      DEFAULT_INVOICE_PERIOD: $$cap_default_invoice_period
-      PRICE_PER_DAY: $$cap_price_per_day
-      PROVIDER_API_KEY_OPEN_NODE: $$cap_provider_api_key_open_node
-      SMTP_ADDRESS: $$cap_smtp_address
-      SMTP_PORT: $$cap_smtp_port
-      SMTP_USERNAME: $$cap_smtp_username
-      SMTP_PASSWORD: $$cap_smtp_password
-      DEFAULT_MAILER_HOST: $$cap_appname.$$cap_root_domain
-      ADMIN_EMAIL: $$cap_admin_email
-      ADMIN_PASSWORD: $$cap_admin_password
-      TRUSTED_PUBKEYS: $$cap_trusted_pubkeys
-    depends_on:
-      - $$cap_appname
-  # Mirror Future
-  $$cap_appname-mirror-future:
-    caproverExtra:
-      notExposeAsWebApp: true
-      dockerfileLines:
-        - FROM viktorvsk/saltivka:$$cap_saltivka_version
-        - CMD bundle exec rails relays:mirror:new
-    environment:
-      RAILS_ENV: production
-      REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
-      SECRET_KEY_BASE: $$cap_secret_key_base
-      POSTGRES_PASSWORD: $$cap_postgres_password
-      POSTGRES_HOST: srv-captain--$$cap_appname-postgresql
-      NIP_42_43_SELF_URL: wss://$$cap_appname.$$cap_root_domain
-      MAILER_DEFAULT_FROM: $$cap_mailer_default_from
-      NIP_11_RELAY_NAME: $$cap_nip_11_relay_name
-      NIP_11_DESCRIPTION: $$cap_nip_11_description
-      NIP_11_PUBKEY: $$cap_nip_11_pubkey
-      NIP_11_CONTACT: $$cap_nip_11_contact
-      DEFAULT_INVOICE_AMOUNT: $$cap_default_invoice_amount
-      DEFAULT_INVOICE_PERIOD: $$cap_default_invoice_period
-      PRICE_PER_DAY: $$cap_price_per_day
-      PROVIDER_API_KEY_OPEN_NODE: $$cap_provider_api_key_open_node
-      SMTP_ADDRESS: $$cap_smtp_address
-      SMTP_PORT: $$cap_smtp_port
-      SMTP_USERNAME: $$cap_smtp_username
-      SMTP_PASSWORD: $$cap_smtp_password
-      DEFAULT_MAILER_HOST: $$cap_appname.$$cap_root_domain
-      ADMIN_EMAIL: $$cap_admin_email
-      ADMIN_PASSWORD: $$cap_admin_password
-      TRUSTED_PUBKEYS: $$cap_trusted_pubkeys
-    depends_on:
-      - $$cap_appname
-  # Mirror Past
-  $$cap_appname-mirror-past:
-    caproverExtra:
-      notExposeAsWebApp: true
-      dockerfileLines:
-        - FROM viktorvsk/saltivka:$$cap_saltivka_version
-        - CMD bundle exec rails relays:mirror:old
-    environment:
-      RAILS_ENV: production
-      REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
-      SECRET_KEY_BASE: $$cap_secret_key_base
-      POSTGRES_PASSWORD: $$cap_postgres_password
-      POSTGRES_HOST: srv-captain--$$cap_appname-postgresql
-      NIP_42_43_SELF_URL: wss://$$cap_appname.$$cap_root_domain
-      MAILER_DEFAULT_FROM: $$cap_mailer_default_from
-      NIP_11_RELAY_NAME: $$cap_nip_11_relay_name
-      NIP_11_DESCRIPTION: $$cap_nip_11_description
-      NIP_11_PUBKEY: $$cap_nip_11_pubkey
-      NIP_11_CONTACT: $$cap_nip_11_contact
-      DEFAULT_INVOICE_AMOUNT: $$cap_default_invoice_amount
-      DEFAULT_INVOICE_PERIOD: $$cap_default_invoice_period
-      PRICE_PER_DAY: $$cap_price_per_day
-      PROVIDER_API_KEY_OPEN_NODE: $$cap_provider_api_key_open_node
-      SMTP_ADDRESS: $$cap_smtp_address
-      SMTP_PORT: $$cap_smtp_port
-      SMTP_USERNAME: $$cap_smtp_username
-      SMTP_PASSWORD: $$cap_smtp_password
-      DEFAULT_MAILER_HOST: $$cap_appname.$$cap_root_domain
-      ADMIN_EMAIL: $$cap_admin_email
-      ADMIN_PASSWORD: $$cap_admin_password
-      TRUSTED_PUBKEYS: $$cap_trusted_pubkeys
-    depends_on:
-      - $$cap_appname
+
 caproverOneClickApp:
   variables:
     - id: '$$cap_saltivka_version'
       label: Saltivka version
       description: 'Docker image version, see details at https://hub.docker.com/r/viktorvsk/saltivka/tags'
-      defaultValue: 'latest'
+      defaultValue: 'v.0.2.0'
     - id: '$$cap_admin_email'
       label: Relay admin email
       description: 'Your email that will be created by default on setup with admin permissions'
@@ -350,12 +187,9 @@ caproverOneClickApp:
           Apply any settings described in Salitvka documentation to the following Caprover Apps:
 
           * `$$cap_appname`
-          * `$$cap_appname-worker-default`
-          * `$$cap_appname-worker-new-events`
-          * `$$cap_appname-worker-new-subscriptions`
-          * `$$cap_appname-worker-new-subscriptions`
-          * `$$cap_appname-mirror-future`
-          * `$$cap_appname-mirror-future`
+          * `$$cap_appname-worker`
+          * `$$cap_appname-scheduler`
+          * `$$cap_appname-mirrors`
 
           P.S. consider modifying default nginx template and adding `proxy_read_timeout 24h;` below `proxy_http_version 1.1;` in the `if (s.websocketSupport)` section in order to better control timeouts through Saltivka settings.
           P.S.S. Once you are going to connect your custom domain you will have to make manual adjustments to ENV variables.

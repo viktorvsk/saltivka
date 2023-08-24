@@ -5,5 +5,5 @@ require "./config/boot"
 require "./config/environment"
 
 module Clockwork
-  every(30.minutes, "Cleanup connections data", skip_first_run: true) { CleanupConnections.perform_later }
+  every(30.minutes, "Cleanup connections data") { CleanupConnections.perform_async }
 end

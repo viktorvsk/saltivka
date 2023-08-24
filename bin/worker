@@ -1,0 +1,9 @@
+#!/bin/bash
+bundle exec sidekiq -q default, 2 \
+                    -q payment_webhooks, 3 \
+                    -q nostr.nip42, 8 \
+                    -q nostr.nip45, 5 \
+                    -q nostr.nip40, 1 \
+                    -q nostr.import-event, 4 \
+                    -q nostr.nip01.event, 6 \
+                    -q nostr.nip01.req, 7

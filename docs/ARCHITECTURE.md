@@ -55,6 +55,8 @@ Redis is utilized heavily here. 3 main use-cases are:
 
 But it is also responsible to handle various data structures i.e. expiration keys and rate limiting sorted sets etc.
 
+Keep in mind for higher workloads some kind of proxy (connection pooler) may be required, like [Twemproxy](https://github.com/twitter/twemproxy) for instance.
+
 ###### DATA STRUCTURES
 
 | Data Structure | Type | Description |
@@ -127,6 +129,8 @@ And secondary, not Nostr-specific tables: `users`, `user_pubkeys`, `relay_mirror
 Proper indexing strategy is a subject to change.
 
 Keep in mind, applications do need maintenance from time to time. In default setup of Saltivka its PostgreSQL Database which needs it the most. See `config/crontab` for an example of a possible maintenance and adjust it to your specific needs.
+
+Also, for higher workloads some kind of proxy (connection pooler) may be required, like [Pgpool-II](https://www.pgpool.net/docs/42/en/html/index.html) for instance.
 
 ## Notes on WebsocketServer implementation
 This project is aimed to be as standard Ruby on Rails project as possible.

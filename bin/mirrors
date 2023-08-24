@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+require_relative "../config/application"
+Rails.application.load_tasks
+
+pids = []
+
+pids << fork { Rake::Task["relays:mirror:new"].invoke }
+pids << fork { Rake::Task["relays:mirror:old"].invoke }
+
+at_exit do
+  pids.each do |pid|
+    Process.detach(pid)
+    Process.kill("TERM", pid) rescue nil
+  end
+end
+
+Process.wait

@@ -64,13 +64,12 @@ It's a typical Ruby on Rails application so all defaults mostly apply.
 
 1. ```git clone https://github.com/viktorvsk/saltivka.git```
 2. ```cd saltivka```
-3. ```cp .env.example .env.development``` (Adjust Postgres and Redis settings)
+3. ```cp .env.example .env.development``` Copy default settings to development environment
 4. ```echo POSTGRES_DATABASE=saltivka_test > .env.test```
-5. Adjust Postgres and Redis credentials in `.env.test` if needed. Use databases different from development environment
-6. ```rails db:create db:migrate db:seed```
-7. ```rspec```
-8. ```rails server```
-9. ```bundle exec sidekiq -q nostr```
+5. Adjust PostgreSQL and Redis connections details in `.env.test` and `.env.development` if necessary. Use different databases for development and test environments
+6. ```bin/setup``` Setup dependencies and database
+7. ```bin/rspec``` Run tests
+8. ```bin/dev``` Start all required services. Keep in mind, if external dependencies (like PostgreSQL or Redis) are not configured correctly, you may see errors here
 
 # Further reading
 * [Configuration options](/docs/CONFIGURATION.md)

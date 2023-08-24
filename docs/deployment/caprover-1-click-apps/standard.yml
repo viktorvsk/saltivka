@@ -60,8 +60,8 @@ services:
     depends_on:
       - $$cap_appname-postgresql
       - $$cap_appname-redis-stack-server
-  # Sidekiq default
-  $$cap_appname-worker-default:
+  # Sidekiq
+  $$cap_appname-worker:
     caproverExtra:
       notExposeAsWebApp: true
       dockerfileLines:
@@ -93,7 +93,72 @@ services:
       TRUSTED_PUBKEYS: $$cap_trusted_pubkeys
     depends_on:
       - $$cap_appname
-  # Sidekiq New Events
+  # Clockwork
+  $$cap_appname-scheduler:
+    caproverExtra:
+      notExposeAsWebApp: true
+      dockerfileLines:
+        - FROM viktorvsk/saltivka:$$cap_saltivka_version
+        - CMD bin/scheduler
+    environment:
+      RAILS_ENV: production
+      REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
+      SECRET_KEY_BASE: $$cap_secret_key_base
+      POSTGRES_PASSWORD: $$cap_postgres_password
+      POSTGRES_HOST: srv-captain--$$cap_appname-postgresql
+      NIP_42_43_SELF_URL: wss://$$cap_appname.$$cap_root_domain
+      MAILER_DEFAULT_FROM: $$cap_mailer_default_from
+      NIP_11_RELAY_NAME: $$cap_nip_11_relay_name
+      NIP_11_DESCRIPTION: $$cap_nip_11_description
+      NIP_11_PUBKEY: $$cap_nip_11_pubkey
+      NIP_11_CONTACT: $$cap_nip_11_contact
+      DEFAULT_INVOICE_AMOUNT: $$cap_default_invoice_amount
+      DEFAULT_INVOICE_PERIOD: $$cap_default_invoice_period
+      PRICE_PER_DAY: $$cap_price_per_day
+      PROVIDER_API_KEY_OPEN_NODE: $$cap_provider_api_key_open_node
+      SMTP_ADDRESS: $$cap_smtp_address
+      SMTP_PORT: $$cap_smtp_port
+      SMTP_USERNAME: $$cap_smtp_username
+      SMTP_PASSWORD: $$cap_smtp_password
+      DEFAULT_MAILER_HOST: $$cap_appname.$$cap_root_domain
+      ADMIN_EMAIL: $$cap_admin_email
+      ADMIN_PASSWORD: $$cap_admin_password
+      TRUSTED_PUBKEYS: $$cap_trusted_pubkeys
+    depends_on:
+      - $$cap_appname
+  # Mirrors
+  $$cap_appname-mirrors:
+    caproverExtra:
+      notExposeAsWebApp: true
+      dockerfileLines:
+        - FROM viktorvsk/saltivka:$$cap_saltivka_version
+        - CMD bin/mirrors
+    environment:
+      RAILS_ENV: production
+      REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
+      SECRET_KEY_BASE: $$cap_secret_key_base
+      POSTGRES_PASSWORD: $$cap_postgres_password
+      POSTGRES_HOST: srv-captain--$$cap_appname-postgresql
+      NIP_42_43_SELF_URL: wss://$$cap_appname.$$cap_root_domain
+      MAILER_DEFAULT_FROM: $$cap_mailer_default_from
+      NIP_11_RELAY_NAME: $$cap_nip_11_relay_name
+      NIP_11_DESCRIPTION: $$cap_nip_11_description
+      NIP_11_PUBKEY: $$cap_nip_11_pubkey
+      NIP_11_CONTACT: $$cap_nip_11_contact
+      DEFAULT_INVOICE_AMOUNT: $$cap_default_invoice_amount
+      DEFAULT_INVOICE_PERIOD: $$cap_default_invoice_period
+      PRICE_PER_DAY: $$cap_price_per_day
+      PROVIDER_API_KEY_OPEN_NODE: $$cap_provider_api_key_open_node
+      SMTP_ADDRESS: $$cap_smtp_address
+      SMTP_PORT: $$cap_smtp_port
+      SMTP_USERNAME: $$cap_smtp_username
+      SMTP_PASSWORD: $$cap_smtp_password
+      DEFAULT_MAILER_HOST: $$cap_appname.$$cap_root_domain
+      ADMIN_EMAIL: $$cap_admin_email
+      ADMIN_PASSWORD: $$cap_admin_password
+      TRUSTED_PUBKEYS: $$cap_trusted_pubkeys
+    depends_on:
+      - $$cap_appname
 
 caproverOneClickApp:
   variables:

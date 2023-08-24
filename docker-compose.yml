@@ -19,6 +19,11 @@ services:
       POSTGRES_USER: nostr
       POSTGRES_DB: saltivka_development
       POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
     command:
       - "docker-entrypoint.sh"
       - "-c"
@@ -55,91 +60,58 @@ services:
       - "max_parallel_maintenance_workers=2"
 
   redis:
-    image: redis/redis-stack-server
+    image: redis/redis-stack-server:6.2.6-v9
     volumes:
       - ./demo/docker/redis-data:/data
     environment:
-      - REDIS_ARGS=--io-threads 1 --io-threads-do-reads no --appendonly yes --maxmemory 1536mb --maxmemory-policy noeviction --bind 0.0.0.0 --requirepass redispass --maxclients 10000 --tcp-backlog 511 # https://github.com/redis-stack/redis-stack/issues/110
+      - REDIS_ARGS=--io-threads 1 --io-threads-do-reads no --appendonly yes --maxmemory 1536mb --maxmemory-policy noeviction --bind 0.0.0.0 --maxclients 10000 --tcp-backlog 511 # https://github.com/redis-stack/redis-stack/issues/110
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 3s
+      timeout: 5s
+      retries: 5
   db-migration:
-    image: viktorvsk/saltivka:latest
+    build:
+      context: .
     env_file: ./demo/.env
     command: sh -c "until bundle exec rails db:migrate db:seed; do sleep 5; done"
     depends_on:
-      - postgresql
-      - redis
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   webserver:
-    image: viktorvsk/saltivka:latest
+    build:
+      context: .
     env_file: ./demo/.env
-    environment:
-      POSTGRES_POOL: "16"
-      RAILS_MAX_THREADS: "16"
-      RAILS_MIN_THREADS: "16"
-      WEB_CONCURRENCY: "6"
     ports:
       - 3000:3000
     depends_on:
-      - postgresql
-      - redis
-      - db-migration
-  worker-default:
-    image: viktorvsk/saltivka:latest
+      db-migration:
+        condition: service_completed_successfully
+  worker:
+    build:
+      context: .
     env_file: ./demo/.env
-    environment:
-      WEB_CONCURRENCY: "0"
-    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip40", "-q", "nostr.nip42,100", "-q", "nostr.nip45", "-q", "payment_webhooks,10"]
+    command: bin/worker
     depends_on:
-      - postgresql
-      - redis
-      - db-migration
-  worker-new-events:
-    image: viktorvsk/saltivka:latest
+      db-migration:
+        condition: service_completed_successfully
+  scheduler:
+    build:
+      context: .
     env_file: ./demo/.env
-    environment:
-      WEB_CONCURRENCY: "0"
-    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip01.event"]
+    command: bin/scheduler
     depends_on:
-      - postgresql
-      - redis
-      - db-migration
-  worker-new-subscriptions:
-    image: viktorvsk/saltivka:latest
-    env_file: ./demo/.env
-    environment:
-      WEB_CONCURRENCY: "0"
-    command: ["bundle", "exec", "sidekiq", "-q", "nostr.nip01.req"]
-    depends_on:
-      - postgresql
-      - redis
-      - db-migration
-  worker-importer:
-    image: viktorvsk/saltivka:latest
-    env_file: ./demo/.env
-    environment:
-      WEB_CONCURRENCY: "0"
-    command: ["bundle", "exec", "sidekiq", "-q", "nostr.import-event"]
-    depends_on:
-      - postgresql
-      - redis
-      - db-migration
-  worker-mirror-relays-future:
-    image: viktorvsk/saltivka:latest
+      db-migration:
+        condition: service_completed_successfully
+  mirrors:
+    build:
+      context: .
     restart: always
     env_file: ./demo/.env
-    environment:
-      WEB_CONCURRENCY: "0"
-    command: ["bundle", "exec", "rails", "relays:mirror:new"]
+    command: bin/mirrors
     depends_on:
-      - postgresql
-      - redis
-      - db-migration
-  worker-mirror-relays-past:
-    image: viktorvsk/saltivka:latest
-    restart: always
-    env_file: ./demo/.env
-    environment:
-      WEB_CONCURRENCY: "0"
-    command: ["bundle", "exec", "rails", "relays:mirror:old"]
-    depends_on:
-      - postgresql
-      - redis
-      - db-migration
+      db-migration:
+        condition: service_completed_successfully

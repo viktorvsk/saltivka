@@ -21,7 +21,15 @@ services:
     volumes:
       - $$cap_appname-redis-stack-server-data:/data
     environment:
-      - REDIS_ARGS=--io-threads 1 --io-threads-do-reads no --appendonly no --maxmemory 1536mb --maxmemory-policy noeviction --bind 0.0.0.0 --maxclients 10000 --tcp-backlog 511 # https://github.com/redis-stack/redis-stack/issues/110
+      - REDIS_ARGS=--io-threads 1 --io-threads-do-reads no --appendonly yes --maxmemory 1536mb --maxmemory-policy noeviction --bind 0.0.0.0 --maxclients 10000 --tcp-backlog 511 # https://github.com/redis-stack/redis-stack/issues/110
+  # Redis (Sidekiq)
+  $$cap_appname-redis-sidekiq:
+    image: redis:7
+    caproverExtra:
+      notExposeAsWebApp: true
+    volumes:
+      - $$cap_appname-redis-sidekiq-data:/data
+    command: redis-server --io-threads 1 --io-threads-do-reads no --appendonly yes --maxmemory-policy noeviction --bind 0.0.0.0 --maxclients 10000 --tcp-backlog 511
   # Puma
   $$cap_appname:
     caproverExtra:
@@ -32,6 +40,7 @@ services:
     environment:
       RAILS_ENV: production
       REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
+      SIDEKIQ_REDIS_URL: redis://srv-captain--$$cap_appname-redis-sidekiq:6379
       SECRET_KEY_BASE: $$cap_secret_key_base
       POSTGRES_PASSWORD: $$cap_postgres_password
       POSTGRES_HOST: srv-captain--$$cap_appname-postgresql
@@ -70,6 +79,7 @@ services:
     environment:
       RAILS_ENV: production
       REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
+      SIDEKIQ_REDIS_URL: redis://srv-captain--$$cap_appname-redis-sidekiq:6379
       SECRET_KEY_BASE: $$cap_secret_key_base
       POSTGRES_PASSWORD: $$cap_postgres_password
       POSTGRES_HOST: srv-captain--$$cap_appname-postgresql
@@ -103,6 +113,7 @@ services:
     environment:
       RAILS_ENV: production
       REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
+      SIDEKIQ_REDIS_URL: redis://srv-captain--$$cap_appname-redis-sidekiq:6379
       SECRET_KEY_BASE: $$cap_secret_key_base
       POSTGRES_PASSWORD: $$cap_postgres_password
       POSTGRES_HOST: srv-captain--$$cap_appname-postgresql
@@ -136,6 +147,7 @@ services:
     environment:
       RAILS_ENV: production
       REDIS_URL: redis://srv-captain--$$cap_appname-redis-stack-server:6379
+      SIDEKIQ_REDIS_URL: redis://srv-captain--$$cap_appname-redis-sidekiq:6379
       SECRET_KEY_BASE: $$cap_secret_key_base
       POSTGRES_PASSWORD: $$cap_postgres_password
       POSTGRES_HOST: srv-captain--$$cap_appname-postgresql

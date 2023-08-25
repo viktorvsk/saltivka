@@ -3,8 +3,8 @@ class Admin::ConfigurationsController < AdminController
 
   def show
     @disabled_configurations = RELAY_CONFIG.public_methods(false)
-    @max_allowed_connections, @maintenance, @unlimited_ips = Sidekiq.redis do |connection|
-      connection.multi do |t|
+    @max_allowed_connections, @maintenance, @unlimited_ips = MemStore.with_redis do |redis|
+      redis.multi do |t|
         t.get("max_allowed_connections")
         t.get("maintenance")
         t.smembers("unlimited_ips")

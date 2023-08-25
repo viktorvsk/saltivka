@@ -3,7 +3,7 @@ class CleanupConnections
   sidekiq_options queue: "default"
 
   def perform
-    Sidekiq.redis do |redis|
+    MemStore.with_redis do |redis|
       subscriptions_connections = redis.keys("subscriptions:*").map { |sub| sub.split(":")[1] }
       connections = redis.smembers("connections")
       all_connections = [connections, subscriptions_connections].flatten.uniq

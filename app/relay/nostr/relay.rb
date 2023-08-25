@@ -3,7 +3,7 @@ Nostr::Relay = lambda do |env|
     ws = Faye::WebSocket.new(env, [], extensions: WebsocketExtensions.all) # standard websocket connection object
     remote_ip = ActionDispatch::Request.new(env).remote_ip
     redis_subscriber = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
-    rate_limited = Sidekiq.redis { |c| c.sismember("unlimited_ips", remote_ip).zero? }
+    rate_limited = MemStore.with_redis { |redis| redis.sismember("unlimited_ips", remote_ip) }
     controller = Nostr::RelayController.new(remote_ip: remote_ip, rate_limited: rate_limited)
     relay_response = Nostr::RelayResponse.new
     connection_id = controller.connection_id
@@ -13,8 +13,8 @@ Nostr::Relay = lambda do |env|
 
     ws.on :open do |event|
       Thread.new do
-        Sidekiq.redis do |c|
-          maintenance, max_allowed_connections, connections_count = c.pipelined do |pipeline|
+        MemStore.with_redis do |redis|
+          maintenance, max_allowed_connections, connections_count = redis.pipelined do |pipeline|
             pipeline.get("maintenance")
             pipeline.get("max_allowed_connections")
             pipeline.scard("connections")
@@ -28,12 +28,12 @@ Nostr::Relay = lambda do |env|
         end
       end
 
-      Sidekiq.redis do |c|
-        Nostr::AuthenticationFlow.new.call(ws_url: ws.url, connection_id: connection_id, redis: c) do |event|
+      MemStore.with_redis do |redis|
+        Nostr::AuthenticationFlow.new.call(ws_url: ws.url, connection_id: connection_id, redis: redis) do |event|
           if event.first === "TERMINATE"
             ws.close(3403, "restricted: #{event.last}")
           else
-            c.hincrby("outgoing_traffic", connection_id, event.to_json.bytesize)
+            redis.hincrby("outgoing_traffic", connection_id, event.to_json.bytesize)
             ws.send(event.to_json)
           end
         end
@@ -51,7 +51,7 @@ Nostr::Relay = lambda do |env|
             elsif command.upcase === "PING"
               Thread.current.exit unless ws.ping
             else
-              Sidekiq.redis { |redis_connection| redis_connection.hincrby("outgoing_traffic", connection_id, event.to_json.bytesize) }
+              MemStore.with_redis { |redis| redis.hincrby("outgoing_traffic", connection_id, event.to_json.bytesize) }
               ws.send(relay_response.call(command.upcase, subscription_id, event))
             end
           end
@@ -68,9 +68,9 @@ Nostr::Relay = lambda do |env|
 
     ws.on :message do |event|
       last_active_at = Time.now.to_i
-      Sidekiq.redis do |redis_connection|
-        controller.perform(event_data: event.data, redis: redis_connection) do |notice|
-          redis_connection.hincrby("outgoing_traffic", connection_id, notice.bytesize)
+      MemStore.with_redis do |redis|
+        controller.perform(event_data: event.data, redis: redis) do |notice|
+          redis.hincrby("outgoing_traffic", connection_id, notice.bytesize)
           ws.send(notice)
         end
       end

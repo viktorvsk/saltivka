@@ -8,7 +8,7 @@ class Admin::ConnectionsController < AdminController
 
     if subscribers_count.zero?
       # It means that client was already disconnected and resource cleanup wasn't handled correctly
-      Sidekiq.redis { |c| Nostr::RelayController.new(connection_id: params[:id], rate_limited: false).terminate(event: nil, redis: c) }
+      MemStore.with_redis { |redis| Nostr::RelayController.new(connection_id: params[:id], rate_limited: false).terminate(event: nil, redis: redis) }
     end
 
     redirect_to admin_connections_path

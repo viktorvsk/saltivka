@@ -1,7 +1,7 @@
 class ConnectionsViewer
   def call
-    connections, connections_authenticators, authentications, authorizations, requests, incoming_traffic, outgoing_traffic, ips, starts = Sidekiq.redis do |c|
-      c.multi do |t|
+    connections, connections_authenticators, authentications, authorizations, requests, incoming_traffic, outgoing_traffic, ips, starts = MemStore.with_redis do |redis|
+      redis.multi do |t|
         t.smembers("connections")
         t.hgetall("connections_authenticators")
         t.hgetall("authentications")
@@ -13,8 +13,8 @@ class ConnectionsViewer
         t.hgetall("connections_starts")
       end
     end
-    subscriptions = Sidekiq.redis do |c|
-      c.multi do |t|
+    subscriptions = MemStore.with_redis do |redis|
+      redis.multi do |t|
         connections.each { |cid| t.smembers("client_reqs:#{cid}") }
       end
     end

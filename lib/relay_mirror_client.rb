@@ -14,9 +14,9 @@ class RelayMirrorClient
 
       case command.upcase
       when "EVENT"
-        Sidekiq.redis { |c| c.call("PFADD", "hll.mirror.future.#{relay_url}", message.last["id"]) }
+        MemStore.with_redis { |redis| redis.call("PFADD", "hll.mirror.future.#{relay_url}", message.last["id"]) }
 
-        if Sidekiq.redis { |c| c.call("BF.ADD", "seen-events", message.last["id"]) }
+        if MemStore.with_redis { |redis| redis.call("BF.ADD", "seen-events", message.last["id"]) }
           ImportEvent.perform_async("INTERNAL", message.last.to_json)
           Rails.logger.debug("+")
         else
@@ -30,10 +30,10 @@ class RelayMirrorClient
 
       if event.code == 4000
         RelayMirror.where(url: relay_url, mirror_type: :future).update_all(active: false)
-        Sidekiq.redis { |c| c.del("hll.mirror.future.#{relay_url}") }
+        MemStore.with_redis { |redis| redis.del("hll.mirror.future.#{relay_url}") }
       elsif event.code == 1000 || event.code == 1006
         Rails.logger.debug("Stop syncing #{relay_url}")
-        Sidekiq.redis { |c| c.del("hll.mirror.future.#{relay_url}") }
+        MemStore.with_redis { |redis| redis.del("hll.mirror.future.#{relay_url}") }
       else
         EM.add_timer(1) do
           Rails.logger.info "Reconnecting to #{relay_url}..."
@@ -71,9 +71,9 @@ class RelayMirrorClient
         end
       when "EVENT"
         newest = [message.last["created_at"].to_i, newest.to_i].min
-        Sidekiq.redis { |c| c.call("PFADD", "hll.mirror.past.#{relay_url}", message.last["id"]) }
+        MemStore.with_redis { |redis| redis.call("PFADD", "hll.mirror.past.#{relay_url}", message.last["id"]) }
 
-        if Sidekiq.redis { |c| c.call("BF.ADD", "seen-events", message.last["id"]) }
+        if MemStore.with_redis { |redis| redis.call("BF.ADD", "seen-events", message.last["id"]) }
           ImportEvent.perform_async("INTERNAL", message.last.to_json)
           Rails.logger.debug("+")
         else
@@ -88,11 +88,11 @@ class RelayMirrorClient
       if event.code == 4000
         Rails.logger.debug("Stop syncing #{relay_url} because relay doesn't want us to")
         RelayMirror.where(url: relay_url, mirror_type: :past).update_all(active: false, newest: newest)
-        Sidekiq.redis { |c| c.del("hll.mirror.past.#{relay_url}") }
+        MemStore.with_redis { |redis| redis.del("hll.mirror.past.#{relay_url}") }
       elsif event.code == 1000 || event.code == 1006
         RelayMirror.where(url: relay_url, mirror_type: :past).update_all(newest: newest)
         Rails.logger.debug("Stop syncing #{relay_url} because settings changed")
-        Sidekiq.redis { |c| c.del("hll.mirror.past.#{relay_url}") }
+        MemStore.with_redis { |redis| redis.del("hll.mirror.past.#{relay_url}") }
       else
         EM.add_timer(1) do
           Rails.logger.info "Reconnecting to #{relay_url}..."

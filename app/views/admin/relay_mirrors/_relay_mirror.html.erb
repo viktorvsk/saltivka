@@ -11,7 +11,7 @@
   </td>
 
   <td><%= "#{time_ago_in_words(relay_mirror.session_started_at)} ago" if relay_mirror.session_started_at %></td>
-  <td><%= Sidekiq.redis { |c| c.call("PFCOUNT", "hll.mirror.#{relay_mirror.mirror_type}.#{relay_mirror.url}") }.to_i %></td>
+  <td><%= MemStore.with_redis { |redis| redis.call("PFCOUNT", "hll.mirror.#{relay_mirror.mirror_type}.#{relay_mirror.url}") }.to_i %></td>
 
   <td class="is-flex">
     <%= button_to "Delete", admin_relay_mirror_path(relay_mirror), method: :delete, class: 'button is-danger is-small mr-1' %>

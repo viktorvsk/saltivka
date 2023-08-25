@@ -65,8 +65,8 @@ RSpec.configure do |config|
   config.before(:each) do
     REDIS_TEST_CONNECTION.flushdb
     begin
-      Sidekiq.redis do |c|
-        c.pipelined do |pipeline|
+      MemStore.with_redis do |redis|
+        redis.pipelined do |pipeline|
           pipeline.select("0")
           pipeline.call(RedisSearchCommands::CREATE_SCHEMA_COMMAND.split(" "))
         end

@@ -14,13 +14,13 @@ Nostr::Relay = lambda do |env|
     ws.on :open do |event|
       Thread.new do
         Sidekiq.redis do |c|
-          maintenance, max_allowed_connections, connections_count = c.pipelined do
-            c.get("maintenance")
-            c.get("max_allowed_connections")
-            c.scard("connections")
-            c.sadd("connections", connection_id)
-            c.hset("connections_ips", connection_id, controller.remote_ip)
-            c.hset("connections_starts", connection_id, Time.now.to_i.to_s)
+          maintenance, max_allowed_connections, connections_count = c.pipelined do |pipeline|
+            pipeline.get("maintenance")
+            pipeline.get("max_allowed_connections")
+            pipeline.scard("connections")
+            pipeline.sadd("connections", connection_id)
+            pipeline.hset("connections_ips", connection_id, controller.remote_ip)
+            pipeline.hset("connections_starts", connection_id, Time.now.to_i.to_s)
           end
 
           ws.close(3503, "restricted: server is on maintenance, please try again later") if ActiveRecord::Type::Boolean.new.cast(maintenance)

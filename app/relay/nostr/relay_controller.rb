@@ -21,10 +21,10 @@ module Nostr
       if rate_limited
         return block.call notice!("rate-limited: take it easy") if exceeds_window_quota?
 
-        redis.pipelined do
-          redis.zadd("requests:#{remote_ip}", ts, ts)
-          redis.hincrby("requests", connection_id, 1)
-          redis.hincrby("incoming_traffic", connection_id, event_data.bytesize)
+        redis.pipelined do |pipeline|
+          pipeline.zadd("requests:#{remote_ip}", ts, ts)
+          pipeline.hincrby("requests", connection_id, 1)
+          pipeline.hincrby("incoming_traffic", connection_id, event_data.bytesize)
         end
       end
 
@@ -78,19 +78,19 @@ module Nostr
       event22242_id = redis.hget("connections_authenticators", connection_id)
       subscriptions_keys = redis.keys("subscriptions:#{connection_id}:*")
 
-      redis.pipelined do
-        redis.del("client_reqs:#{connection_id}")
-        redis.del(subscriptions_keys) if subscriptions_keys.present?
-        redis.srem("connections", connection_id)
-        redis.hdel("connections_authenticators", connection_id)
-        redis.hdel("authentications", connection_id) # TODO: check why it wasn't here before
-        redis.hdel("authorizations", connection_id)
-        redis.hdel("requests", connection_id)
-        redis.hdel("incoming_traffic", connection_id)
-        redis.hdel("outgoing_traffic", connection_id)
-        redis.hdel("connections_ips", connection_id)
-        redis.hdel("connections_starts", connection_id)
-        redis.call("SET", "events22242:#{event22242_id}", "", "KEEPTTL")
+      redis.pipelined do |pipeline|
+        pipeline.del("client_reqs:#{connection_id}")
+        pipeline.del(subscriptions_keys) if subscriptions_keys.present?
+        pipeline.srem("connections", connection_id)
+        pipeline.hdel("connections_authenticators", connection_id)
+        pipeline.hdel("authentications", connection_id) # TODO: check why it wasn't here before
+        pipeline.hdel("authorizations", connection_id)
+        pipeline.hdel("requests", connection_id)
+        pipeline.hdel("incoming_traffic", connection_id)
+        pipeline.hdel("outgoing_traffic", connection_id)
+        pipeline.hdel("connections_ips", connection_id)
+        pipeline.hdel("connections_starts", connection_id)
+        pipeline.call("SET", "events22242:#{event22242_id}", "", "KEEPTTL")
       end
     end
 

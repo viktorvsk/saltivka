@@ -66,9 +66,9 @@ RSpec.configure do |config|
     REDIS_TEST_CONNECTION.flushdb
     begin
       Sidekiq.redis do |c|
-        c.pipelined do
-          c.select("0")
-          c.call(RedisSearchCommands::CREATE_SCHEMA_COMMAND.split(" "))
+        c.pipelined do |pipeline|
+          pipeline.select("0")
+          pipeline.call(RedisSearchCommands::CREATE_SCHEMA_COMMAND.split(" "))
         end
       end
     rescue RedisClient::CommandError => e

@@ -14,10 +14,10 @@ class MemStore
       to_fanount = pubsubs.select { |pubsub_id| event.should_fanout?(authenticated_pubsubs[pubsub_id]) }
 
       Sidekiq.redis do |c|
-        c.pipelined do
+        c.pipelined do |pipeline|
           to_fanount.each do |pubsub_id|
             cid, sid = pubsub_id.split(":")
-            fanout(cid: cid, sid: sid, command: :found_event, payload: event.to_json, conn: c)
+            fanout(cid: cid, sid: sid, command: :found_event, payload: event.to_json, conn: pipeline)
           end
         end
       end
@@ -28,9 +28,9 @@ class MemStore
       queries = filters.map { |f| SubscriptionQueryBuilder.new(f).query }
 
       Sidekiq.redis do |c|
-        c.pipelined do
-          c.sadd("client_reqs:#{cid}", sid)
-          queries.each { |query| c.call("JSON.SET", "subscriptions:#{cid}:#{sid}", "$", query) }
+        c.pipelined do |pipeline|
+          pipeline.sadd("client_reqs:#{cid}", sid)
+          queries.each { |query| pipeline.call("JSON.SET", "subscriptions:#{cid}:#{sid}", "$", query) }
         end
       end
     end

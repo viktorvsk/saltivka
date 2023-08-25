@@ -28,14 +28,12 @@ Nostr::Relay = lambda do |env|
         end
       end
 
-      MemStore.with_redis do |redis|
-        Nostr::AuthenticationFlow.new.call(ws_url: ws.url, connection_id: connection_id, redis: redis) do |event|
-          if event.first === "TERMINATE"
-            ws.close(3403, "restricted: #{event.last}")
-          else
-            redis.hincrby("outgoing_traffic", connection_id, event.to_json.bytesize)
-            ws.send(event.to_json)
-          end
+      Nostr::AuthenticationFlow.new.call(ws_url: ws.url, connection_id: connection_id) do |event|
+        if event.first === "TERMINATE"
+          ws.close(3403, "restricted: #{event.last}")
+        else
+          MemStore.with_redis { |redis| redis.hincrby("outgoing_traffic", connection_id, event.to_json.bytesize) }
+          ws.send(event.to_json)
         end
       end
 

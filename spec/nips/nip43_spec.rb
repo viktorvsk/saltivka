@@ -7,7 +7,7 @@ RSpec.describe("NIP-43") do
         event = build(:event, kind: 22242, tags: [["relay", "http://localhost"]], created_at: 5.seconds.ago)
         payload = CGI.escape(event.to_json)
 
-        subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION)
+        subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID")
 
         expect(REDIS_TEST_CONNECTION.get("events22242:#{event.sha256}")).to eq("CONN_ID")
         expect(REDIS_TEST_CONNECTION.hget("authentications", "CONN_ID")).to eq(event.pubkey)
@@ -19,7 +19,7 @@ RSpec.describe("NIP-43") do
         nostr_queue = Sidekiq::Queue.new("nostr.nip42")
 
         expect {
-          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION)
+          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID")
         }.to change { nostr_queue.size }.by(1)
         expect(nostr_queue.first.args).to match_array(["CONN_ID", event.sha256, event.pubkey])
       end
@@ -36,7 +36,7 @@ RSpec.describe("NIP-43") do
             Redis.new(url: ENV["REDIS_URL"]).lpush("authorization_result:CONN_ID", "4") # emulate AuthorizationRequest job
           end
 
-          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |_|
+          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID") do |_|
             assert false # should not be here because only errors are yielded
           end
 
@@ -51,7 +51,7 @@ RSpec.describe("NIP-43") do
 
           REDIS_TEST_CONNECTION.lpush("authorization_result:CONN_ID", "0") # emulate AuthorizationRequest job and don't wait syncronously
 
-          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |message|
+          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID") do |message|
             expect(message).to eq(["TERMINATE", "your account doesn't have required authorization (1)"])
             result = "TERMINATED"
           end
@@ -64,7 +64,7 @@ RSpec.describe("NIP-43") do
 
     context "with invalid data for event 22242" do
       it "TERMINATEs for events with invalid JSON" do
-        subject.call(ws_url: "ws://localhost?authorization=INVALID", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |message|
+        subject.call(ws_url: "ws://localhost?authorization=INVALID", connection_id: "CONN_ID") do |message|
           expect(message).to eq(["TERMINATE", "NIP-43 auth event has errors in JSON: unexpected token at 'INVALID'"])
         end
       end
@@ -74,7 +74,7 @@ RSpec.describe("NIP-43") do
           event = build(:event, kind: 22242, created_at: 5.seconds.ago)
           payload = CGI.escape(event.to_json)
 
-          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |message|
+          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID") do |message|
             expect(message).to eq(["TERMINATE", "NIP-43 auth attempt is detected but auth event has errors: Tag 'relay' is missing"])
           end
         end
@@ -84,7 +84,7 @@ RSpec.describe("NIP-43") do
         before { allow(RELAY_CONFIG).to receive(:forced_min_auth_level).and_return(1) }
 
         it "TERMINATEs when event is not provided" do
-          subject.call(ws_url: "ws://localhost", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |message|
+          subject.call(ws_url: "ws://localhost", connection_id: "CONN_ID") do |message|
             expect(message).to eq(["TERMINATE", "NIP-43 is forced over NIP-42 and auth event is missing in URL"])
           end
         end
@@ -93,7 +93,7 @@ RSpec.describe("NIP-43") do
           event = build(:event, kind: 22242, created_at: 5.seconds.ago)
           payload = CGI.escape(event.to_json)
 
-          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |message|
+          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID") do |message|
             expect(message).to eq(["TERMINATE", "NIP-43 is forced over NIP-42 and auth event has errors: Tag 'relay' is missing"])
           end
         end
@@ -108,7 +108,7 @@ RSpec.describe("NIP-43") do
           event = build(:event, kind: 22242, created_at: 5.seconds.ago)
           payload = CGI.escape(event.to_json)
 
-          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |message|
+          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID") do |message|
             expect(message).to eq(["NOTICE", "error: ArgumentError something went wrong"])
           end
         end
@@ -120,7 +120,7 @@ RSpec.describe("NIP-43") do
           event = build(:event, kind: 22242, created_at: 5.seconds.ago)
           payload = CGI.escape(event.to_json)
 
-          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |message|
+          subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID") do |message|
             expect(message).to eq(["TERMINATE", "NIP-43 is forced over NIP-42 and something went wrong"])
           end
         end
@@ -141,7 +141,7 @@ RSpec.describe("NIP-43") do
       # But it doesn't actually make any difference
       # TODO: proper way to test it is using Timecop and time freeze
 
-      subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |message|
+      subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID") do |message|
         expect(message).to eq(["TERMINATE", "NIP-43 auth attempt is detected but auth event has errors: Created At is too old, expected window is 60 seconds"])
       end
     end
@@ -152,7 +152,7 @@ RSpec.describe("NIP-43") do
 
       REDIS_TEST_CONNECTION.set("events22242:#{event.sha256}", "") # simulate client terminated connection
 
-      subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |message|
+      subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID") do |message|
         expect(message).to eq(["TERMINATE", "event with id #{event.sha256} was used for authentication twice"])
       end
     end
@@ -180,7 +180,7 @@ RSpec.describe("NIP-43") do
       REDIS_TEST_CONNECTION.hset("authentications", "FIRST_CONN_ID", event.pubkey)
       REDIS_TEST_CONNECTION.hset("connections_authenticators", "FIRST_CONN_ID", event.sha256)
 
-      subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) do |message|
+      subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID") do |message|
         current_connection_disconnected = true
         expect(message).to eq(["TERMINATE", "event with id #{event.sha256} was used for authentication twice"])
       end

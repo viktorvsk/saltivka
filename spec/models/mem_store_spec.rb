@@ -5,7 +5,7 @@ RSpec.describe MemStore do
     it "creates redis structures" do
       described_class.authenticate!(cid: "CONN_ID", event_sha256: "sha256", pubkey: "pubkey")
       expect(REDIS_TEST_CONNECTION.hget("authentications", "CONN_ID")).to eq("pubkey")
-      expect(REDIS_TEST_CONNECTION.lpop("queue:nostr.nip42")).to eq({class: "AuthorizationRequest", args: ["CONN_ID", "sha256", "pubkey"]}.to_json)
+      expect(SIDEKIQ_REDIS_TEST_CONNECTION.lpop("queue:nostr.nip42")).to eq({class: "AuthorizationRequest", args: ["CONN_ID", "sha256", "pubkey"]}.to_json)
     end
   end
 

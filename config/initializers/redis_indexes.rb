@@ -7,7 +7,7 @@ Rails.application.config.after_initialize do
           pipeline.call(RedisSearchCommands::CREATE_SCHEMA_COMMAND.split(" "))
         end
       end
-    rescue RedisClient::CommandError => e
+    rescue Redis::BaseError => e
       if e.message != "Index already exists"
         raise(e)
       end

@@ -17,6 +17,7 @@ require "sidekiq/api"
 # Add additional requires below this line. Rails is not loaded until this point!
 
 REDIS_TEST_CONNECTION = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
+SIDEKIQ_REDIS_TEST_CONNECTION = Redis.new(url: ENV["SIDEKIQ_REDIS_URL"], driver: :hiredis)
 
 FAKE_CREDENTIALS = {
   alice: {pk: "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95", sk: "945e01e37662430162121b804d3645a86d97df9d256917d86735d0eb219393eb"},
@@ -64,6 +65,7 @@ RSpec.configure do |config|
 
   config.before(:each) do
     REDIS_TEST_CONNECTION.flushdb
+    SIDEKIQ_REDIS_TEST_CONNECTION.flushdb
     begin
       MemStore.with_redis do |redis|
         redis.pipelined do |pipeline|

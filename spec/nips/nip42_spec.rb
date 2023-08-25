@@ -178,7 +178,7 @@ RSpec.describe("NIP-42") do
 
   describe Nostr::AuthenticationFlow do
     it "AUTHs connection_id" do
-      expect(subject.call(ws_url: "ws://localhost", connection_id: "CONN_ID", redis: REDIS_TEST_CONNECTION) { |message| message }).to eq(["AUTH", "CONN_ID"])
+      expect(subject.call(ws_url: "ws://localhost", connection_id: "CONN_ID") { |message| message }).to eq(["AUTH", "CONN_ID"])
     end
   end
 end

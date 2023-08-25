@@ -77,12 +77,8 @@ class MemStore
     end
 
     def authenticate!(cid:, event_sha256:, pubkey:)
-      with_redis do |redis|
-        redis.multi do |t|
-          t.hset("authentications", cid, pubkey)
-          t.lpush("queue:nostr.nip42", {class: "AuthorizationRequest", args: [cid, event_sha256, pubkey]}.to_json)
-        end
-      end
+      with_sidekiq { |redis| redis.lpush("queue:nostr.nip42", {class: "AuthorizationRequest", args: [cid, event_sha256, pubkey]}.to_json) }
+      with_redis { |redis| redis.hset("authentications", cid, pubkey) }
     end
 
     def authorize!(cid:, level:)
@@ -160,6 +156,12 @@ class MemStore
 
     def with_redis
       REDIS_CONNECTIONS_POOL.with do |connection|
+        yield connection if block_given?
+      end
+    end
+
+    def with_sidekiq
+      Sidekiq.redis do |connection|
         yield connection if block_given?
       end
     end

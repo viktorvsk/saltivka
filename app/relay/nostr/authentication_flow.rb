@@ -1,6 +1,6 @@
 module Nostr
   class AuthenticationFlow
-    def call(ws_url:, connection_id:, redis:)
+    def call(ws_url:, connection_id:)
       auth_event_22242 = CGI.unescape(CGI.parse(URI.parse(ws_url).query.to_s)["authorization"].first.to_s).presence
 
       event = begin
@@ -38,22 +38,25 @@ module Nostr
       # 3) Both get disconnected immediately
       # 4) User doesn't notice it and leaves (or its client generates new Event22242 for auth)
       # 5) Attacker authenticates successfully again immediately before window time passed
-      existing_connection_id = redis.get("events22242:#{event["id"]}")
+      existing_connection_id = MemStore.with_redis { |redis| redis.get("events22242:#{event["id"]}") }
 
       if existing_connection_id.nil?
         # Happy path/main flow
-        redis.multi do |t|
-          t.call("SET", "events22242:#{event["id"]}", connection_id, "EX", RELAY_CONFIG.fast_auth_window_seconds.to_s)
-          t.hset("connections_authenticators", connection_id, event["id"])
-          t.hset("authentications", connection_id, pubkey)
 
-          # put event to Sidekiq
-          t.lpush("queue:nostr.nip42", {class: "AuthorizationRequest", args: [connection_id, event["id"], event["pubkey"]]}.to_json)
+        MemStore.with_redis do |redis|
+          redis.multi do |t|
+            t.call("SET", "events22242:#{event["id"]}", connection_id, "EX", RELAY_CONFIG.fast_auth_window_seconds.to_s)
+            t.hset("connections_authenticators", connection_id, event["id"])
+            t.hset("authentications", connection_id, pubkey)
+          end
         end
+
+        # put event to Sidekiq
+        MemStore.with_sidekiq { |redis| redis.lpush("queue:nostr.nip42", {class: "AuthorizationRequest", args: [connection_id, event["id"], event["pubkey"]]}.to_json) }
 
         if RELAY_CONFIG.forced_min_auth_level > 0
           # Synchronous authorization
-          _list_name, authorization_level = redis.blpop("authorization_result:#{connection_id}", RELAY_CONFIG.authorization_timeout.to_s)
+          _list_name, authorization_level = MemStore.with_redis { |redis| redis.blpop("authorization_result:#{connection_id}", RELAY_CONFIG.authorization_timeout.to_s) }
 
           if authorization_level.to_i < RELAY_CONFIG.forced_min_auth_level
             yield(terminate("your account doesn't have required authorization (#{RELAY_CONFIG.forced_min_auth_level})"))
@@ -66,10 +69,12 @@ module Nostr
         # Terminate connection previously authenticated with this event
         # if it has not been disconnected on its own yet
         if existing_connection_id.present?
-          redis.multi do |t|
-            t.publish("events:#{existing_connection_id}:_:terminate", [3403, "restricted: event with id #{event["id"]} was used for authentication twice"].to_json)
-            t.hdel("connections_authenticators", connection_id)
-            t.hdel("authentications", existing_connection_id)
+          MemStore.with_redis do |redis|
+            redis.multi do |t|
+              t.publish("events:#{existing_connection_id}:_:terminate", [3403, "restricted: event with id #{event["id"]} was used for authentication twice"].to_json)
+              t.hdel("connections_authenticators", connection_id)
+              t.hdel("authentications", existing_connection_id)
+            end
           end
         end
 

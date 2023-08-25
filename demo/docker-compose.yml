@@ -5,15 +5,15 @@ services:
     ports:
       - 2402:443
     volumes:
-      - ./demo/default.conf:/etc/nginx/conf.d/default.conf
-      - ./demo/localhost.crt:/certificate.crt
-      - ./demo/localhost.key:/private.key
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+      - ./localhost.crt:/certificate.crt
+      - ./localhost.key:/private.key
     depends_on:
       - webserver
   postgresql:
     image: postgres:15
     volumes:
-      - ./demo/docker/pg-data:/var/lib/postgresql/data
+      - ./docker/pg-data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: nostr
@@ -62,9 +62,19 @@ services:
   redis:
     image: redis/redis-stack-server:6.2.6-v9
     volumes:
-      - ./demo/docker/redis-data:/data
+      - ./docker/redis-data:/data
     environment:
-      - REDIS_ARGS=--io-threads 1 --io-threads-do-reads no --appendonly yes --maxmemory 1536mb --maxmemory-policy noeviction --bind 0.0.0.0 --maxclients 10000 --tcp-backlog 511 # https://github.com/redis-stack/redis-stack/issues/110
+      - REDIS_ARGS=--io-threads 1 --io-threads-do-reads no --appendonly no --maxmemory-policy noeviction --bind 0.0.0.0 --maxclients 10000 --tcp-backlog 511 # https://github.com/redis-stack/redis-stack/issues/110
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+  sidekiq_redis:
+    image: redis:7
+    volumes:
+      - ./docker/sidekiq-redis-data:/data
+    command: redis-server --io-threads 1 --io-threads-do-reads no --appendonly no --maxmemory-policy noeviction --bind 0.0.0.0 --maxclients 10000 --tcp-backlog 511
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 3s
@@ -72,19 +82,21 @@ services:
       retries: 5
   db-migration:
     build:
-      context: .
-    env_file: ./demo/.env
+      context: ..
+    env_file: ./.env
     command: sh -c "until bundle exec rails db:migrate db:seed; do sleep 5; done"
     depends_on:
       postgresql:
         condition: service_healthy
       redis:
         condition: service_healthy
+      sidekiq_redis:
+        condition: service_healthy
 
   webserver:
     build:
-      context: .
-    env_file: ./demo/.env
+      context: ..
+    env_file: ./.env
     ports:
       - 3000:3000
     depends_on:
@@ -92,25 +104,25 @@ services:
         condition: service_completed_successfully
   worker:
     build:
-      context: .
-    env_file: ./demo/.env
+      context: ..
+    env_file: ./.env
     command: bin/worker
     depends_on:
       db-migration:
         condition: service_completed_successfully
   scheduler:
     build:
-      context: .
-    env_file: ./demo/.env
+      context: ..
+    env_file: ./.env
     command: bin/scheduler
     depends_on:
       db-migration:
         condition: service_completed_successfully
   mirrors:
     build:
-      context: .
+      context: ..
     restart: always
-    env_file: ./demo/.env
+    env_file: ./.env
     command: bin/mirrors
     depends_on:
       db-migration:

@@ -74,7 +74,7 @@ services:
     image: redis:7
     volumes:
       - ./docker/sidekiq-redis-data:/data
-    command: redis-server --io-threads 1 --io-threads-do-reads no --appendonly no --maxmemory-policy noeviction --bind 0.0.0.0 --maxclients 10000 --tcp-backlog 511
+    command: redis-server --io-threads 1 --io-threads-do-reads no --appendonly yes --maxmemory-policy noeviction --bind 0.0.0.0 --maxclients 10000 --tcp-backlog 511
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 3s

@@ -50,8 +50,8 @@ Some thoughts and hints on production deployment may be found [here](/docs/DEPLO
 1. Prepare a host with docker environment installed (something like [this](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04)). Demo setup expects approximately 8 GB of RAM and 4vCPU
 2. SSH into this host
 3. ```git clone https://github.com/viktorvsk/saltivka.git```
-4. ```cd saltivka/demo```
-6. ```docker compose up --build```
+4. ```cd saltivka```
+5. ```docker-compose -f demo/docker-compose.yml up --build```
 
 That's it! Wait a minute or two until database is ready. Now you should have HTTP/WS server available at `localhost:3000` and HTTPS/WSS at `localhost:2402`. Ensure ports are open on your server. Both commands should work and let you start working with Nostr:
 
@@ -65,11 +65,12 @@ It's a typical Ruby on Rails application so all defaults mostly apply.
 1. ```git clone https://github.com/viktorvsk/saltivka.git```
 2. ```cd saltivka```
 3. ```cp .env.example .env.development``` Copy default settings to development environment
-4. ```echo POSTGRES_DATABASE=saltivka_test > .env.test```
-5. Adjust PostgreSQL and Redis connections details in `.env.test` and `.env.development` if necessary. Use different databases for development and test environments
-6. ```bin/setup``` Setup dependencies and database
-7. ```bin/rspec``` Run tests
-8. ```bin/dev``` Start all required services. Keep in mind, if external dependencies (like PostgreSQL or Redis) are not configured correctly, you may see errors here
+4. ```cp .env.test.example .env.test``` Copy default settings to test environment
+5. ```docker-compose -f local_dev/docker-compose.yml up``` run PostgreSQL on port `5432`, RedisStack on port `6379`, Redis (for Sidekiq) on port `63790`. **This step is optional if you prefer running those dependencies in a different way**
+6. Adjust PostgreSQL and Redis connections details in `.env.test` and `.env.development` if necessary. Use different databases for development and test environments
+7. ```bin/setup``` Setup dependencies and database
+8. ```RAILS_ENV=test bin/setup && bin/rspec``` Run tests (optional)
+9. ```bin/dev``` Start all required services
 
 # Further reading
 * [Configuration options](/docs/CONFIGURATION.md)

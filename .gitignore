@@ -39,3 +39,9 @@
 
 /demo/docker/pg-data
 /demo/docker/redis-data
+/demo/docker/sidekiq-redis-data
+/local_dev/docker/pg-data
+/local_dev/docker/redis-data
+/local_dev/docker/sidekiq-redis-data
+/local_dev/docker/redis-test-data
+/local_dev/docker/sidekiq-redis-test-data

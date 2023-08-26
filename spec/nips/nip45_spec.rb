@@ -53,7 +53,7 @@ RSpec.describe("NIP-45") do
 
     subject do
       allow(SecureRandom).to receive(:hex).and_return(@random_connection_id)
-      result = Nostr::RelayController.new.perform(event_data: @nostr_event, redis: REDIS_TEST_CONNECTION) do |notice|
+      result = Nostr::RelayController.new.perform(event_data: @nostr_event) do |notice|
         expect(notice).to eq(["NOTICE", "error: #{@expected_error}"].to_json) if @expected_error
       end
 
@@ -65,8 +65,8 @@ RSpec.describe("NIP-45") do
 
       subject
 
-      assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr.nip45"), 1
-      assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr.nip45"), {class: "CountRequest", args: ["CONN_ID", "SUBID", "[{}]"]}.to_json
+      assert_equal SIDEKIQ_REDIS_TEST_CONNECTION.llen("queue:nostr.nip45"), 1
+      assert_equal SIDEKIQ_REDIS_TEST_CONNECTION.lpop("queue:nostr.nip45"), {class: "CountRequest", args: ["CONN_ID", "SUBID", "[{}]"]}.to_json
       assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), []
       # assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {}
     end

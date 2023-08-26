@@ -8,7 +8,7 @@ RSpec.describe Nostr::RelayController do
 
   subject do
     allow(SecureRandom).to receive(:hex).and_return(@random_connection_id)
-    result = Nostr::RelayController.new.perform(event_data: @nostr_event, redis: REDIS_TEST_CONNECTION) do |notice|
+    result = Nostr::RelayController.new.perform(event_data: @nostr_event) do |notice|
       expect(notice).to eq(["NOTICE", "error: #{@expected_error}"].to_json) if @expected_error
     end
 
@@ -69,7 +69,7 @@ RSpec.describe Nostr::RelayController do
   describe "#authorized?" do
     subject do
       allow(SecureRandom).to receive(:hex).and_return(@random_connection_id)
-      result = Nostr::RelayController.new.perform(event_data: @nostr_event, redis: REDIS_TEST_CONNECTION) do |notice|
+      result = Nostr::RelayController.new.perform(event_data: @nostr_event) do |notice|
         expect(notice).to eq(["NOTICE", @expected_error].to_json) if @expected_error
       end
 

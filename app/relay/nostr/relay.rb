@@ -3,7 +3,7 @@ Nostr::Relay = lambda do |env|
     ws = Faye::WebSocket.new(env, [], extensions: WebsocketExtensions.all) # standard websocket connection object
     remote_ip = ActionDispatch::Request.new(env).remote_ip
     redis_subscriber = Redis.new(url: ENV["REDIS_URL"], driver: :hiredis)
-    rate_limited = MemStore.with_redis { |redis| redis.sismember("unlimited_ips", remote_ip) }
+    rate_limited = MemStore.with_redis { |redis| !redis.sismember("unlimited_ips", remote_ip) }
     controller = Nostr::RelayController.new(remote_ip: remote_ip, rate_limited: rate_limited)
     relay_response = Nostr::RelayResponse.new
     connection_id = controller.connection_id
@@ -66,11 +66,9 @@ Nostr::Relay = lambda do |env|
 
     ws.on :message do |event|
       last_active_at = Time.now.to_i
-      MemStore.with_redis do |redis|
-        controller.perform(event_data: event.data, redis: redis) do |notice|
-          redis.hincrby("outgoing_traffic", connection_id, notice.bytesize)
-          ws.send(notice)
-        end
+      controller.perform(event_data: event.data) do |notice|
+        redis.hincrby("outgoing_traffic", connection_id, notice.bytesize)
+        ws.send(notice)
       end
     end
 

@@ -4,7 +4,7 @@ RSpec.describe "NIP-65" do
   describe Nostr::RelayController do
     describe "#authorized?" do
       subject do
-        result = Nostr::RelayController.new.perform(event_data: @nostr_event, redis: REDIS_TEST_CONNECTION) do |notice|
+        result = Nostr::RelayController.new.perform(event_data: @nostr_event) do |notice|
           expect(notice).to eq(["NOTICE", @expected_error].to_json) if @expected_error
         end
 

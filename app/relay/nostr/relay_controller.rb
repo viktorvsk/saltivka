@@ -3,7 +3,7 @@ module Nostr
     include Nostr::Nips::Nip1
     include Nostr::Nips::Nip45
 
-    attr_reader :redis, :connection_id, :remote_ip, :rate_limited
+    attr_reader :connection_id, :remote_ip, :rate_limited
 
     COMMANDS = %w[REQ CLOSE EVENT COUNT]
 
@@ -13,14 +13,13 @@ module Nostr
       @rate_limited = rate_limited
     end
 
-    def perform(event_data:, redis:, &block)
+    def perform(event_data:, &block)
       Rails.logger.info(event_data)
-      @redis = redis
       ts = Time.now.to_i
 
-      if rate_limited
-        return block.call notice!("rate-limited: take it easy") if exceeds_window_quota?
+      return block.call notice!("rate-limited: take it easy") if rate_limited && exceeds_window_quota?
 
+      MemStore.with_redis do |redis|
         redis.pipelined do |pipeline|
           pipeline.zadd("requests:#{remote_ip}", ts, ts)
           pipeline.hincrby("requests", connection_id, 1)
@@ -97,7 +96,7 @@ module Nostr
     private
 
     def exceeds_window_quota?
-      requests_count_in_time_window = redis.zcount("requests:#{remote_ip}", RELAY_CONFIG.rate_limiting_sliding_window.seconds.ago.to_i, "+inf").to_i
+      requests_count_in_time_window = MemStore.with_redis { |redis| redis.zcount("requests:#{remote_ip}", RELAY_CONFIG.rate_limiting_sliding_window.seconds.ago.to_i, "+inf").to_i }
       requests_count_in_time_window > RELAY_CONFIG.rate_limiting_max_requests
     end
 
@@ -106,7 +105,7 @@ module Nostr
       return true if required_auth_level.zero?
       return true if Nostr::Nips::Nip65.call(command, nostr_event)
 
-      level = redis.hget("authorizations", connection_id).to_i # nil.to_i === 0
+      level = MemStore.with_redis { |redis| redis.hget("authorizations", connection_id).to_i } # nil.to_i === 0
       level >= required_auth_level
     end
 

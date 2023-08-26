@@ -457,7 +457,7 @@ RSpec.describe("NIP-01") do
 
     subject do
       allow(SecureRandom).to receive(:hex).and_return(@random_connection_id)
-      result = Nostr::RelayController.new.perform(event_data: @nostr_event, redis: REDIS_TEST_CONNECTION) do |notice|
+      result = Nostr::RelayController.new.perform(event_data: @nostr_event) do |notice|
         expect(notice).to eq(["NOTICE", "error: #{@expected_error}"].to_json) if @expected_error
       end
 
@@ -470,8 +470,8 @@ RSpec.describe("NIP-01") do
 
         subject
 
-        assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr.nip01.req"), 1
-        assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr.nip01.req"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", "[{}]"]}.to_json
+        assert_equal SIDEKIQ_REDIS_TEST_CONNECTION.llen("queue:nostr.nip01.req"), 1
+        assert_equal SIDEKIQ_REDIS_TEST_CONNECTION.lpop("queue:nostr.nip01.req"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", "[{}]"]}.to_json
         # assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"] # business logic changed
         # assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => "[{}]"}
       end
@@ -482,8 +482,8 @@ RSpec.describe("NIP-01") do
 
         subject
 
-        assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr.nip01.req"), 1
-        assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr.nip01.req"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", [filters].to_json]}.to_json
+        assert_equal SIDEKIQ_REDIS_TEST_CONNECTION.llen("queue:nostr.nip01.req"), 1
+        assert_equal SIDEKIQ_REDIS_TEST_CONNECTION.lpop("queue:nostr.nip01.req"), {class: "NewSubscription", args: ["CONN_ID", "SUBID", [filters].to_json]}.to_json
         # assert_equal REDIS_TEST_CONNECTION.smembers("client_reqs:CONN_ID"), ["SUBID"] # business logic changed
         # assert_equal REDIS_TEST_CONNECTION.hgetall("subscriptions"), {"CONN_ID:SUBID" => [filters].to_json}
       end
@@ -537,7 +537,7 @@ RSpec.describe("NIP-01") do
         subject
 
         refute REDIS_TEST_CONNECTION.sismember("client_reqs:CONN_ID", "XYZ123")
-        assert_empty REDIS_TEST_CONNECTION.hkeys("subscriptions")
+        assert_nil REDIS_TEST_CONNECTION.get("subscriptions:CONN_ID:XYZ123")
       end
 
       describe "with invalid args responds with error" do
@@ -562,8 +562,8 @@ RSpec.describe("NIP-01") do
 
           subject
 
-          assert_equal REDIS_TEST_CONNECTION.llen("queue:nostr.nip01.event"), 1
-          assert_equal REDIS_TEST_CONNECTION.lpop("queue:nostr.nip01.event"), {class: "NewEvent", args: ["CONN_ID", @valid_event]}.to_json
+          assert_equal SIDEKIQ_REDIS_TEST_CONNECTION.llen("queue:nostr.nip01.event"), 1
+          assert_equal SIDEKIQ_REDIS_TEST_CONNECTION.lpop("queue:nostr.nip01.event"), {class: "NewEvent", args: ["CONN_ID", @valid_event]}.to_json
         end
       end
 

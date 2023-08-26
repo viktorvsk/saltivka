@@ -14,6 +14,7 @@ First let's discuss business logic settings.
 | WS_DEFLATE\_ENABLED | whether to enable websockets permessage deflate extension | true | |
 | WS_DEFLATE\_LEVEL | compression level | 9 | |  |
 | WS\_DEFLATE\_MAX\_WINDOW\_BITS | sliding window bits | 15 | |
+| LATEST_EVENTS\_WINDOW | how old (in days) events are considered latest | 7 | bigger value may lead to better query performance but more memory required for indexes |
 | DEFAULT\_ERRORS\_FORMAT| other option is JSON or "as is"  | TEXT | experimental |
 | AUTHORIZATION\_TIMEOUT| when NIP-43 min auth_level > 0 connection is blocked until authorization request is processed. This value defines timeout in seconds | 10 | seconds |
 | FORCED\_MIN\_AUTH\_LEVEL| Authorization is implemented in levels, see [here](/docs/AUTHORIZATION.md) for more details | 0 |  |

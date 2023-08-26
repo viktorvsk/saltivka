@@ -8,4 +8,5 @@ module Clockwork
   every(30.minutes, "Cleanup connections data") { CleanupConnections.perform_async }
   every(30.minutes, "Cleanup requests:<IP> data used for rate limiting") { CleanupRequests.perform_async }
   every(2.hours, "Reprocess expirable events (NIP-40)") { ReprocessExpirationEventsNip40.perform_async }
+  every(1.day, "Reprocess seen-events", at: "00:00", tz: "UTC") { ReprocessSeenEvents.perform_async }
 end

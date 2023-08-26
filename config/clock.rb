@@ -6,4 +6,5 @@ require "./config/environment"
 
 module Clockwork
   every(30.minutes, "Cleanup connections data") { CleanupConnections.perform_async }
+  every(30.minutes, "Cleanup requests:<IP> data used for rate limiting") { CleanupRequests.perform_async }
 end

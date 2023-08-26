@@ -7,6 +7,7 @@ This is mostly a typical Ruby on Rails application with FayeWebsocket server and
 Clients connect to the FayeWebsocket server and only communicate with it in terms of the Nostr protocol.
 Websocket server assigns persistent `connection_id` to identify the client. and opens a separate connection to Redis.
 Websocket server is responsible for initial validation of the system, subscriber and events, i.e.:
+
 * Is the system in maintenance mode?
 * Is max number connections to the server has not yet reached the limit?
 * Is the subscriber rate-limited?
@@ -37,34 +38,32 @@ WebsocketServer manages NIP-11 HTTP response.
 
 Websocket server is also responsible for properly handling connection `close` and resources cleanup i.e. Redis data structures that belong to the `connection_id` and Redis connection created specifically for this client.
 Connection may be closed due to following reasons:
+
 * Client closed connection
 * NIP-43 is forced with min auth_level but client didn't pass it
 * Connection was manually closed from admin UI
 
 ### Redis
-Currently [RedisStack](https://redis.io/docs/about/about-stack/) of version 6.2.6 is used because there are plans to use RedisGraph.
-However, in future it is planned to use multiple different Redis instances for different components.
-One Redis for Sidekiq (background jobs) — which will have the strongest persistence possible.
-One for handling Pub/Sub without persistence aiming for the best throughput.
-One for websocket connection business logic with a mixed performance/persitence ration goals.
-One for caching solely etc.
-Redis is utilized heavily here. 3 main use-cases are:
-1. Pub/Sub handler
-2. Websocket connection business logic
-2. Background jobs
+Currently `redis:7` is used for Sidekiq jobs and [RedisStack](https://redis.io/docs/about/about-stack/) of version 7.2.0-v0 is used for the rest of the features. In future it is planned to add RedisStack of version 6.2.6-v9 for graph related queries and split main RedisStack to more granular features like the following:
 
-But it is also responsible to handle various data structures i.e. expiration keys and rate limiting sorted sets etc.
+* Pub/Sub
+* Caching
+* Rate limiting and traffic
+* Subscriptions management (RediSearch)
+* Settings (maintenance, max_allowed_connections)
+* Auth
+* etc
 
 Keep in mind for higher workloads some kind of proxy (connection pooler) may be required, like [Twemproxy](https://github.com/twitter/twemproxy) for instance.
 
-###### DATA STRUCTURES
+###### RedisStack Data Structures
 
 | Data Structure | Type | Description |
 | --- | --- | --- |
 | `client_reqs:<CONNECTION_ID>` | SET | subscription_id list per connection |
 | `connections` | SET | list of active connections |
 | `connections_authenticators` | HASH | event kind-22242 id that validated connection |
-| `subscriptions:<CONNECTION_ID>:<SUBSCRIPTION_ID>` | JSON | contains filters |
+| `subscriptions:<CONNECTION_ID>:<SUBSCRIPTION_ID>` | JSON (RedisJSON) | contains filters |
 | `subscriptions_idx` | RediSearch Index (`FT.CREATE`) | indexes subscriptions for search using `FT.SEARCH` command |
 | `authentications` | HASH |pubkey per connection |
 | `authorizations` | HASH | `auth_level` per connection |
@@ -109,17 +108,23 @@ Choosing what actual Redis server to use and how to configure it consider the fo
 Websocket server uses minimal amounts of data in Redis and its more tolerant to critical failures with the worst that can happen — clients will have to reconnect and will lose some responses.
 While Sidekiq workers are more reliant on data in Redis and consume much more traffic (i.e. events payload)
 The main thing to remember is the eviction policy in order not to accidentally lose some Sidekiq jobs during high peak traffic.
-In theory different Redis servers should be used for WebsocketServer and for Sidekiq.
-But currently this is not supported.
 
-### Sidekiq worker
+### Background worker (Sidekiq)
 Nostr business logic is running inside of background jobs.
 Those jobs may change Redis data, persist/delete Events in PostgreSQL, publish messages to redis channels with Nostr events responses or connection termination commands.
 
-### Application server
+### Application server (Puma)
 Ruby on Rails application served by Puma application server to manage incoming requests.
 Puma is responsible for routing websocket connections from clients to WebsocketServer.
 It also provides admin dashboard HTTP part and any future extensions i.e.: public dashboard, user portal, HTTP API, GraphQL etc
+
+### Scheduler (Clockwork)
+
+To manage application-specific tasks native ruby gem Clockwork is used instead of Cron.
+
+### Mirrors
+
+Mirrors is a process that is responsible to launch Websocket Clients that connect to external Nostr relays based on user configuration in database. This process is started with `bin/mirrors` and has to constantly run in background.
 
 ### Database
 Tested against 14,15 and 16 versions of PostgreSQL but at the moment there are no version-specific SQL so in theory many versions should be compatible.
@@ -144,5 +149,6 @@ Currently main dependencies (outside of `app/relay`) are:
 * `Rails.logger`
 * `Sentry`
 * `RELAY_CONFIG`
+* `MemStore`
 
 It shouldn't be too complex to rewrite the Websocket component into another language for more efficient connection handling.

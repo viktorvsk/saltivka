@@ -67,7 +67,7 @@ Nostr::Relay = lambda do |env|
     ws.on :message do |event|
       last_active_at = Time.now.to_i
       controller.perform(event_data: event.data) do |notice|
-        redis.hincrby("outgoing_traffic", connection_id, notice.bytesize)
+        MemStore.with_redis { |redis| redis.hincrby("outgoing_traffic", connection_id, notice.bytesize) }
         ws.send(notice)
       end
     end

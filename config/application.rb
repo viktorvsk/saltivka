@@ -50,6 +50,8 @@ module Saltivka
       }
     end
 
+    config.active_record.schema_format = :sql
+
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end

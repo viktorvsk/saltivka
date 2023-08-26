@@ -29,12 +29,11 @@ module Nostr
 
       def close_command(nostr_event, _block)
         subscription_id = nostr_event.first
-        subscriptions_keys = MemStore.with_redis { |redis| redis.keys("subscriptions:#{connection_id}:*") }
 
         MemStore.with_redis do |redis|
           redis.pipelined do |pipeline|
             pipeline.srem("client_reqs:#{connection_id}", subscription_id)
-            pipeline.del(subscriptions_keys) if subscriptions_keys.present?
+            pipeline.del("subscriptions:#{connection_id}:#{subscription_id}")
           end
         end
       end

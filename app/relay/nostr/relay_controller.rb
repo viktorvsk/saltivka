@@ -90,7 +90,7 @@ module Nostr
         pipeline.hdel("outgoing_traffic", connection_id)
         pipeline.hdel("connections_ips", connection_id)
         pipeline.hdel("connections_starts", connection_id)
-        pipeline.call("SET", "events22242:#{event22242_id}", "", "KEEPTTL")
+        pipeline.call("SET", "events22242:#{event22242_id}", "", "KEEPTTL") if event22242_id.present?
       end
     end
 

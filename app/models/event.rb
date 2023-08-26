@@ -8,6 +8,9 @@ class Event < ApplicationRecord
   include Nostr::Nip42
 
   def should_fanout?(subscriber_pubkey)
+    event_expiration_tag = tags.find { |t| t.first == "expiration" }
+
+    return false if event_expiration_tag.present? && Time.at(event_expiration_tag.last.to_i).past?
     return true unless RELAY_CONFIG.enforce_kind_4_authentication
     return true unless kind === 4
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_08_19_202002) do
+ActiveRecord::Schema[7.0].define(version: 2023_08_26_131122) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "plpgsql"
@@ -55,6 +55,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_08_19_202002) do
     t.index ["author_id", "created_at", "kind"], name: "index_events_for_replaceable", where: "((kind = ANY (ARRAY[0, 3, 41])) OR ((kind >= 10000) AND (kind <= 19999)) OR ((kind >= 30000) AND (kind <= 39999)))"
     t.index ["author_id"], name: "index_events_on_author_id"
     t.index ["created_at", "kind"], name: "index_events_on_created_at_and_kind"
+    t.index ["id"], name: "index_events_on_id", where: "(jsonb_path_query_array(tags, '$[*][0]'::jsonpath) ? 'expiration'::text)"
     t.index ["kind"], name: "index_events_on_kind"
   end
 

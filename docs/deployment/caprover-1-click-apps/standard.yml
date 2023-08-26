@@ -20,7 +20,7 @@ services:
       retries: 5
   # Redis Stack
   $$cap_appname-redis-stack-server:
-    image: redis/redis-stack-server:6.2.6-v9
+    image: redis/redis-stack-server:7.2.0-v0
     caproverExtra:
       notExposeAsWebApp: true
     volumes:

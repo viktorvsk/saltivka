@@ -13,13 +13,13 @@ services:
     volumes:
       - ./docker/sidekiq-redis-test-data:/data
   redis:
-    image: redis/redis-stack-server:6.2.6-v9
+    image: redis/redis-stack-server:7.2.0-v0
     ports:
       - 6379:6379
     volumes:
       - ./docker/redis-data:/data
   redis_test:
-    image: redis/redis-stack-server:6.2.6-v9
+    image: redis/redis-stack-server:7.2.0-v0
     ports:
       - 63792:6379
     volumes:

@@ -31,5 +31,6 @@ class NewSubscription
     end
 
     MemStore.fanout(cid: connection_id, sid: subscription_id, command: :found_end, payload: "EOSE")
+    ReqFiltersLog.create(filters: filters)
   end
 end

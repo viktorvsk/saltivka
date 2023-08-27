@@ -255,6 +255,36 @@ ALTER SEQUENCE public.relay_mirrors_id_seq OWNED BY public.relay_mirrors.id;
 
 
 --
+-- Name: req_filters_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.req_filters_logs (
+    id bigint NOT NULL,
+    filters jsonb DEFAULT '[]'::jsonb,
+    created_at timestamp(6) without time zone
+);
+
+
+--
+-- Name: req_filters_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.req_filters_logs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: req_filters_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.req_filters_logs_id_seq OWNED BY public.req_filters_logs.id;
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -421,6 +451,13 @@ ALTER TABLE ONLY public.relay_mirrors ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: req_filters_logs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.req_filters_logs ALTER COLUMN id SET DEFAULT nextval('public.req_filters_logs_id_seq'::regclass);
+
+
+--
 -- Name: trusted_authors id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -495,6 +532,14 @@ ALTER TABLE ONLY public.invoices
 
 ALTER TABLE ONLY public.relay_mirrors
     ADD CONSTRAINT relay_mirrors_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: req_filters_logs req_filters_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.req_filters_logs
+    ADD CONSTRAINT req_filters_logs_pkey PRIMARY KEY (id);
 
 
 --
@@ -896,6 +941,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20230826131122'),
 ('20230826152946'),
 ('20230826153633'),
-('20230827140714');
+('20230827140714'),
+('20230827170307');
 
 

@@ -18,12 +18,7 @@ class BaseProvider
       order_id: order_id
     }
 
-    author_from_pubkey = begin
-      Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", pubkey).first_or_create(pubkey: pubkey)
-    rescue ActiveRecord::RecordNotUnique
-      Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", pubkey).first
-    end
-    author_from_pubkey.invoices.create(invoice_params)
+    Author.from_pubkey(pubkey).invoices.create(invoice_params)
   end
 
   def create_external_invoice(payload)

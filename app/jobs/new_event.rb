@@ -5,11 +5,7 @@ class NewEvent
   def perform(connection_id, event_json)
     event_params = JSON.parse(event_json)
     pubkey = event_params.delete("pubkey")
-    author = begin
-      Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", pubkey.downcase).first_or_create(pubkey: pubkey.downcase)
-    rescue ActiveRecord::RecordNotUnique
-      Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", pubkey.downcase).first
-    end
+    author = Author.from_pubkey(pubkey)
 
     event_params.merge!({
       "created_at" => Time.at(event_params["created_at"]),

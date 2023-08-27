@@ -56,13 +56,7 @@ module Nostr
       end
 
       def pubkey=(value)
-        author_from_pubkey = begin
-          Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", value).first_or_create(pubkey: value)
-        rescue ActiveRecord::RecordNotUnique
-          Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", value).first
-        end
-
-        self.author = author_from_pubkey
+        self.author = Author.from_pubkey(value)
       end
 
       def created_at=(value)

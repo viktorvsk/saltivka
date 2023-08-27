@@ -2,11 +2,7 @@ class UserPubkeysController < ApplicationController
   skip_before_action :require_login, only: %i[show]
 
   def create
-    author = begin
-      Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", params[:pubkey]).first_or_create(pubkey: params[:pubkey])
-    rescue ActiveRecord::RecordNotUnique
-      Author.select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", params[:pubkey]).first
-    end
+    author = Author.from_pubkey(params[:pubkey])
     @user_pubkey = author.user_pubkey || current_user.user_pubkeys.new(author: author)
     @user_pubkey.user = current_user
     @auth_event = begin

@@ -8,6 +8,12 @@ class Author < ApplicationRecord
   has_one :trusted_author, dependent: :destroy, autosave: true
   has_one :user_pubkey, dependent: :destroy
 
+  def self.from_pubkey(pk)
+    select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", pk.downcase).first_or_create(pubkey: pk.downcase)
+  rescue ActiveRecord::RecordNotUnique
+    select(:id, :pubkey).where("LOWER(authors.pubkey) = ?", pk.downcase).first
+  end
+
   private
 
   def lower_pubkey_uniqueness

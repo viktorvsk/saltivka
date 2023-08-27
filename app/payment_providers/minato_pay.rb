@@ -67,8 +67,10 @@ class MinatoPay < BaseProvider
       #
       # invoice.period_days - (webhook["missing_amount"].to_i / RELAY_CONFIG.price_per_day.to_i) - 1
       Sentry.capture_message("[#{short_name}][unpaid] invoice_id=#{invoice.id} webhook=#{webhook.to_json}")
+      0
     else
       Sentry.capture_message("[#{short_name}][#{webhook["status"]}] invoice_id=#{invoice.id} webhook=#{webhook.to_json}")
+      0
     end
   end
 end

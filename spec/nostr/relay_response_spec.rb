@@ -14,7 +14,7 @@ RSpec.describe Nostr::RelayResponse do
     create(:event, kind: 123, content: "a")
     create(:event, kind: 123, content: "b")
 
-    expect(subject.call("COUNT", "subid", "2")).to eq(["COUNT", "subid", {count: 2}].to_json)
+    expect(subject.call("COUNT", "subid", {count: 2}.to_json)).to eq(["COUNT", "subid", {count: 2}].to_json)
   end
 
   it "handles EVENT" do

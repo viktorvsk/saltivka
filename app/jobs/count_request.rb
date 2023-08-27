@@ -18,9 +18,20 @@ class CountRequest
 
     union = filters.map { |filter_set| "(#{Event.by_nostr_filters(filter_set, subscriber_pubkey, true).to_sql})" }.join("\nUNION\n")
 
-    count = Event.includes(:author).from("(#{union}) AS t").count
+    unless RELAY_CONFIG.count_cost_threshold.zero?
+      explain = ActiveRecord::Base.connection.execute("EXPLAIN #{union}").first.to_s
+      rows = explain[/rows=(\d+)/, 1].to_i
+      cost = explain[/cost=(\d+)/, 1].to_i
+      should_count_approximate = RELAY_CONFIG.count_cost_threshold.positive? && cost > RELAY_CONFIG.count_cost_threshold
+    end
 
-    MemStore.fanout(cid: connection_id, sid: subscription_id, command: :count, payload: count.to_s)
+    count = should_count_approximate ? rows : Event.includes(:author).from("(#{union}) AS t").count
+
+    payload = {count: count.to_i}
+
+    payload[:approximate] = should_count_approximate if RELAY_CONFIG.count_cost_threshold.positive?
+
+    MemStore.fanout(cid: connection_id, sid: subscription_id, command: :count, payload: payload.to_json)
     count
   end
 end

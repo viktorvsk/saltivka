@@ -9,7 +9,7 @@ module Nostr
       when "OK"
         event
       when "COUNT"
-        ["COUNT", subscription_id, {count: event.to_i}].to_json
+        ["COUNT", subscription_id, JSON.parse(event)].to_json
       when "NOTICE"
         ["NOTICE", event].to_json
       end

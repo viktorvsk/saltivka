@@ -5,7 +5,7 @@ RSpec.describe("NIP-45") do
     it "fanout with empty filters array" do
       create(:event, kind: 123)
       expect(MemStore).to receive(:pubkey_for).once.with(cid: "CONN_ID")
-      expect(MemStore).to receive(:fanout).once.with(cid: "CONN_ID", sid: "SUBID", command: :count, payload: "1")
+      expect(MemStore).to receive(:fanout).once.with(cid: "CONN_ID", sid: "SUBID", command: :count, payload: {count: 1}.to_json)
 
       subject.perform("CONN_ID", "SUBID", "[]")
     end
@@ -13,7 +13,7 @@ RSpec.describe("NIP-45") do
     it "fanout with filter_set instead of filters" do
       create(:event, kind: 0, pubkey: FAKE_CREDENTIALS[:alice][:pk])
       expect(MemStore).to receive(:pubkey_for).once.with(cid: "CONN_ID")
-      expect(MemStore).to receive(:fanout).once.with(cid: "CONN_ID", sid: "SUBID", command: :count, payload: "1")
+      expect(MemStore).to receive(:fanout).once.with(cid: "CONN_ID", sid: "SUBID", command: :count, payload: {count: 1}.to_json)
 
       subject.perform("CONN_ID", "SUBID", {kinds: [0], authors: ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]}.to_json)
     end
@@ -21,7 +21,7 @@ RSpec.describe("NIP-45") do
     it "fanout with empty filter_set" do
       create(:event, kind: 123)
       expect(MemStore).to receive(:pubkey_for).once.with(cid: "CONN_ID")
-      expect(MemStore).to receive(:fanout).once.with(cid: "CONN_ID", sid: "SUBID", command: :count, payload: "1")
+      expect(MemStore).to receive(:fanout).once.with(cid: "CONN_ID", sid: "SUBID", command: :count, payload: {count: 1}.to_json)
 
       subject.perform("CONN_ID", "SUBID", "[{}]")
     end

@@ -50,6 +50,7 @@ First let's discuss business logic settings.
 | NIP\_42\_CHALLENGE\_WINDOW\_SECONDS| how much time NIP-42 auth challenge is valid for in seconds | 600 | |
 | NIP\_43\_FAST\_AUTH\_WINDOW\_SECONDS| how much time client has between generating kind-22242 event and using it for authentication | 80 | |
 | NIP\_42\_43\_SELF\_URL| this should be equal to what users will add to their clients | ws://localhost:3000 | in fact, only host name is used for validation but this should be a valid URL |
+| NIP\_45_COUNT\_COST\_THRESHOLD | PostgreSQL cost at which `COUNT` queries will calculate approximate result | 0 | higher number may lead to performance issues; set this value to `0` to always get exact results; accuracy of approximate result depends on many factors of how PostgreSQL is configured and maintained |
 | NIP\_65\_KINDS\_EXEMPT\_OF\_AUTH| consider min `auth_level=4` enforced for `EVENT` commands but we still want NIP-65 events to pass through. Here we define space delimited kinds we allow processing without authorization | 10002 | in case `FORCED_MIN_AUTH_LEVEL` > 0, it won't work because connection won't even be established (space delimited list) |
 | ADMIN\_EMAIL| if specified, user with this email will be created as admin who can sign in using UI to view admin dashboard |  | only works once |
 | ADMIN\_PASSWORD| password for this user |  | only works once |

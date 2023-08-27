@@ -191,6 +191,10 @@ class RelayConfig
     ENV.fetch("NIP_42_43_SELF_URL", "ws://localhost:3000")
   end
 
+  def count_cost_threshold
+    ENV.fetch("NIP_45_COUNT_COST_THRESHOLD", 0).to_i
+  end
+
   def kinds_exempt_of_auth
     ENV.fetch("NIP_65_KINDS_EXEMPT_OF_AUTH", "10002").to_s.split(" ").map(&:to_i)
   end

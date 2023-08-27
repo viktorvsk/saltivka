@@ -12,7 +12,7 @@ class ReprocessExpirationEventsNip40
           event.destroy
         else
           event_scheduled = Sidekiq::ScheduledSet.new.any? { |job| job.klass == "DeleteExpiredEventNip40" && job.args.first == event.sha256 }
-          DeleteExpiredEventNip40.perform_at(expires_at, sha256) unless event_scheduled
+          DeleteExpiredEventNip40.perform_at(expires_at, event.sha256) unless event_scheduled
         end
       end
     end

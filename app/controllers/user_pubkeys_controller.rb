@@ -48,7 +48,7 @@ class UserPubkeysController < ApplicationController
     if user_pubkey
       payload[:names] = user_pubkey.user.user_pubkeys.where.not(nip05_name: ["", nil]).map do |upk|
         [upk.nip05_name, upk.pubkey]
-      end
+      end.to_h
     end
 
     render json: payload

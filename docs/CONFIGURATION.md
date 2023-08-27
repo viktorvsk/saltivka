@@ -55,6 +55,7 @@ First let's discuss business logic settings.
 | ADMIN\_EMAIL| if specified, user with this email will be created as admin who can sign in using UI to view admin dashboard | | only works once |
 | ADMIN\_PASSWORD| password for this user | | only works once |
 | TRUSTED\_PUBKEYS| list of pubkeys that will have highest `auth_level=4` | | space delimited list, only works once |
+| SHOULD_LOG_FILTERS | log every REQ command filters | false | |
 
 Here lets review configuration related to payments:
 

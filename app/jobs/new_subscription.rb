@@ -1,5 +1,8 @@
 class NewSubscription
+  SHOULD_LOG_FILTERS = ActiveRecord::Type::Boolean.new.cast(ENV.fetch("SHOULD_LOG_FILTERS", false))
+
   include Sidekiq::Worker
+
   sidekiq_options queue: "nostr.nip01.req"
 
   def perform(connection_id, subscription_id, filters)
@@ -31,6 +34,6 @@ class NewSubscription
     end
 
     MemStore.fanout(cid: connection_id, sid: subscription_id, command: :found_end, payload: "EOSE")
-    ReqFiltersLog.create(filters: filters)
+    ReqFiltersLog.create(filters: filters) if SHOULD_LOG_FILTERS
   end
 end

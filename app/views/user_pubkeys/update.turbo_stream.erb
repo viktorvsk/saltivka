@@ -1,0 +1,3 @@
+<% if @user_pubkey.errors.any? %>
+  <%= turbo_stream.update("flash", partial: "layouts/flash") %>
+<% end %>

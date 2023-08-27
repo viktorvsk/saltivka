@@ -10,6 +10,8 @@ Rails.application.routes.draw do
   get "/payment-successful", to: "homes#payment_successful"
   post "/payment-callback/:provider", to: "invoices#update"
 
+  get "/.well-known/nostr.json", to: "user_pubkeys#show"
+
   resources :invoices, only: %i[create]
 
   resource :session, only: %i[new create destroy]

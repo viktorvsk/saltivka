@@ -6,6 +6,7 @@ This is an implementation of the [Nostr protocol](https://github.com/nostr-proto
 
 * [NIP-01: Basic protocol flow description](https://github.com/nostr-protocol/nips/blob/master/01.md)
 * [NIP-04: Encrypted Direct Message](https://github.com/nostr-protocol/nips/blob/master/04.md)
+* [NIP-05: Mapping Nostr keys to DNS-based internet identifiers](https://github.com/nostr-protocol/nips/blob/master/05.md) (Allows registered users to have their own NIP-05 identifiers)
 * [NIP-09: Event Deletion](https://github.com/nostr-protocol/nips/blob/master/09.md)
 * [NIP-11: Relay Information Document](https://github.com/nostr-protocol/nips/blob/master/11.md)
 * [NIP-13: Proof of Work](https://github.com/nostr-protocol/nips/blob/master/13.md)

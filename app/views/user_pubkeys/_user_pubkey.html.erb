@@ -1,6 +1,19 @@
 <%= turbo_frame_tag user_pubkey do %>
-  <div class="is-flex is-justify-content-space-between is-align-items-center">
-    <pre><%= user_pubkey.author.pubkey %></pre>
-    <%= button_to "Disconnect", user_pubkey_path(user_pubkey), method: :delete, class: "button is-large is-danger is-align-self-flex-end", data: { turbo_confirm: "Are you sure you want to disconnect this Nostr account from your profile?" } %>
+  <div class="is-flex is-align-items-center mb-4">
+    <%= button_to "Disconnect", user_pubkey_path(user_pubkey), method: :delete, class: "button is-small is-rounded is-danger is-align-self-flex-end mr-4", data: { turbo_confirm: "Are you sure you want to disconnect this Nostr account from your profile?" } %>
+    <div class="p-4 mr-4 tag is-rounded is-primary is-light is-family-code"><%= user_pubkey.author.pubkey %></div>
+
+    <%= form_for(user_pubkey) do |f| %>
+      <div class="field has-addons">
+        <div class="control">
+          <%= f.text_field :nip05_name, class: "input is-small is-rounded", required: true, placeholder: "Choose NIP-05 name" %>
+        </div>
+        <div class="control">
+          <%= f.submit "Save", class: "button is-info is-small is-rounded" %>
+        </div>
+      </div>
+    <% end %>
+
+
   </div>
 <% end %>

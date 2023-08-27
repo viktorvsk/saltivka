@@ -1,4 +1,6 @@
 class UserPubkeysController < ApplicationController
+  skip_before_action :require_login, only: %i[show]
+
   def create
     author = Author.create_or_find_by(pubkey: params[:pubkey])
     @user_pubkey = author.user_pubkey || current_user.user_pubkeys.new(author: author)
@@ -35,6 +37,19 @@ class UserPubkeysController < ApplicationController
     MemStore.disconnect(cid: current_user.email)
   end
 
+  def show
+    user_pubkey = UserPubkey.joins(:author_subscription).where("author_subscriptions.expires_at > ?", Time.current).find_by(nip05_name: params[:name])
+    payload = {}
+
+    if user_pubkey
+      payload[:names] = user_pubkey.user.user_pubkeys.where.not(nip05_name: ["", nil]).map do |upk|
+        [upk.nip05_name, upk.pubkey]
+      end
+    end
+
+    render json: payload
+  end
+
   def destroy
     @user_pubkey = current_user.user_pubkeys.find(params[:id])
 
@@ -54,5 +69,23 @@ class UserPubkeysController < ApplicationController
   end
 
   def update
+    @user_pubkey = current_user.user_pubkeys.find(params[:id])
+
+    if @user_pubkey.update(user_pubkey_params)
+      head :ok
+    else
+      respond_to do |format|
+        format.html { redirect_to edit_user_path, alert: "Public key was not update because of errors: #{@user_pubkey.errors.full_messages.join(", ")}" }
+        format.turbo_stream do
+          flash.now[:alert] = "Public key was not updated because of errors: #{@user_pubkey.errors.full_messages.join(", ")}"
+        end
+      end
+    end
+  end
+
+  private
+
+  def user_pubkey_params
+    params.require(:user_pubkey).permit(:nip05_name)
   end
 end

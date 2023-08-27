@@ -10,9 +10,12 @@ class User < ApplicationRecord
   validates :email, uniqueness: true, presence: true
 
   scope :active, -> { where.not(confirmed_at: nil) }
+  scope :paid, -> { joins(:author_subscriptions).where("author_subscriptions.expires_at > ?", Time.current) }
 
   has_many :user_pubkeys, dependent: :destroy
   has_many :authors, through: :user_pubkeys
+  has_many :author_subscriptions, through: :authors
+  has_many :nip05_names, dependent: :delete_all
 
   def active?
     confirmed_at.present?

@@ -315,7 +315,8 @@ CREATE TABLE public.user_pubkeys (
     author_id bigint NOT NULL,
     user_id bigint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    nip05_name public.citext
 );
 
 
@@ -740,6 +741,13 @@ CREATE UNIQUE INDEX index_user_pubkeys_on_author_id ON public.user_pubkeys USING
 
 
 --
+-- Name: index_user_pubkeys_on_nip05_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_user_pubkeys_on_nip05_name ON public.user_pubkeys USING btree (nip05_name) WHERE ((nip05_name IS NOT NULL) AND (nip05_name OPERATOR(public.<>) ''::public.citext));
+
+
+--
 -- Name: index_user_pubkeys_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -887,6 +895,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20230819202002'),
 ('20230826131122'),
 ('20230826152946'),
-('20230826153633');
+('20230826153633'),
+('20230827140714');
 
 

@@ -36,7 +36,7 @@ module Nostr
       if events_ids_to_delete.present?
         DeleteEvent.upsert_all(delete_events_to_upsert, unique_by: %i[sha256 author_id])
         to_delete_events_ids = Event.where(author_id: author.id).where("LOWER(events.sha256) IN (?)", events_ids_to_delete).where.not(kind: 5).pluck(:id)
-        Event.where(id: to_delete_events_ids).destroy_all
+        Event.includes(:event_delegator).where(id: to_delete_events_ids).destroy_all
       end
     end
   end

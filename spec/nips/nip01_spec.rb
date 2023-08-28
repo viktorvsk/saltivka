@@ -112,18 +112,18 @@ RSpec.describe("NIP-01") do
 
     describe ".by_nostr_filters" do
       it "finds events matching filter_set in the database" do
-        event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
+        event_with_tagsith_searchable_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
 
         parsed_json = JSON.parse(File.read(Rails.root.join(*%w[spec support nostr_event_delegated.json])))
         event_params = parsed_json.merge("sha256" => parsed_json.delete("id"), "created_at" => Time.at(parsed_json["created_at"]))
         Event.create!(event_params)
 
-        expected_events_for_author = (event_with_tags.pubkey == "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95") ? 2 : 1
+        expected_events_for_author = (event_with_tagsith_searchable_tags.pubkey == "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95") ? 2 : 1
         expect(Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]}).count).to eq(expected_events_for_author)
 
         # TODO: fix flaky specs
-        # expect(Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95", event_with_tags.pubkey.first(5)]}).count).to eq(1)
-        # expect(Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f", event_with_tags.sha256.first(5)]}).count).to eq(1)
+        # expect(Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95", event_with_tagsith_searchable_tags.pubkey.first(5)]}).count).to eq(1)
+        # expect(Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f", event_with_tagsith_searchable_tags.sha256.first(5)]}).count).to eq(1)
 
         expect(Event.by_nostr_filters({"authors" => ["8e0d3"]}).count).to eq(0)
         expect(Event.by_nostr_filters({"authors" => ["8e0d3d3eb2881ec137a11debe736a9086715a8c8beeeda615780064d68bc25dd"]}).count).to eq(1)
@@ -132,8 +132,8 @@ RSpec.describe("NIP-01") do
         expect(Event.by_nostr_filters({}).count).to eq(3)
         expect(Event.by_nostr_filters({limit: 1}).count).to eq(1)
         expect(Event.by_nostr_filters({kinds: 0}).count).to eq(1)
-        expect(Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95", event_with_tags.pubkey]}).count).to eq(2)
-        expect(Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f", event_with_tags.sha256]}).count).to eq(2)
+        expect(Event.by_nostr_filters({"authors" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95", event_with_tagsith_searchable_tags.pubkey]}).count).to eq(2)
+        expect(Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f", event_with_tagsith_searchable_tags.sha256]}).count).to eq(2)
         expect(Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"]}).count).to eq(1)
         expect(Event.by_nostr_filters({"ids" => []}).count).to eq(3)
         expect(Event.by_nostr_filters({"ids" => ["INVALID"]}).count).to eq(0)
@@ -356,9 +356,9 @@ RSpec.describe("NIP-01") do
       it "matches #e and #p filters" do
         MemStore.subscribe(cid: "C1", sid: "S1", filters: ["#e" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"]])
         MemStore.subscribe(cid: "C1", sid: "S2", filters: ["#p" => ["a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
-        event_with_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
+        event_with_tagsith_searchable_tags = create(:event, kind: 1, tags: [["e", "bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f"], ["p", "a19f19f63dc65c8053c9aa332a5d1721a9b522b8cb4a6342582e7f8c4c2d6b95"]])
 
-        expect(MemStore.matching_pubsubs_for(event_with_tags)).to match_array(["C1:S1", "C1:S2"])
+        expect(MemStore.matching_pubsubs_for(event_with_tagsith_searchable_tags)).to match_array(["C1:S1", "C1:S2"])
       end
 
       it "matches either #e or #p filter" do
@@ -617,38 +617,44 @@ RSpec.describe("NIP-01") do
     context "given a single letter tag" do
       it "gets created only for the first value" do
         event = create(:event, kind: 123, tags: [["r", "payload", "only first is value is indexed"]])
-        expect(event.searchable_tags.count).to eq(1)
-        expect(event.searchable_tags.first.value).to eq("payload")
+        event_with_searchable_tags = Event.includes(:searchable_tags).where(id: event.id).first
+        expect(event_with_searchable_tags.searchable_tags.count).to eq(1)
+        expect(event_with_searchable_tags.searchable_tags.first.value).to eq("payload")
       end
       it "works for upcase letters too" do
         event = create(:event, kind: 123, tags: [["R", "PAYLOAD", "only first is value is indexed"]])
-        expect(event.searchable_tags.count).to eq(1)
-        expect(event.searchable_tags.first.value).to eq("PAYLOAD")
+        event_with_searchable_tags = Event.includes(:searchable_tags).where(id: event.id).first
+        expect(event_with_searchable_tags.searchable_tags.count).to eq(1)
+        expect(event_with_searchable_tags.searchable_tags.first.value).to eq("PAYLOAD")
       end
 
       it "works for similar tags (exact match)" do
         event = create(:event, kind: 123, tags: [["R", "PAYLOAD"], ["R", "PAYLOAD"]])
-        expect(event.searchable_tags.count).to eq(1)
-        expect(event.searchable_tags.first.value).to eq("PAYLOAD")
+        event_with_searchable_tags = Event.includes(:searchable_tags).where(id: event.id).first
+        expect(event_with_searchable_tags.searchable_tags.count).to eq(1)
+        expect(event_with_searchable_tags.searchable_tags.first.value).to eq("PAYLOAD")
       end
 
       it "works for similar tags (case insensitive match)" do
         event = create(:event, kind: 123, tags: [["R", "PAYLOAD"], ["R", "payLoaD"]])
-        expect(event.searchable_tags.count).to eq(1)
-        expect(event.searchable_tags.first.value).to eq("PAYLOAD")
+        event_with_searchable_tags = Event.includes(:searchable_tags).where(id: event.id).first
+        expect(event_with_searchable_tags.searchable_tags.count).to eq(1)
+        expect(event_with_searchable_tags.searchable_tags.first.value).to eq("PAYLOAD")
       end
 
       it "works for similar tags when their keys case different (#r and #R)" do
         event = create(:event, kind: 123, tags: [["R", "PAYLOAD"], ["r", "PAYLOAD"]])
-        expect(event.searchable_tags.count).to eq(2)
-        expect(event.searchable_tags.first.value).to eq("PAYLOAD")
-        expect(event.searchable_tags.second.value).to eq("PAYLOAD")
+        event_with_searchable_tags = Event.includes(:searchable_tags).where(id: event.id).first
+        expect(event_with_searchable_tags.searchable_tags.count).to eq(2)
+        expect(event_with_searchable_tags.searchable_tags.first.value).to eq("PAYLOAD")
+        expect(event_with_searchable_tags.searchable_tags.second.value).to eq("PAYLOAD")
       end
     end
 
     it "indexes only the first value" do
       event = create(:event, kind: 30000, tags: [["d", "", "payload"]], content: "E")
-      expect(event.searchable_tags.pluck(:value)).to eq([""])
+      event_with_searchable_tags = Event.includes(:searchable_tags).where(id: event.id).first
+      expect(event_with_searchable_tags.searchable_tags.pluck(:value)).to eq([""])
     end
   end
 end

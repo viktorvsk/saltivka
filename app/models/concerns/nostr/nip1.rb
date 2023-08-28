@@ -160,7 +160,7 @@ module Nostr
           Event.where(author_id: author_id, kind: kind, created_at: created_at).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
         ].flatten.reject(&:blank?)
 
-        Event.where(id: to_delete.uniq).destroy_all if to_delete.present?
+        Event.includes(:event_delegator).where(id: to_delete.uniq).destroy_all if to_delete.present?
       end
 
       def must_not_be_ephemeral
@@ -193,7 +193,7 @@ module Nostr
           Event.joins(:searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where(author_id: author_id, kind: kind, created_at: created_at, searchable_tags: {name: "d"}).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
         ].flatten.reject(&:blank?)
 
-        Event.where(id: to_delete).destroy_all
+        Event.includes(:event_delegator).where(id: to_delete).destroy_all
       end
 
       def must_be_newer_than_existing_parameterized_replaceable

@@ -7,6 +7,16 @@ class Event < ApplicationRecord
   include Nostr::Nip40
   include Nostr::Nip42
 
+  before_destroy { define_singleton_method(:readonly?) { false } }
+
+  def readonly?
+    !new_record?
+  end
+
+  def self.update_all(attr_hahs)
+    raise ActiveRecord::ReadOnlyRecord
+  end
+
   def should_fanout?(subscriber_pubkey)
     event_expiration_tag = tags.find { |t| t.first == "expiration" }
 

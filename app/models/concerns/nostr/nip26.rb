@@ -25,6 +25,11 @@ module Nostr
 
         delegation_tag = tags.find { |t| t.first === "delegation" }
         delegation_pubkey, condition_string, delegation_sig = delegation_tag[1..]
+
+        if condition_string.blank? || delegation_sig.blank?
+          errors.add(:tags, "'delegation' required elements missing: condition and/or signature")
+        end
+
         delegation_string = "nostr:delegation:#{delegation_pubkey}:#{condition_string}"
 
         schnorr_params = {

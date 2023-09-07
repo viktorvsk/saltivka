@@ -232,7 +232,7 @@ module Nostr
           rel = rel.where.not(kind: 4)
         end
 
-        filter_set.transform_keys(&:downcase).slice(*AVAILABLE_FILTERS).select { |key, value| value.present? }.each do |key, value|
+        filter_set.slice(*AVAILABLE_FILTERS).select { |key, value| value.present? }.each do |key, value|
           if key == "kinds"
             value = Array.wrap(value)
             if RELAY_CONFIG.enforce_kind_4_authentication && value.include?(4)
@@ -291,7 +291,19 @@ module Nostr
           if /\A#[a-zA-Z]\Z/.match?(key)
             where_clause = value.map { |t| "LOWER(searchable_tags.value) = ?" }.join(" OR ")
 
-            rel = rel.joins(:searchable_tags).where(searchable_tags: {name: key.last}).where(where_clause, *value.map(&:downcase))
+            rel = rel.joins(:searchable_tags).where(searchable_tags: {name: key.last}).where(where_clause, *value.map(&:to_s).map(&:downcase))
+          end
+
+          if key == "search"
+
+            value.each do |search_filter|
+              case search_filter
+              when /\Awithout_tag:[a-zA-Z]\Z/
+                _, tag_name = search_filter.split(":")
+                rel = rel.joins("LEFT JOIN searchable_tags AS st_without_#{tag_name} ON st_without_#{tag_name}.name = '#{tag_name}' AND st_without_#{tag_name}.event_id = events.id").where("LOWER(st_without_#{tag_name}.value) IS NULL")
+              end
+            end
+
           end
 
           rel = rel.where("created_at >= ?", Time.at(value)) if key == "since"

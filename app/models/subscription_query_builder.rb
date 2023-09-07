@@ -1,6 +1,6 @@
 class SubscriptionQueryBuilder
   SINGLE_LETTER_TAGS = ("a".."z").to_a.concat(("A".."Z").to_a).map { |single_letter_tag| single_letter_tag }
-  AVAILABLE_FILTERS = ["authors", "kinds", "ids", "since", "until"].concat(SINGLE_LETTER_TAGS)
+  AVAILABLE_FILTERS = ["authors", "kinds", "ids", "since", "until", "search"].concat(SINGLE_LETTER_TAGS)
   REDIS_SEARCH_TAG_ANY_VALUE = "__ANY__"
   REDIS_SEARCH_TAG_EMPTY_VALUE = "__EMPTY__"
   REDIS_SEARCH_NUMERIC_ANY_VALUE = 0

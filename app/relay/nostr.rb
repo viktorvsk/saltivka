@@ -40,7 +40,11 @@ module Nostr
             minLength: 1,
             items: {type: "integer", minimum: 0, maximum: 65535}
           },
-
+          search: {
+            type: :array,
+            id: :search,
+            items: {type: :string}
+          },
           limit: {
             type: :integer,
             minimum: 0,
@@ -193,7 +197,11 @@ module Nostr
             minLength: 1,
             items: {type: "integer", minimum: 0}
           },
-
+          search: {
+            type: :array,
+            id: :search,
+            items: {type: :string}
+          },
           limit: {
             type: :integer,
             minimum: 1,

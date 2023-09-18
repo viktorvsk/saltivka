@@ -3,7 +3,7 @@ class NewEvent
   sidekiq_options queue: "nostr.nip01.event"
 
   def perform(connection_id, event_json)
-    event_params = JSON.parse(event_json.gsub("\n", '\\n'))
+    event_params = JSON.parse(event_json)
     pubkey = event_params.delete("pubkey")
     author = Author.from_pubkey(pubkey)
 

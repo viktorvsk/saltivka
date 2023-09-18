@@ -296,7 +296,7 @@ module Nostr
 
           if key == "search"
 
-            value.each do |search_filter|
+            Array.wrap(value).each do |search_filter|
               case search_filter
               when /\Awithout_tag:[a-zA-Z]\Z/
                 _, tag_name = search_filter.split(":")

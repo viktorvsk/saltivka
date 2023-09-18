@@ -7,7 +7,8 @@ namespace :relays do
 
       EM.run do
         mirrors.each do |relay_url|
-          websockets << RelayMirrorClient.sync_future_events(relay_url)
+          ws = RelayMirrorClient.sync_future_events(relay_url)
+          websockets << ws if ws
         end
 
         EM.add_periodic_timer(5) do
@@ -31,7 +32,8 @@ namespace :relays do
 
       EM.run do
         mirrors.each do |mirror|
-          websockets << RelayMirrorClient.sync_past_events(relay_url: mirror.url, oldest: mirror.oldest, newest: mirror.newest)
+          ws = RelayMirrorClient.sync_past_events(relay_url: mirror.url, oldest: mirror.oldest, newest: mirror.newest)
+          websockets << ws if ws
         end
 
         EM.add_periodic_timer(5) do

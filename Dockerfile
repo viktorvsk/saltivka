@@ -19,6 +19,12 @@ RUN  bundle config --local without "development test" && \
      find /usr/local/bundle/gems/ -name "*.c" -delete && \
      find /usr/local/bundle/gems/ -name "*.o" -delete
 
+RUN wget -O - https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2 | tar -xj && \
+    cd jemalloc-5.3.0 && \
+    ./configure && \
+    make && \
+    make install
+
 ADD . /app
 
 ################################################################################
@@ -38,6 +44,9 @@ RUN apk add --no-cache $EFFECTIVE_PACKAGES && \
 
 COPY --from=Builder /usr/local/bundle/ /usr/local/bundle/
 COPY --from=Builder --chown=app:app /app /app
+COPY --from=builder /usr/local/lib/libjemalloc.so.2 /usr/local/lib/
+
+ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
 
 WORKDIR /app
 

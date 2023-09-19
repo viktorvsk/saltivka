@@ -13,7 +13,13 @@ class NewEvent
       "author" => author
     })
 
-    event = Event.new(event_params)
+    event = begin
+      Event.new(event_params)
+    rescue => e
+      Sentry.capture_exception(e)
+      Sentry.capture_message("[NewEvent][#{e.class}] event_json=#{event_params}", level: :warning)
+      return
+    end
     should_fanout_without_save = event.kinda?(:ephemeral) && event.valid?
 
     if should_fanout_without_save || event.save
@@ -42,7 +48,7 @@ class NewEvent
     if event.valid?
       MemStore.add_latest_event(event: event.to_json)
     else
-      Sentry.capture_message("[NewEvent][InvalidEvent] event=#{event.to_json}", level: :warning)
+      Sentry.capture_message("[NewEvent][InvalidEvent] event=#{event.to_json} errors=#{event.errors.to_a}", level: :warning)
     end
 
     event

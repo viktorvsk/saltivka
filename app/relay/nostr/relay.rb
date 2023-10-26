@@ -40,7 +40,7 @@ Nostr::Relay = lambda do |env|
       redis_thread = Thread.new do
         redis_subscriber.psubscribe("events:#{connection_id}:*") do |on|
           on.pmessage do |pattern, channel, event|
-            _namespace, _connection_id, subscription_id, command = channel.split(":")
+            _namespace, _connection_id, subscription_id, command = channel.scan(/\A(.*):(\w+):(.*):(.*)\Z/).flatten
 
             if command.upcase === "TERMINATE"
               code, reason = JSON.parse(event)

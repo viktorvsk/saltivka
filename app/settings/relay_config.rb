@@ -195,6 +195,14 @@ class RelayConfig
     ENV.fetch("NIP_45_COUNT_COST_THRESHOLD", 0).to_i
   end
 
+  def ts_default_language
+    ENV.fetch("NIP_50_DEFAULT_LANGUAGE", "english")
+  end
+
+  def content_searchable_kinds
+    ENV.fetch("NIP_50_CONTENT_SEARCHABLE_KINDS", "1 30023").split(" ").map(&:to_i)
+  end
+
   def kinds_exempt_of_auth
     ENV.fetch("NIP_65_KINDS_EXEMPT_OF_AUTH", "10002").to_s.split(" ").map(&:to_i)
   end

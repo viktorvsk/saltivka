@@ -294,6 +294,17 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: searchable_contents; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.searchable_contents (
+    event_id bigint NOT NULL,
+    language character varying NOT NULL,
+    tsv_content tsvector NOT NULL
+);
+
+
+--
 -- Name: searchable_tags; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -575,13 +586,6 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: ar_internal_metadata_pkey_ccnew4; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX ar_internal_metadata_pkey_ccnew4 ON public.ar_internal_metadata USING btree (key);
-
-
---
 -- Name: index_author_subscriptions_on_author_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -686,13 +690,6 @@ CREATE INDEX index_events_on_kind ON public.events USING btree (kind);
 
 
 --
--- Name: index_events_on_latest_records; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_events_on_latest_records ON public.events USING btree (created_at DESC, id DESC) WHERE (created_at > '2023-08-19 00:00:00'::timestamp without time zone);
-
-
---
 -- Name: index_events_on_lower_sha256; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -725,6 +722,20 @@ CREATE UNIQUE INDEX index_invoices_on_order_id ON public.invoices USING btree (o
 --
 
 CREATE UNIQUE INDEX index_relay_mirrors_on_url_and_mirror_type ON public.relay_mirrors USING btree (url, mirror_type);
+
+
+--
+-- Name: index_searchable_contents_on_event_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_searchable_contents_on_event_id ON public.searchable_contents USING btree (event_id);
+
+
+--
+-- Name: index_searchable_contents_on_tsv_content; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_searchable_contents_on_tsv_content ON public.searchable_contents USING gin (tsv_content);
 
 
 --
@@ -877,6 +888,14 @@ ALTER TABLE ONLY public.events
 
 
 --
+-- Name: searchable_contents fk_rails_86c5dd3b26; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.searchable_contents
+    ADD CONSTRAINT fk_rails_86c5dd3b26 FOREIGN KEY (event_id) REFERENCES public.events(id);
+
+
+--
 -- Name: delete_events fk_rails_9b916d76a1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -942,6 +961,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20230826152946'),
 ('20230826153633'),
 ('20230827140714'),
-('20230827170307');
+('20230827170307'),
+('20231025122455');
 
 

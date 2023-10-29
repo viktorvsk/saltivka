@@ -19,7 +19,7 @@ RSpec.describe(Event) do
 
   it "destroys event" do
     kind2_event.save!
-    kind2_event_with_event_delegators_included = Event.includes(:event_delegator).where(id: kind2_event).first
+    kind2_event_with_event_delegators_included = Event.includes(:event_delegator, :searchable_content).where(id: kind2_event).first
     expect { kind2_event_with_event_delegators_included.destroy }.to change { kind2_event_with_event_delegators_included.persisted? }.from(true).to(false)
   end
 

@@ -6,6 +6,7 @@ class Event < ApplicationRecord
   include Nostr::Nip26
   include Nostr::Nip40
   include Nostr::Nip42
+  include Nostr::Nip50
 
   before_destroy { define_singleton_method(:readonly?) { false } }
 

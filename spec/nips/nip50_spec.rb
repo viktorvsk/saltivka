@@ -3,17 +3,38 @@ require "rails_helper"
 RSpec.describe("NIP-50") do
   describe Event do
     describe ".by_nostr_filters" do
-      context "with 'search' filter equal to 'without_tag:x'" do
-        it "does not include events with tag 'x'" do
-          event = create(:event)
-          event_with_x_tag = create(:event, tags: [["x", 100]])
-          event_with_capital_x_tag = create(:event, tags: [["X", 200]])
+      context "with 'search' key" do
+        let!(:event) { create(:event, kind: 1, content: "Hello everyone!") }
+        let!(:other_event) { create(:event, kind: 2) }
 
-          expect(described_class.by_nostr_filters({search: ["without_tag:x"]})).to match_array([event, event_with_capital_x_tag])
-          expect(described_class.by_nostr_filters({search: ["without_tag:x"], "#x": [200]})).to match_array([])
-          expect(described_class.by_nostr_filters({search: ["without_tag:x"], "#X": [200]})).to match_array([event_with_capital_x_tag])
-          expect(described_class.by_nostr_filters({search: ["without_tag:X"], "#x": [100]})).to match_array([event_with_x_tag])
-          expect(described_class.by_nostr_filters({search: ["without_tag:X"], "#X": [300]})).to match_array([])
+        it "performs full-text search" do
+          # TODO: add more examples
+          expected_to_match = ["Hello how everyone", "m:manual Hell:*", "m:prefix Hell"]
+          expected_to_not_match = ["Hell"]
+
+          expect(described_class.by_nostr_filters({})).to match_array([event, other_event])
+
+          expected_to_match.each do |query|
+            expect(described_class.by_nostr_filters({search: query})).to match_array([event])
+          end
+
+          expected_to_not_match.each do |query|
+            expect(described_class.by_nostr_filters({search: query})).to match_array([])
+          end
+        end
+
+        context "with manual mode" do
+          it "handles syntax error" do
+            query = "m:manual Hello!"
+            expect(described_class.by_nostr_filters({search: query})).to match_array([])
+          end
+        end
+
+        context "with prefix mode" do
+          it "handles syntax error" do
+            query = "m:prefix Hello!"
+            expect(described_class.by_nostr_filters({search: query})).to match_array([])
+          end
         end
       end
     end

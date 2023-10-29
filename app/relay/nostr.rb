@@ -41,9 +41,9 @@ module Nostr
             items: {type: "integer", minimum: 0, maximum: 65535}
           },
           search: {
-            type: :array,
-            id: :search,
-            items: {type: :string}
+            type: "string",
+            minLength: 1,
+            id: "subscription_id"
           },
           limit: {
             type: :integer,
@@ -198,9 +198,9 @@ module Nostr
             items: {type: "integer", minimum: 0}
           },
           search: {
-            type: :array,
-            id: :search,
-            items: {type: :string}
+            type: "string",
+            minLength: 1,
+            id: "subscription_id"
           },
           limit: {
             type: :integer,

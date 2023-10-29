@@ -25,6 +25,8 @@ class SubscriptionMatcherQueryBuilder
       query << "(@#{tag_name}:{#{values_with_any}})"
     end
 
+    # TODO: handle #search
+
     @query = query.sort.join(" ")
   end
 end

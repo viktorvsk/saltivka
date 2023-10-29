@@ -32,6 +32,7 @@ class SearchableContent < ApplicationRecord
     yiddish
   ]
   belongs_to :event
+  validates :event_id, uniqueness: true
   validates :language, :tsv_content, presence: true
   validates :language, inclusion: {in: AVAILABLE_LANGUAGES}
 

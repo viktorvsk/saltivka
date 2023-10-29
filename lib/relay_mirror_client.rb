@@ -12,16 +12,20 @@ class RelayMirrorClient
       message = JSON.parse(event.data)
       command = message.first
 
-      case command.upcase
-      when "EVENT"
-        MemStore.with_redis { |redis| redis.call("PFADD", "hll.mirror.future.#{relay_url}", message.last["id"]) }
+      if command.is_a?(String)
+        case command.upcase
+        when "EVENT"
+          MemStore.with_redis { |redis| redis.call("PFADD", "hll.mirror.future.#{relay_url}", message.last["id"]) }
 
-        if MemStore.with_redis { |redis| redis.call("BF.ADD", "seen-events", message.last["id"]) }
-          ImportEvent.perform_async("INTERNAL", message.last.to_json)
-          Rails.logger.debug("+")
-        else
-          Rails.logger.debug("duplicate")
+          if MemStore.with_redis { |redis| redis.call("BF.ADD", "seen-events", message.last["id"]) }
+            ImportEvent.perform_async("INTERNAL", message.last.to_json)
+            Rails.logger.debug("+")
+          else
+            Rails.logger.debug("duplicate")
+          end
         end
+      else
+        Rails.logger.error("[UnexpectedCommand] command=#{command}")
       end
     end
 
@@ -59,26 +63,30 @@ class RelayMirrorClient
       message = JSON.parse(event.data)
       command = message.first
 
-      case command.upcase
-      when "EOSE"
-        sleep(1)
-        ws.send(["CLOSE", message.last].to_json)
+      if command.is_a?(String)
+        case command.upcase
+        when "EOSE"
+          sleep(1)
+          ws.send(["CLOSE", message.last].to_json)
 
-        if newest.to_i.positive? && oldest.to_i.positive? && newest.to_i <= oldest.to_i
-          RelayMirror.where(url: relay_url, mirror_type: :past).update_all(active: false, newest: newest)
-        elsif newest
-          ws.send(["REQ", "MIRROR_SYNC_PAST_SINCE_#{oldest}_UNTIL_#{newest}", {limit: 100, until: newest}].to_json)
-        end
-      when "EVENT"
-        newest = [message.last["created_at"].to_i, newest.to_i].min
-        MemStore.with_redis { |redis| redis.call("PFADD", "hll.mirror.past.#{relay_url}", message.last["id"]) }
+          if newest.to_i.positive? && oldest.to_i.positive? && newest.to_i <= oldest.to_i
+            RelayMirror.where(url: relay_url, mirror_type: :past).update_all(active: false, newest: newest)
+          elsif newest
+            ws.send(["REQ", "MIRROR_SYNC_PAST_SINCE_#{oldest}_UNTIL_#{newest}", {limit: 100, until: newest}].to_json)
+          end
+        when "EVENT"
+          newest = [message.last["created_at"].to_i, newest.to_i].min
+          MemStore.with_redis { |redis| redis.call("PFADD", "hll.mirror.past.#{relay_url}", message.last["id"]) }
 
-        if MemStore.with_redis { |redis| redis.call("BF.ADD", "seen-events", message.last["id"]) }
-          ImportEvent.perform_async("INTERNAL", message.last.to_json)
-          Rails.logger.debug("+")
-        else
-          Rails.logger.debug("duplicate")
+          if MemStore.with_redis { |redis| redis.call("BF.ADD", "seen-events", message.last["id"]) }
+            ImportEvent.perform_async("INTERNAL", message.last.to_json)
+            Rails.logger.debug("+")
+          else
+            Rails.logger.debug("duplicate")
+          end
         end
+      else
+        Rails.logger.error("[UnexpectedCommand] command=#{command}")
       end
     end
 

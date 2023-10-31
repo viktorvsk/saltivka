@@ -15,7 +15,7 @@ module Nostr
       has_one :searchable_content, autosave: true, dependent: :delete
 
       def self.by_search_query(query)
-        mod, text = query.scan(/\A(?:m:(\w+))?(.*)\Z/).flatten
+        mod, text = query.scan(/\A(?:m:(\w+))?(.*)\Z/).flatten.map(&:strip)
         case mod
         when "plain"
           ts_function, text = "plainto_tsquery", text
@@ -39,7 +39,7 @@ module Nostr
           end
         end
 
-        joins(:searchable_content).where("searchable_contents.tsv_content @@ #{ts_function}(searchable_contents.language::regconfig, ?)", text.downcase)
+        joins(:searchable_content).where("searchable_contents.tsv_content @@ #{ts_function}(?)", text.downcase)
       end
     end
   end

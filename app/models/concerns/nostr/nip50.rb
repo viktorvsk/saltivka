@@ -15,7 +15,7 @@ module Nostr
       has_one :searchable_content, autosave: true, dependent: :delete
 
       def self.by_search_query(query)
-        mod, text = query.scan(/\A(?:m:(\w+))?(.*)\Z/).flatten.map(&:strip)
+        mod, text = query.scan(/\A(?:m:(\w+))?(.*)\Z/).flatten.map(&:to_s).map(&:strip)
         case mod
         when "plain"
           ts_function, text = "plainto_tsquery", text

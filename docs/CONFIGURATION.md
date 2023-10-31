@@ -49,11 +49,13 @@ First let's discuss business logic settings.
 | NIP\_43\_FAST\_AUTH\_WINDOW\_SECONDS| how much time client has between generating kind-22242 event and using it for authentication | 80 | |
 | NIP\_42\_43\_SELF\_URL| this should be equal to what users will add to their clients | ws://localhost:3000 | in fact, only host name is used for validation but this should be a valid URL |
 | NIP\_45_COUNT\_COST\_THRESHOLD | PostgreSQL cost at which `COUNT` queries will calculate approximate result | 0 | higher number may lead to performance issues; set this value to `0` to always get exact results; accuracy of approximate result depends on many factors of how PostgreSQL is configured and maintained |
+| NIP\_50\_DEFAULT\_LANGUAGE | PostgreSQL stemming dict to use by default | simple | details: [https://www.postgresql.org/docs/current/textsearch-dictionaries.html](https://www.postgresql.org/docs/current/textsearch-dictionaries.html) |
+| NIP\_50_CONTENT\_SEARCHABLE\_KINDS | Which content types should be searchable by full text | 1 30023 | space separated list of kinds |
 | NIP\_65\_KINDS\_EXEMPT\_OF\_AUTH| consider min `auth_level=4` enforced for `EVENT` commands but we still want NIP-65 events to pass through. Here we define space delimited kinds we allow processing without authorization | 10002 | in case `FORCED_MIN_AUTH_LEVEL` > 0, it won't work because connection won't even be established (space delimited list) |
 | ADMIN\_EMAIL| if specified, user with this email will be created as admin who can sign in using UI to view admin dashboard | | only works once |
 | ADMIN\_PASSWORD| password for this user | | only works once |
 | TRUSTED\_PUBKEYS| list of pubkeys that will have highest `auth_level=4` | | space delimited list, only works once |
-| SHOULD_LOG_FILTERS | log every REQ command filters | false | |
+| SHOULD\_LOG_FILTERS | log every REQ command filters | false | |
 
 Here lets review configuration related to payments:
 
@@ -92,8 +94,8 @@ Now let's briefly review general app settings:
 | ACTIVE\_RECORD_LOG\_SLOW\_QUERIES | whether to log slow queries or not (true/false) | false |
 | SECRET\_KEY_BASE | some random secret string for sessions and other stuff |
 | SENTRY_DSN | Sentry integration |
-| NEW_RELIC\_LICENSE_KEY= | Newrelic integration |
-| NEW_RELIC\_APP_NAME= | Newrelic app name |
-| NEW_RELIC\_LOG_LEVEL= | Newrelic logs level |
+| NEW\_RELIC\_LICENSE\_KEY | Newrelic integration |
+| NEW\_RELIC\_APP\_NAME | Newrelic app name |
+| NEW\_RELIC\_LOG\_LEVEL | Newrelic logs level |
 | CI | run full tests suite on CI |
 | RUBY_YJIT\_ENABLE | enable YJIT for Ruby, its Docker-image-dependent, usually should be left default| true |

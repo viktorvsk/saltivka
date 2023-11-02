@@ -15,7 +15,42 @@ module Nostr
       has_one :searchable_content, autosave: true, dependent: :delete
 
       def self.by_search_query(query)
+        ts_function, text = parse_nip50_query(query)
+
+        if ts_function == "to_tsquery"
+          begin
+            ActiveRecord::Base.transaction do
+              Event.where("to_tsvector('test') @@ #{ts_function}(?)", text).exists?
+            end
+          rescue ActiveRecord::StatementInvalid => _
+            return Event.none
+          end
+        end
+
+        joins(:searchable_content).where("searchable_contents.tsv_content @@ #{ts_function}(?)", text)
+      end
+
+      def matches_full_text_search?(query)
+        ts_function, text = self.class.parse_nip50_query(query)
+        result = nil
+
+        if ts_function == "to_tsquery"
+          begin
+            ActiveRecord::Base.transaction do
+              result = Event.where("to_tsvector(?) @@ #{ts_function}(?)", content, text).exists?
+            end
+          rescue ActiveRecord::StatementInvalid => e
+            Rails.logger.warn("[InvalidSearchQuery][#{e.class}] message=#{e.message} query=#{query}")
+            result = false
+          end
+        end
+
+        result
+      end
+
+      def self.parse_nip50_query(query)
         mod, text = query.scan(/\A(?:m:(\w+))?(.*)\Z/).flatten.map(&:to_s).map(&:strip)
+
         case mod
         when "plain"
           ts_function, text = "plainto_tsquery", text
@@ -29,17 +64,7 @@ module Nostr
           ts_function, text = "websearch_to_tsquery", text
         end
 
-        if ts_function == "to_tsquery"
-          begin
-            ActiveRecord::Base.transaction do
-              ActiveRecord::Base.connection.execute("SELECT to_tsquery('#{text}')")
-            end
-          rescue ActiveRecord::StatementInvalid => _
-            return Event.none
-          end
-        end
-
-        joins(:searchable_content).where("searchable_contents.tsv_content @@ #{ts_function}(?)", text.downcase)
+        [ts_function, text.downcase]
       end
     end
   end

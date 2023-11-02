@@ -27,7 +27,8 @@ class SubscriptionQueryBuilder
         query[k] = REDIS_SEARCH_NUMERIC_ANY_VALUE
       when /\A[a-zA-Z]\Z/
         query[k] = [REDIS_SEARCH_TAG_ANY_VALUE]
-      # TODO: add search
+      when "search"
+        query[k] = REDIS_SEARCH_TAG_ANY_VALUE
       end
     end
 

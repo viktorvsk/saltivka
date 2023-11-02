@@ -8,6 +8,7 @@ class RedisSearchCommands
            $.authors AS authors TAG
            $.since AS since NUMERIC SORTABLE
            $.until AS until NUMERIC SORTABLE
+           $.search AS search TEXT
            $.a AS a TAG CASESENSITIVE
            $.b AS b TAG CASESENSITIVE
            $.c AS c TAG CASESENSITIVE

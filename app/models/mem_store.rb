@@ -1,6 +1,7 @@
 class MemStore
   class << self
     REDIS_CONNECTIONS_POOL = ConnectionPool.new(size: ENV.fetch("RAILS_MAX_THREADS", 5), timeout: ENV.fetch("REDIS_POOL_TIMEOUT", 5)) { Redis.new(url: ENV["REDIS_URL"], driver: :hiredis) }
+    SUBSCRIPTIONS_LIMIT = 10000 # TODO: this is the default limit. Better way is to calcualte actual number of matching subscriptions and request only this number
 
     def fanout(cid:, command:, payload:, sid: "_", conn: nil)
       if conn # Reuse connection if possible
@@ -41,7 +42,7 @@ class MemStore
       query = SubscriptionMatcherQueryBuilder.new(event).query
 
       begin
-        subscriptions = with_redis { |redis| redis.call("FT.SEARCH", "subscriptions_idx", query, "NOCONTENT") }
+        subscriptions = with_redis { |redis| redis.call("FT.SEARCH", "subscriptions_idx", query, "NOCONTENT", "LIMIT", "0", SUBSCRIPTIONS_LIMIT) }
       rescue RedisClient::CommandError => e
         Sentry.capture_exception(e)
         Rails.logger.error("[MemStore.matching_pubsubs_for][INVALID_QUERY] query=#{query} event_sha256=#{event.sha256}")
@@ -52,27 +53,29 @@ class MemStore
       subscriptions.shift # First argument is Redis specific return value
       subscriptions.map! { |r| r.gsub(/\Asubscriptions:/, "") } # Redis returns full keys name including "namespace" subscriptions:
 
-      # TODO: workaround to the fact that we want NIP-50 search to also produce
-      # events that are coming after EOSE but RedisSearch doesn't provide equivalent
-      # functionality we could use in our case. Thats why here we retrieve all
-      # the subscriptions that have #search filter
-      subscriptions_with_search_filter = with_redis { |redis| redis.call("FT.SEARCH", "subscriptions_idx", "-@search:#{SubscriptionQueryBuilder::REDIS_SEARCH_TAG_ANY_VALUE}") }
+      # If event of a searcheable kind, we might want to make additional
+      # filter by #search
+      if event.kind.in?(RELAY_CONFIG.content_searchable_kinds)
+        # TODO: workaround to the fact that we want NIP-50 search to also produce
+        # events that are coming after EOSE but RedisSearch doesn't provide equivalent
+        # functionality we could use in our case. Thats why here we retrieve all
+        # the subscriptions that have #search filter
+        subscriptions_with_search_filter = with_redis { |redis| redis.call("FT.SEARCH", "subscriptions_idx", "-@search:#{SubscriptionQueryBuilder::REDIS_SEARCH_TAG_ANY_VALUE}", "LIMIT", "0", SUBSCRIPTIONS_LIMIT) }
 
-      subscriptions_with_search_filter.shift # First argument is Redis specific return value
-      subscriptions_with_search_filter = Hash[*subscriptions_with_search_filter] # convert to hash
-      subscriptions_with_search_filter.transform_keys! { |k| k.gsub(/\Asubscriptions:/, "") } # Redis returns full keys name including "namespace" subscriptions:
-      subscriptions_with_search_filter.transform_values! { |v| JSON.parse(v.last)["search"] } # extracting search query per subscription
-      subscriptions_with_search_filter.select! { |k, v| k.in?(subscriptions) } # We receive all subscriptions with #search filter here so we remove those which don't match other filters i.e. #kind
+        subscriptions_with_search_filter.shift # First argument is Redis specific return value
+        subscriptions_with_search_filter = Hash[*subscriptions_with_search_filter] # convert to hash
+        subscriptions_with_search_filter.transform_keys! { |k| k.gsub(/\Asubscriptions:/, "") } # Redis returns full keys name including "namespace" subscriptions:
+        subscriptions_with_search_filter.transform_values! { |v| JSON.parse(v.last)["search"] } # extracting search query per subscription
+        subscriptions_with_search_filter.select! { |k, v| k.in?(subscriptions) } # We receive all subscriptions with #search filter here so we remove those which don't match other filters i.e. #kind
 
-      subscriptions.reject! do |pubsub_id|
-        filters_by_search = pubsub_id.in?(subscriptions_with_search_filter.keys)
-        searchable_event = event.kind.in?(RELAY_CONFIG.content_searchable_kinds)
-        search_query = subscriptions_with_search_filter[pubsub_id]
+        subscriptions.reject! do |pubsub_id|
+          filters_by_search = pubsub_id.in?(subscriptions_with_search_filter.keys)
+          search_query = subscriptions_with_search_filter[pubsub_id]
 
-        # Do not fanout events to subscriptions which have search kind in case
-        # if event is not of a searchable kind or if event content does not match
-        # subscription query
-        filters_by_search && (!searchable_event || !event.matches_full_text_search?(search_query))
+          # Do not fanout events to subscriptions which have search kind in case
+          # if event content does not match subscription query
+          filters_by_search && !event.matches_full_text_search?(search_query)
+        end
       end
 
       subscriptions

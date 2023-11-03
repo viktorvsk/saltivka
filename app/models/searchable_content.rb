@@ -37,10 +37,23 @@ class SearchableContent < ApplicationRecord
   validates :language, inclusion: {in: AVAILABLE_LANGUAGES}
 
   def tsv_content=(text_content)
+    text_content = case event.kind
+    when 0
+      rows = []
+      begin
+        JSON.parse(text_content).each { |k, v| rows.push("#{k} #{v}") }
+      rescue
+        nil
+      end
+      rows.push("__EMPTY__") if rows.empty?
+      rows.join("\n")
+    else
+      text_content
+    end
+
     sanitized_text = ActiveRecord::Base.sanitize_sql_array(["?", text_content.delete("\x00")])
-    tsv = self.class.find_by_sql(["
-      SELECT to_tsvector('#{language}', ?) AS tsv
-    ", sanitized_text]).first.tsv
+
+    tsv = self.class.find_by_sql(["SELECT to_tsvector('#{language}', ?) AS tsv", sanitized_text]).first.tsv
 
     super(tsv)
   end

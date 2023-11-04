@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nostr NIP-50 search client</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Nostr NIP-50 search client" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/nostr-tools/lib/nostr.bundle.js"></script>
+<script src="
+https://cdn.jsdelivr.net/npm/autolink-js@1.0.2/autolink-min.min.js
+"></script>
+</head>
+<body x-data="App">
+  <div class="container is-fluid mt-4">
+    <div class="field has-addons ">
+      <p class="control has-icons-left is-expanded">
+        <input x-model="query" class="input" type="text" placeholder="Search..." @input.debounce="search">
+        <span class="icon is-small is-left">
+          <i class="fas fa-search"></i>
+        </span>
+      </p>
+      <div class="control" @click="settingsVisible = !settingsVisible">
+        <a class="button" x-bind:class="((!isJSON(filters) || !isJSON(relays)) && 'is-danger') || (settingsVisible && 'is-info')">
+          <span class="icon is-small is-left">
+            <i class="fas fa-gear"></i>
+          </span>
+        </a>
+      </div>
+    </div>
+
+    <template x-if="settingsVisible || !isJSON(filters) || !isJSON(relays)">
+      <div class="columns">
+        <div class="column">
+          <textarea x-bind:class="isJSON(filters) ? 'is-primary' : 'is-danger'" id="filters" name="filters" x-model="filters" class="textarea" placeholder='{"kinds": [1]}'></textarea>
+          <span class="is-size-7">Add more filters manually</span>
+        </div>
+        <div class="column">
+          <textarea x-bind:class="isJSON(relays) ? 'is-primary' : 'is-danger'" id="relays" name="relays" x-model="relays" class="textarea" placeholder="wss://saltivka.org"></textarea>
+          <span class="is-size-7">Relays list</span>
+        </div>
+      </div>
+    </template>
+    
+    <template x-if="isLoading && query.length > 2"><progress class="progress is-large is-info" max="100"></progress></template>
+    <template x-if="!isLoading && query.length > 2 && events?.length === 0"><h1 class="is-title is-size-1">Nothing found :(</h1></template>
+
+    <template x-if="events">
+      <div class="mb-4 mt-4">
+        <template x-for="event in events">
+          <div class="box is-half">
+            <article class="media">
+              <figure class="media-left">
+                <p class="image is-64x64">
+                  <template x-if="!event.metadata">
+                    <img src="https://bulma.io/images/placeholders/128x128.png">
+                  </template>
+                  <template x-if="event.metadata">
+                    <div x-data="{ author: JSON.parse(event.metadata.content) }">
+                      <img x-bind:src="author.picture" onerror="if (this.src != 'error.jpg') this.src = 'https://bulma.io/images/placeholders/128x128.png';">
+                    </div>
+                  </template>
+                </p>
+              </figure>
+              <div class="media-content">
+                  <template x-if="event.metadata">
+                    <div x-data="{ author: JSON.parse(event.metadata.content) }">
+                      <b x-text="author.display_name || author.name"></b>
+                      <template x-if="author.website">
+                        <span class="has-text-link" x-html="author.website.autoLink()"></span>
+                      </template>
+                      <span class="has-text-info-dark" x-text="author.nip05"></span>
+                    </div>
+                  </template>
+                <div style="word-break: break-all; white-space: pre-line" x-html="event.content.autoLink()">
+                </div>
+
+              </div>
+              <div class="media-right">
+                <span class='is-size-7' x-text="(new Date(event.created_at * 1000)).toLocaleDateString()"></span>
+              </div>
+            </article>
+          </div>
+        </template>
+      </div>
+    </template>
+
+  </div>
+
+  <script type="text/javascript">
+    function App() {
+      return {
+        isJSON(text) {
+            if (typeof text !== "string"){
+                return false;
+            }
+            try{
+                var json = JSON.parse(text);
+                return (typeof json === 'object');
+            }
+            catch (error){
+                return false;
+            }
+        },
+        query: "",
+        isLoading: false,
+        settingsVisible: false,
+        events: undefined,
+        filters: Alpine.$persist(JSON.stringify({kinds: [1]})).as('filters'),
+        relays:  Alpine.$persist(JSON.stringify(["wss://saltivka.org"])).as('relays'),
+        init() {
+        },
+        async search() {
+          this.isLoading = true;
+          this.events = [];
+          if (this.query.length < 3) { return }
+          const pool = new window.NostrTools.SimplePool();
+          const relays = JSON.parse(this.relays);
+          const filters = JSON.parse(this.filters);
+          this.events = await pool.list(relays, [{...filters, search: this.query}])
+          console.log(this.events)
+          this.isLoading = false;
+          let metadata = await pool.list(relays, [{kinds: [0], authors: this.events.map(e => e.pubkey)}]);
+          this.events.map(e => e.metadata = metadata.filter(m => e.pubkey === m.pubkey)[0])
+          // pool.close() // TODO: doesn't work
+        }
+      }
+    }
+  </script>
+</body>
+</html>

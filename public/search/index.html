@@ -70,21 +70,26 @@ https://cdn.jsdelivr.net/npm/autolink-js@1.0.2/autolink-min.min.js
                 </p>
               </figure>
               <div class="media-content">
-                  <template x-if="event.metadata">
-                    <div x-data="{ author: JSON.parse(event.metadata.content) }">
-                      <b x-text="author.display_name || author.name"></b>
-                      <template x-if="author.website">
-                        <span class="has-text-link" x-html="author.website.autoLink()"></span>
-                      </template>
-                      <span class="has-text-info-dark" x-text="author.nip05"></span>
-                    </div>
-                  </template>
+                <template x-if="event.metadata">
+                  <div x-data="{ author: JSON.parse(event.metadata.content) }">
+                    <b x-text="author.display_name || author.name"></b>
+                    <template x-if="author.website">
+                      <span class="has-text-link" x-html="author.website.autoLink()"></span>
+                    </template>
+                    <span class="has-text-info-dark" x-text="author.nip05"></span>
+                  </div>
+                </template>
                 <div style="word-break: break-all; white-space: pre-line" x-html="event.content.autoLink()">
+                </div>
+                <div class="mt-2 mb-2">
+                  <span class='tag' x-text="`Kind ${event.kind}`"></span>
+                  <span class='tag' x-text="(new Date(event.created_at * 1000)).toLocaleDateString()"></span>
+                  <span class='tag' x-text="event.id"></span>
                 </div>
 
               </div>
               <div class="media-right">
-                <span class='is-size-7' x-text="(new Date(event.created_at * 1000)).toLocaleDateString()"></span>
+
               </div>
             </article>
           </div>

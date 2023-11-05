@@ -10,6 +10,20 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: btree_gin; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS btree_gin WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION btree_gin; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION btree_gin IS 'support for indexing common datatypes in GIN';
+
+
+--
 -- Name: citext; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -732,10 +746,10 @@ CREATE UNIQUE INDEX index_searchable_contents_on_event_id ON public.searchable_c
 
 
 --
--- Name: index_searchable_contents_on_tsv_content; Type: INDEX; Schema: public; Owner: -
+-- Name: index_searchable_contents_on_tsv_content_and_event_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_searchable_contents_on_tsv_content ON public.searchable_contents USING gin (tsv_content);
+CREATE INDEX index_searchable_contents_on_tsv_content_and_event_id ON public.searchable_contents USING gin (tsv_content, event_id);
 
 
 --
@@ -962,6 +976,8 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20230826153633'),
 ('20230827140714'),
 ('20230827170307'),
-('20231025122455');
+('20231025122455'),
+('20231105000145'),
+('20231105000543');
 
 

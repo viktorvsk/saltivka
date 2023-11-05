@@ -23,7 +23,6 @@ This section probably mostly requires NIPs to handle errors in a universal ways 
 
 ## Feature Rich
 
-- [ ] https://github.com/nostr-protocol/nips/blob/master/50.md
 - [ ] https://github.com/nostr-protocol/nips/blob/master/98.md
 - [ ] https://github.com/nostr-protocol/nips/pull/377/files
 - [ ] Backup export users events

@@ -27,7 +27,7 @@ module Nostr
           end
         end
 
-        where(events: { id: SearchableContent.select(:event_id).where("tsv_content @@ #{ts_function}(?)", text).order(tsv_content: :desc) })
+        where(events: {id: SearchableContent.select(:event_id).where("tsv_content @@ #{ts_function}(?)", text).order(tsv_content: :desc)})
       end
 
       def matches_full_text_search?(query)

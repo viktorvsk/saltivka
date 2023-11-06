@@ -17,7 +17,7 @@ This is an implementation of the [Nostr protocol](https://github.com/nostr-proto
 * [NIP-42: Authentication of clients to relays](https://github.com/nostr-protocol/nips/blob/master/42.md)
 * [NIP-43: Fast Auth (experimental)](https://github.com/nostr-protocol/nips/pull/571)
 * [NIP-45: Event Counts](https://github.com/nostr-protocol/nips/blob/master/45.md)
-* [NIP-50: Event Counts](https://github.com/nostr-protocol/nips/blob/master/50.md)
+* [NIP-50: Search Capability](https://github.com/nostr-protocol/nips/blob/master/50.md)
 * [NIP-65: Relay List Metadata](https://github.com/nostr-protocol/nips/blob/master/65.md)
 
 # Abstract

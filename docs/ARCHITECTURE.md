@@ -92,13 +92,13 @@ events:<CONNECTION_ID>:<SUBSCRIPTION_ID>:<COMMAND>"
 See the list of commands with their Nostr equivalents and description:
 
 | Command | Nostr Equivalent | Example Payload |
-| ------- | ---------------- | ------- | ----------- |
+| ------- | ---------------- | --------------- |
 | FOUND_END | EOSE |— |
-| FOUND_EVENT | EVENT| `"{\"id\": \"...\", \"sig\": \"...\", ...}"` |
-| OK | OK |`"[\"OK\", \"<MESSAGE>\"]"` |
+| FOUND_EVENT | EVENT| `{"id": "...", "sig": "...", ...}` |
+| OK | OK |`["OK", "<MESSAGE>"]` |
 | COUNT | COUNT | "5" |
-| NOTICE | NOTICE | `"MESSAGE"` |
-| TERMINATE | — | `"[4000, "<REASON>"]"` |
+| NOTICE | NOTICE | `<MESSAGE>` |
+| TERMINATE | — | `[4000, "<REASON>"]` |
 
 Keep in mind, there is no message for `AUTH` because it is handled directly in WebsocketServer and not through Redis.
 

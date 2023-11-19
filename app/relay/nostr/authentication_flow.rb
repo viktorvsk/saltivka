@@ -6,7 +6,7 @@ module Nostr
       event = begin
         JSON.parse(auth_event_22242) if auth_event_22242
       rescue JSON::ParserError => e
-        return yield(terminate("NIP-43 auth event has errors in JSON: #{e.message}"))
+        return yield(terminate("NIP-42/NIP-43 auth event has errors in JSON: #{e.message}"))
       end
 
       pubkey, errors = Nostr::Nips::Nip43.call(event) if auth_event_22242
@@ -16,10 +16,10 @@ module Nostr
         return yield(terminate("NIP-43 is forced over NIP-42 and auth event has errors: #{Nostr::Presenters::Errors.new(errors)}")) if errors.present?
       else
         return yield(["AUTH", connection_id]) unless auth_event_22242 # NIP-42 fallback if no auth event provided
-        return yield(terminate("NIP-43 auth attempt is detected but auth event has errors: #{Nostr::Presenters::Errors.new(errors)}")) if errors.present?
+        return yield(terminate("NIP-42/NIP-43 auth attempt is detected but auth event has errors: #{Nostr::Presenters::Errors.new(errors)}")) if errors.present?
       end
 
-      # Here we have a valid NIP-43 auth event present so the result is either
+      # Here we have a valid NIP-42/NIP-43 auth event present so the result is either
       # connection(s) termination or a succesful authorization (even if auth_level is 0)
 
       # Possible options here are: [nil, "", "<vald_pubkey>"]

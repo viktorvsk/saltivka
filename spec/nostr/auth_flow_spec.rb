@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe Nostr::AuthenticationFlow do
   it "handles invalid JSON" do
     subject.call(ws_url: "ws://localhost?authorization=INVALID", connection_id: "CONN_ID") do |message|
-      expect(message).to eq ["TERMINATE", "NIP-43 auth event has errors in JSON: unexpected token at 'INVALID'"]
+      expect(message).to eq ["TERMINATE", "NIP-42/NIP-43 auth event has errors in JSON: unexpected token at 'INVALID'"]
     end
   end
 

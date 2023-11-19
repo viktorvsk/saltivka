@@ -87,6 +87,70 @@ module Nostr
     maxItems: 2
   }.to_json)
 
+  AUTH_SCHEMA = JSONSchemer.schema({
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    id: "nostr/nips/01/commands/client/AUTH/",
+    type: "array",
+    items: [
+      {const: "AUTH", required: true},
+      {
+        type: "object",
+        id: "event/",
+        properties: {
+          content: {
+            constant: "",
+            id: "content"
+          },
+          created_at: {
+            type: "intger",
+            id: "created_at",
+            minimum: 0 # TODO: consider enforcing RELAY_CONFIG.challenge_window_seconds
+          },
+          id: {
+            type: "string",
+            id: "id",
+            minLength: 64,
+            maxLength: 64
+          },
+          kind: {
+            const: 22242,
+            id: "kind"
+          },
+          pubkey: {
+            type: "string",
+            id: "pubkey",
+            minLength: 64,
+            maxLength: 64
+          },
+          sig: {
+            type: "string",
+            id: "sig",
+            minLength: 128,
+            maxLength: 128
+          },
+          tags: { # TODO: Consider enforcing challenge and relay tags potentially with RELAY_CONFIG.self_url
+            type: "array",
+            id: "tags/",
+            items: [
+              {
+                type: "array",
+                prefixItems: {
+                  type: "string",
+                  minLength: 1
+                },
+                minLength: 1
+              }
+            ],
+            maxItems: RELAY_CONFIG.max_event_tags
+          }
+        },
+        required: %w[content created_at id kind pubkey sig tags]
+      }
+    ],
+    minItems: 2,
+    maxItems: 2
+  }.to_json)
+
   EVENT_SCHEMA = JSONSchemer.schema({
     "$schema": "http://json-schema.org/draft-07/schema#",
     id: "nostr/nips/01/commands/client/EVENT/",

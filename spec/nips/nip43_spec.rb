@@ -65,7 +65,7 @@ RSpec.describe("NIP-43") do
     context "with invalid data for event 22242" do
       it "TERMINATEs for events with invalid JSON" do
         subject.call(ws_url: "ws://localhost?authorization=INVALID", connection_id: "CONN_ID") do |message|
-          expect(message).to eq(["TERMINATE", "NIP-43 auth event has errors in JSON: unexpected token at 'INVALID'"])
+          expect(message).to eq(["TERMINATE", "NIP-42/NIP-43 auth event has errors in JSON: unexpected token at 'INVALID'"])
         end
       end
 
@@ -75,7 +75,7 @@ RSpec.describe("NIP-43") do
           payload = CGI.escape(event.to_json)
 
           subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID") do |message|
-            expect(message).to eq(["TERMINATE", "NIP-43 auth attempt is detected but auth event has errors: Tag 'relay' is missing"])
+            expect(message).to eq(["TERMINATE", "NIP-42/NIP-43 auth attempt is detected but auth event has errors: Tag 'relay' is missing"])
           end
         end
       end
@@ -142,7 +142,7 @@ RSpec.describe("NIP-43") do
       # TODO: proper way to test it is using Timecop and time freeze
 
       subject.call(ws_url: "ws://localhost?authorization=#{payload}", connection_id: "CONN_ID") do |message|
-        expect(message).to eq(["TERMINATE", "NIP-43 auth attempt is detected but auth event has errors: Created At is too old, expected window is 60 seconds"])
+        expect(message).to eq(["TERMINATE", "NIP-42/NIP-43 auth attempt is detected but auth event has errors: Created At is too old, expected window is 60 seconds"])
       end
     end
 

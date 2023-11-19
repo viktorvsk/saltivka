@@ -1,11 +1,12 @@
 module Nostr
   class RelayController
     include Nostr::Nips::Nip1
+    include Nostr::Nips::Nip42
     include Nostr::Nips::Nip45
 
     attr_reader :connection_id, :remote_ip, :rate_limited
 
-    COMMANDS = %w[REQ CLOSE EVENT COUNT]
+    COMMANDS = %w[REQ CLOSE EVENT COUNT AUTH]
 
     def initialize(remote_ip: nil, rate_limited: true, connection_id: nil)
       @connection_id = connection_id || SecureRandom.hex
@@ -101,6 +102,7 @@ module Nostr
     end
 
     def authorized?(command, nostr_event)
+      return true if command == "AUTH"
       required_auth_level = RELAY_CONFIG.send("required_auth_level_for_#{command.downcase}")
       return true if required_auth_level.zero?
       return true if Nostr::Nips::Nip65.call(command, nostr_event)

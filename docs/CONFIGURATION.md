@@ -25,7 +25,7 @@ First let's discuss business logic settings.
 | DEFAULT\_FILTER\_LIMIT| If filters in `REQ` event do not have `limit` this values applies | 100 | |
 | VALIDATE\_ID\_ON\_SERVER| whether to validate `payload` matches `id` on the server | true | This is already checked by WebsocketServer and is time-consuming but for consistency it is enabled by default |
 | VALIDATE\_SIG\_ON\_SERVER| whether to validate `sig` matches `id` on the server | true | This is already checked by WebsocketServer and is time-consuming but for consistency it is enabled by default |
-| NIP\_04\_NIP\_42\_ENFORCE\_KIND\_4\_AUTHENTICATION| If enforced, kind-4 events will only be sent by relay to those subscribers who are authenticated and have pubkey matching event's author pubkey or event's p-tag | true | delegation is not handled here |
+| NIP\_04\_NIP\_42\_ENFORCE\_KIND\_4\_AUTHENTICATION| If enforced, kind-4 events will only be sent by relay to those subscribers who are authenticated and have pubkey matching event's author pubkey or event's p-tag | true | |
 | NIP\_11\_MAX\_FILTER\_LIMIT| see [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) | 1000 | |
 | NIP\_11\_RELAY\_NAME| see [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) | | |
 | NIP\_11\_DESCRIPTION| see [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) | | |

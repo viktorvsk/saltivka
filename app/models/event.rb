@@ -32,7 +32,6 @@ class Event < ApplicationRecord
 
     receiver_pubkey = event_p_tag.second
 
-    # TODO: consider delegation
     subscriber_pubkey.in?([receiver_pubkey, pubkey])
   end
 end

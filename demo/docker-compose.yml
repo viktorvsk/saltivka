@@ -96,6 +96,7 @@ services:
   webserver:
     build:
       context: ..
+    restart: unless-stopped
     env_file: ./.env
     ports:
       - 3000:3000
@@ -105,6 +106,7 @@ services:
   worker:
     build:
       context: ..
+    restart: unless-stopped
     env_file: ./.env
     command: bin/worker
     depends_on:
@@ -113,6 +115,7 @@ services:
   scheduler:
     build:
       context: ..
+    restart: unless-stopped
     env_file: ./.env
     command: bin/scheduler
     depends_on:
@@ -121,7 +124,7 @@ services:
   mirrors:
     build:
       context: ..
-    restart: always
+    restart: unless-stopped
     env_file: ./.env
     command: bin/mirrors
     depends_on:

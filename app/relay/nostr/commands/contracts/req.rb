@@ -13,7 +13,7 @@ module Nostr
           filters = nostr_event[2..]
 
           filters.each_with_index do |filter_set, index|
-            if filter_set["since"].present? && filter_set["until"].present?
+            if filter_set["since"].present? && filter_set["until"].present? && filter_set["since"] > filter_set["until"]
               add_error("filters/#{index}/since-gt-until", "when both specified, until has always to be after since")
             end
           end

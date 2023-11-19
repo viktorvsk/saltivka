@@ -160,7 +160,7 @@ module Nostr
           Event.where(author_id: author_id, kind: kind, created_at: created_at).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
         ].flatten.reject(&:blank?)
 
-        Event.includes(:event_delegator, :searchable_content).where(id: to_delete.uniq).destroy_all if to_delete.present?
+        Event.includes(:searchable_content).where(id: to_delete.uniq).destroy_all if to_delete.present?
       end
 
       def must_not_be_ephemeral
@@ -193,7 +193,7 @@ module Nostr
           Event.joins(:searchable_tags).where("LOWER(searchable_tags.value) = ?", d_tag_value.downcase).where(author_id: author_id, kind: kind, created_at: created_at, searchable_tags: {name: "d"}).where("LOWER(events.sha256) > ?", sha256.downcase).pluck(:id)
         ].flatten.reject(&:blank?)
 
-        Event.includes(:event_delegator, :searchable_content).where(id: to_delete).destroy_all
+        Event.includes(:searchable_content).where(id: to_delete).destroy_all
       end
 
       def must_be_newer_than_existing_parameterized_replaceable
@@ -247,24 +247,18 @@ module Nostr
                   where_clause = <<~SQL
                     events.kind IN (:kinds) OR
                       (
-                        events.kind = 4 AND (LOWER(authors.pubkey) = :pubkey OR LOWER(delegator_authors.pubkey) = :pubkey OR LOWER(p_tags.value) = :pubkey)
+                        events.kind = 4 AND (LOWER(authors.pubkey) = :pubkey OR LOWER(p_tags.value) = :pubkey)
                       )
                   SQL
-                  # NIP-26
-                  # TODO: check performance
                   rel
                     .joins(:author)
                     .joins("LEFT JOIN searchable_tags AS p_tags ON p_tags.event_id = events.id AND p_tags.name = 'p'")
-                    .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
-                    .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
                     .where(where_clause, kinds: value, pubkey: subscriber_pubkey.downcase)
                 else
                   rel
                     .joins(:author)
                     .joins("LEFT JOIN searchable_tags AS p_tags ON p_tags.event_id = events.id AND p_tags.name = 'p'")
-                    .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
-                    .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
-                    .where("events.kind = 4 AND (LOWER(authors.pubkey) = :pubkey OR LOWER(delegator_authors.pubkey) = :pubkey OR LOWER(p_tags.value) = :pubkey)", pubkey: subscriber_pubkey.downcase)
+                    .where("events.kind = 4 AND (LOWER(authors.pubkey) = :pubkey OR LOWER(p_tags.value) = :pubkey)", pubkey: subscriber_pubkey.downcase)
                 end
               else
                 rel.where(kind: value)
@@ -311,30 +305,7 @@ module Nostr
           RELAY_CONFIG.default_filter_limit
         end
 
-        if filter_set.key?("authors")
-
-          # NIP-26
-
-          # pubkey max length is 64 so we don't need a predicate match in this case
-          where_clause = filter_set["authors"].map { |pubkey| "LOWER(delegator_authors.pubkey) = ?" }.join(" OR ")
-
-          delegator_rel = by_nostr_filters(filter_set.except("authors"), subscriber_pubkey, count_request).joins(:author)
-            .joins("LEFT JOIN event_delegators ON event_delegators.event_id = events.id")
-            .joins("LEFT JOIN authors AS delegator_authors ON delegator_authors.id = event_delegators.author_id")
-            .where(where_clause, *filter_set["authors"].map(&:downcase))
-          union = <<~SQL
-            (#{rel.limit(filter_limit).to_sql})
-
-            UNION
-
-            (#{delegator_rel.limit(filter_limit).to_sql})
-          SQL
-
-          LazySql.new(klass: "Event", sql: union)
-
-        else
-          rel.limit(filter_limit)
-        end
+        rel.limit(filter_limit)
       end
     end
   end

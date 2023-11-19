@@ -19,8 +19,8 @@ RSpec.describe(Event) do
 
   it "destroys event" do
     kind2_event.save!
-    kind2_event_with_event_delegators_included = Event.includes(:event_delegator, :searchable_content).where(id: kind2_event).first
-    expect { kind2_event_with_event_delegators_included.destroy }.to change { kind2_event_with_event_delegators_included.persisted? }.from(true).to(false)
+    kind2_event_with_searchable_content_included = Event.includes(:searchable_content).where(id: kind2_event).first
+    expect { kind2_event_with_searchable_content_included.destroy }.to change { kind2_event_with_searchable_content_included.persisted? }.from(true).to(false)
   end
 
   context "raises ActiveRecord::ReadOnlyRecord when" do

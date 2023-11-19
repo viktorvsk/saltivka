@@ -126,7 +126,7 @@ RSpec.describe("NIP-01") do
         # expect(Event.by_nostr_filters({"ids" => ["bf84a73d1e6a1708b1c4dc5555a78f342ef29abfd469a091ca4f34533399c95f", event_with_tagsith_searchable_tags.sha256.first(5)]}).count).to eq(1)
 
         expect(Event.by_nostr_filters({"authors" => ["8e0d3"]}).count).to eq(0)
-        expect(Event.by_nostr_filters({"authors" => ["8e0d3d3eb2881ec137a11debe736a9086715a8c8beeeda615780064d68bc25dd"]}).count).to eq(1)
+        expect(Event.by_nostr_filters({"authors" => ["8e0d3d3eb2881ec137a11debe736a9086715a8c8beeeda615780064d68bc25dd"]}).count).to eq(0)
         expect(Event.by_nostr_filters({"authors" => ["09cd08d"]}).count).to eq(0)
         expect(Event.by_nostr_filters({"authors" => ["09cd08d416b78dd3e1d6c00c9e14087d803df6360fbf0acdb30106ca042ee81e"]}).count).to eq(1)
         expect(Event.by_nostr_filters({}).count).to eq(3)
@@ -343,14 +343,14 @@ RSpec.describe("NIP-01") do
         expect(MemStore.matching_pubsubs_for(event)).to match_array("C1:S1")
       end
 
-      it "matches author filter when author is delegated" do
+      it "does not match author filter when author is delegated" do
         parsed_json = JSON.parse(File.read(Rails.root.join(*%w[spec support nostr_event_delegated.json])))
         delegated_event_params = parsed_json.merge("sha256" => parsed_json.delete("id"), "created_at" => Time.at(parsed_json["created_at"]))
         delegated_event = Event.new(delegated_event_params)
         MemStore.subscribe(cid: "C1", sid: "S1", filters: ["authors" => ["09cd08d416b78dd3e1d6c00c9e14087d803df6360fbf0acdb30106ca042ee81e"]])
         MemStore.subscribe(cid: "C1", sid: "S2", filters: ["authors" => ["8e0d3d3eb2881ec137a11debe736a9086715a8c8beeeda615780064d68bc25dd"]])
 
-        expect(MemStore.matching_pubsubs_for(delegated_event)).to match_array(["C1:S1", "C1:S2"])
+        expect(MemStore.matching_pubsubs_for(delegated_event)).to match_array(["C1:S1"])
       end
 
       it "matches #e and #p filters" do

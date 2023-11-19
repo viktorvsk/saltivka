@@ -126,36 +126,6 @@ CREATE TABLE public.delete_events (
 
 
 --
--- Name: event_delegators; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.event_delegators (
-    id bigint NOT NULL,
-    event_id bigint NOT NULL,
-    author_id bigint NOT NULL
-);
-
-
---
--- Name: event_delegators_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.event_delegators_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: event_delegators_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.event_delegators_id_seq OWNED BY public.event_delegators.id;
-
-
---
 -- Name: events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -448,13 +418,6 @@ ALTER TABLE ONLY public.authors ALTER COLUMN id SET DEFAULT nextval('public.auth
 
 
 --
--- Name: event_delegators id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.event_delegators ALTER COLUMN id SET DEFAULT nextval('public.event_delegators_id_seq'::regclass);
-
-
---
 -- Name: events id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -525,14 +488,6 @@ ALTER TABLE ONLY public.author_subscriptions
 
 ALTER TABLE ONLY public.authors
     ADD CONSTRAINT authors_pkey PRIMARY KEY (id);
-
-
---
--- Name: event_delegators event_delegators_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.event_delegators
-    ADD CONSTRAINT event_delegators_pkey PRIMARY KEY (id);
 
 
 --
@@ -648,22 +603,6 @@ CREATE INDEX index_delete_events_on_author_id ON public.delete_events USING btre
 CREATE UNIQUE INDEX index_delete_events_on_sha256_and_author_id ON public.delete_events USING btree (sha256, author_id);
 
 ALTER TABLE public.delete_events CLUSTER ON index_delete_events_on_sha256_and_author_id;
-
-
---
--- Name: index_event_delegators_on_event_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_event_delegators_on_event_id ON public.event_delegators USING btree (event_id);
-
-
---
--- Name: index_event_delegators_on_event_id_and_author_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_event_delegators_on_event_id_and_author_id ON public.event_delegators USING btree (event_id, author_id);
-
-ALTER TABLE public.event_delegators CLUSTER ON index_event_delegators_on_event_id_and_author_id;
 
 
 --
@@ -870,22 +809,6 @@ ALTER TABLE ONLY public.invoices
 
 
 --
--- Name: event_delegators fk_rails_3df25f44ef; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.event_delegators
-    ADD CONSTRAINT fk_rails_3df25f44ef FOREIGN KEY (author_id) REFERENCES public.authors(id);
-
-
---
--- Name: event_delegators fk_rails_5f94d04b9b; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.event_delegators
-    ADD CONSTRAINT fk_rails_5f94d04b9b FOREIGN KEY (event_id) REFERENCES public.events(id);
-
-
---
 -- Name: user_pubkeys fk_rails_66431c7d01; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -978,6 +901,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20230827170307'),
 ('20231025122455'),
 ('20231105000145'),
-('20231105000543');
+('20231105000543'),
+('20231119170827');
 
 

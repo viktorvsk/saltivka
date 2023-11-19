@@ -25,13 +25,6 @@ FAKE_CREDENTIALS = {
   carl: {pk: "477318cfb5427b9cfc66a9fa376150c1ddbc62115ae27cef72417eb959691396", sk: "777e4f60b4aa87937e13acc84f7abcc3c93cc035cb4c1e9f7a9086dd78fffce1"}
 }
 
-NIP_26_TAG = {
-  pk: "8e0d3d3eb2881ec137a11debe736a9086715a8c8beeeda615780064d68bc25dd",
-  sk: "ee35e8bb71131c02c1d7e73231daa48e9953d329a4b701f7133c8f46dd21139c",
-  conditions: "kind=1&created_at>1680000800&created_at<1687949586",
-  sig: "d890dc2d9706f0bfeba01a2a67a2b35790ac75dc6b8908dc3cd2a0d1cdf649100c9e4472477819773a3658aa152e6b7a70d6d88e238995de0155c7b1f8623804"
-}
-
 # Requires supporting ruby files with custom matchers and macros, etc, in
 # spec/support/ and its subdirectories. Files matching `spec/**/*_spec.rb` are
 # run as spec files by default. This means that files in spec/support that end

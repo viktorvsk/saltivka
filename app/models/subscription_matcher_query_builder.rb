@@ -5,7 +5,6 @@ class SubscriptionMatcherQueryBuilder
   def initialize(event)
     authors = [
       event.pubkey,
-      event.delegation_tag_pubkey,
       SubscriptionQueryBuilder::REDIS_SEARCH_TAG_ANY_VALUE
     ].reject(&:blank?).join(" | ")
 

@@ -4,10 +4,6 @@ FactoryBot.define do
     content { "" }
     created_at { Time.now }
 
-    trait :delegated_event do
-      tags { [["delegation", NIP_26_TAG[:pk], NIP_26_TAG[:conditions], NIP_26_TAG[:sig]]] }
-    end
-
     after(:build) do |event|
       if event.pubkey.blank?
         _random_fake_signer_name, credentials = FAKE_CREDENTIALS.to_a.sample

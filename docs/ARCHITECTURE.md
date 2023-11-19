@@ -130,7 +130,7 @@ Mirrors is a process that is responsible to launch Websocket Clients that connec
 ### Database
 Tested against 14,15 and 16 versions of PostgreSQL but at the moment there are no version-specific SQL so in theory many versions should be compatible.
 
-Database currently has the following core tables: `authors`, `delete_events`, `events`, `searchable_tags`, `event_delegators`, `trusted_authors` which are slightly optimized for storage (by normalizing `authors` public keys for example).
+Database currently has the following core tables: `authors`, `delete_events`, `events`, `searchable_tags`, `trusted_authors` which are slightly optimized for storage (by normalizing `authors` public keys for example).
 And secondary, not Nostr-specific tables: `users`, `user_pubkeys`, `relay_mirrors`, `invoices`, `author_subscriptions`.
 Proper indexing strategy is a subject to change.
 

@@ -52,16 +52,16 @@ RSpec.describe("NIP-04") do
         expect(Event.by_nostr_filters({kinds: [4]}, FAKE_CREDENTIALS[:alice][:pk]).to_a.map(&:id).sort).to eq([e1.id, e2.id].sort)
       end
 
-      it "finds kind 4 events by delegation" do
+      it "does not find kind 4 events by delegation" do
         tags = [
           ["p", FAKE_CREDENTIALS[:alice][:pk]],
           ["delegation", FAKE_CREDENTIALS[:carl][:pk], "kind=4", "b05bd5636223b546d2a5f0f5875c2558647558ed94df5378ae34ac053c5cd7d40d524b1c763b7cda096eb8da0cd4ff744cd0946e895c39ea54727cb26257df1e"]
         ]
-        e1 = create(:event, kind: 4, pubkey: FAKE_CREDENTIALS[:bob][:pk], tags: tags, created_at: Time.at(1688051860))
+        create(:event, kind: 4, pubkey: FAKE_CREDENTIALS[:bob][:pk], tags: tags, created_at: Time.at(1688051860))
         create(:event, kind: 1, pubkey: FAKE_CREDENTIALS[:alice][:pk])
         create(:event, kind: 4, pubkey: FAKE_CREDENTIALS[:alice][:pk])
 
-        expect(Event.by_nostr_filters({kinds: [4]}, FAKE_CREDENTIALS[:carl][:pk]).to_a.map(&:id)).to eq([e1.id])
+        expect(Event.by_nostr_filters({kinds: [4]}, FAKE_CREDENTIALS[:carl][:pk]).to_a.map(&:id)).to eq([])
       end
 
       it "finds kind 4 events by p-tag, author, and delegation" do

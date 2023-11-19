@@ -204,7 +204,7 @@ RSpec.describe("NIP-01") do
       context "with invalid data" do
         it "doesn't delete existing events" do
           e1 = create(:event, kind: 10001, pubkey: FAKE_CREDENTIALS[:alice][:pk])
-          e2 = build(:event, kind: 10001, pubkey: FAKE_CREDENTIALS[:alice][:pk], created_at: 100.year.from_now)
+          e2 = build(:event, kind: 10001, pubkey: FAKE_CREDENTIALS[:alice][:pk], tags: {})
           refute e2.save
           assert e1.reload.persisted?
           assert e2.new_record?

@@ -10,7 +10,6 @@ This is an implementation of the [Nostr protocol](https://github.com/nostr-proto
 * [NIP-09: Event Deletion](https://github.com/nostr-protocol/nips/blob/master/09.md)
 * [NIP-11: Relay Information Document](https://github.com/nostr-protocol/nips/blob/master/11.md)
 * [NIP-13: Proof of Work](https://github.com/nostr-protocol/nips/blob/master/13.md)
-* [NIP-22: Event `created_at` Limits](https://github.com/nostr-protocol/nips/blob/master/22.md)
 * [NIP-26: Delegated Event Signing](https://github.com/nostr-protocol/nips/blob/master/26.md)
 * [NIP-28: Public Chat](https://github.com/nostr-protocol/nips/blob/master/28.md) Treats kind 41 event as replaceable
 * [NIP-40: Expiration Timestamp](https://github.com/nostr-protocol/nips/blob/master/40.md)

@@ -107,7 +107,7 @@ class RelayConfig
   end
 
   def supported_nips
-    nips = Set.new(%w[1 2 5 9 11 13 15 22 26 28 40 42 43 45 50])
+    nips = Set.new(%w[1 2 5 9 11 13 15 26 28 40 42 43 45 50])
     nips.add(4) if enforce_kind_4_authentication
     nips.add(65) if kinds_exempt_of_auth.include?(10002)
 
@@ -164,14 +164,6 @@ class RelayConfig
 
   def min_pow
     ENV.fetch("NIP_13_MIN_POW", 0).to_i
-  end
-
-  def created_at_in_past
-    ENV.fetch("NIP_22_CREATED_AT_IN_PAST", 1.year.to_i).to_i
-  end
-
-  def created_at_in_future
-    ENV.fetch("NIP_22_CREATED_AT_IN_FUTURE", 3.months.to_i).to_i
   end
 
   def restrict_change_auth_pubkey

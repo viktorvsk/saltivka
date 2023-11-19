@@ -9,6 +9,9 @@ module Nostr
         if kind.in?(CONTENT_SEARCHABLE_KINDS)
           searchable_content = build_searchable_content(language: SearchableContent::DEFAULT_LANGUAGE)
           searchable_content.tsv_content = content.downcase
+          # TODO: check if errors in searchable_content prevents parent event record from saving
+          # it may happen for instance when kind-1 event has content but after it becomes tsv_content
+          # it is empty because it was removed as stop words in used dictionary
         end
       end
 

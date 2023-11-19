@@ -28,6 +28,7 @@ In case all validations passed and event should be processed, Websocket server p
 | `CLOSE` | — |
 | `EVENT` | `NewEvent` |
 | `COUNT` | `CountRequest` |
+| `AUTH` | — |
 
 At this point request processing part is finished on the WebsocketServer side and it awaits the result of the processed Sidekiq job.
 

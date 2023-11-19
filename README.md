@@ -78,5 +78,5 @@ It's a typical Ruby on Rails application so all defaults mostly apply.
 * [Architecture details](/docs/ARCHITECTURE.md)
 * [Limitations](/docs/LIMITATIONS.md)
 * [Deployment hints](/docs/deployment/README.md)
-* [Roadmap](/docs/ROADMAP.md)
 * [Contributing](/docs/CONTRIBUTING.md)
+* [Search](/docs/NIP-50-SEARCH.md)

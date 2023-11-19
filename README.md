@@ -5,20 +5,20 @@
 This is an implementation of the [Nostr protocol](https://github.com/nostr-protocol/nostr) server (Nostr Relay) in Ruby. It implements the following list of specifications (Nostr Implementation Possibilities or NIPs):
 
 * [NIP-01: Basic protocol flow description](https://github.com/nostr-protocol/nips/blob/master/01.md)
-* [NIP-04: Encrypted Direct Message](https://github.com/nostr-protocol/nips/blob/master/04.md)
-* [NIP-05: Mapping Nostr keys to DNS-based internet identifiers](https://github.com/nostr-protocol/nips/blob/master/05.md) (Allows registered users to have their own NIP-05 identifiers)
+* [NIP-04: Encrypted Direct Message](https://github.com/nostr-protocol/nips/blob/master/04.md) Only authenticated pubkeys can get their own kind-4 events, uses NIP-42/NIP-43
+* [NIP-05: Mapping Nostr keys to DNS-based internet identifiers](https://github.com/nostr-protocol/nips/blob/master/05.md) Allows registered users to have their own NIP-05 identifiers
 * [NIP-09: Event Deletion](https://github.com/nostr-protocol/nips/blob/master/09.md)
 * [NIP-11: Relay Information Document](https://github.com/nostr-protocol/nips/blob/master/11.md)
 * [NIP-13: Proof of Work](https://github.com/nostr-protocol/nips/blob/master/13.md)
 * [NIP-22: Event `created_at` Limits](https://github.com/nostr-protocol/nips/blob/master/22.md)
 * [NIP-26: Delegated Event Signing](https://github.com/nostr-protocol/nips/blob/master/26.md)
-* [NIP-28: Public Chat](https://github.com/nostr-protocol/nips/blob/master/28.md)
+* [NIP-28: Public Chat](https://github.com/nostr-protocol/nips/blob/master/28.md) Treats kind 41 event as replaceable
 * [NIP-40: Expiration Timestamp](https://github.com/nostr-protocol/nips/blob/master/40.md)
 * [NIP-42: Authentication of clients to relays](https://github.com/nostr-protocol/nips/blob/master/42.md)
 * [NIP-43: Fast Auth (experimental)](https://github.com/nostr-protocol/nips/pull/571)
 * [NIP-45: Event Counts](https://github.com/nostr-protocol/nips/blob/master/45.md)
 * [NIP-50: Search Capability](https://github.com/nostr-protocol/nips/blob/master/50.md)
-* [NIP-65: Relay List Metadata](https://github.com/nostr-protocol/nips/blob/master/65.md)
+* [NIP-65: Relay List Metadata](https://github.com/nostr-protocol/nips/blob/master/65.md) Allows configure event kinds that are not subject to access control, meaning you can always do anything with kind 10002 events
 
 # Abstract
 Nostr requires decentralization. Decentralization requires servers. Many different servers, small and big. Some servers should be robust and cheap to operate at scale. Some servers are better to be cute and simple to use. This relay aims to become the most developer-friendly and the most relay-operator-friendly implementation through:

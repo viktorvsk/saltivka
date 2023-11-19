@@ -1,4 +1,6 @@
 class RelayConfig
+  DYNAMIC_CONFIGURATION = %w[maintenance max_allowed_connections unlimited_ips]
+
   def default_invoice_amount
     ENV.fetch("DEFAULT_INVOICE_AMOUNT", 6000).to_i
   end

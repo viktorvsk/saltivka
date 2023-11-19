@@ -1,6 +1,4 @@
 class Admin::ConfigurationsController < AdminController
-  DYNAMIC_CONFIGURATION = %w[maintenance max_allowed_connections unlimited_ips]
-
   def show
     @disabled_configurations = RELAY_CONFIG.public_methods(false)
     @max_allowed_connections, @maintenance, @unlimited_ips = MemStore.with_redis do |redis|
@@ -13,7 +11,7 @@ class Admin::ConfigurationsController < AdminController
   end
 
   def update
-    if configuration_params[:name].in?(DYNAMIC_CONFIGURATION) && MemStore.update_config(configuration_params[:name], configuration_params[:value])
+    if configuration_params[:name].in?(RelayConfig::DYNAMIC_CONFIGURATION) && MemStore.update_config(configuration_params[:name], configuration_params[:value])
       head :ok
     else
       head :unprocessable_entity

@@ -23,15 +23,15 @@ Nostr requires decentralization. Decentralization requires servers. Many differe
 
 * **high configurability** — like support for dynamic feature flags in future
 * **clean errors descriptions** — including different formats and granular causes
-* **Comprehensive tests and documentation coverage** — plans to focus on mutation and unit tests
+* **comprehensive tests and documentation coverage** — plans to focus on mutation and unit tests
 * **feature rich** — for example, experimental NIPs and non-nostr related stuff like backups, cross posting etc
 * **great accessibility** — plans to add support for major integrations aka HTTP API, GraphQL, webhooks and others
 
 The ultimate goal is everyone using this relay for the next use-cases:
 
-* **Developers**, while working on a client, need to connect to some relays, play with different NIPs, fix errors, check hypothesis
-* **Non-technical but curious people** wants to setup a private relay to share it with friends and family
-* **Small-to-medium businesses** use custom configuration of the relay to provide paid services in their specific niche (i.e. invite-driven userbase gets IT-related curated content into their feed)
+* **developers**, while working on a client, need to connect to some relays, play with different NIPs, fix errors, check hypothesis
+* **non-technical but curious people** wants to setup a private relay to share it with friends and family
+* **small-to-medium businesses** use custom configuration of the relay to provide paid services in their specific niche (i.e. invite-driven userbase gets IT-related curated content into their feed)
 
 This however doesn't mean it *shouldn't* be possible to serve millions of users per day with this relay. It just means that with Ruby and concurrency one will have to spend more money into hardware. So performance optimizations will usually have low priority unless it prevents some interesting use-cases. 
 

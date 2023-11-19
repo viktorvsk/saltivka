@@ -68,7 +68,7 @@ module Nostr
           searchable_tags.new(name: "d", value: "")
         end
         tag_with_value_only = tags.map { |t| t[..1] }.reject(&:blank?) # TODO: cover empty tag with spec
-        unique_tags = tag_with_value_only.uniq { |tag| tag[0] + tag[1..].map(&:downcase).sort.join }
+        unique_tags = tag_with_value_only.uniq { |tag| tag[0] + tag[1..].map(&:to_s).map(&:downcase).sort.join } # We can have nil in tag value
         unique_tags.each do |tag|
           tag_name, tag_value = tag
           tag_value_too_long = tag_value && tag.second.size > RELAY_CONFIG.max_searchable_tag_value_length

@@ -35,7 +35,7 @@ gem "newrelic_rpm"
 group :development, :test do
   gem "debug", platforms: %i[mri mingw x64_mingw]
   gem "dotenv-rails"
-  gem "factory_bot_rails"
+  gem "factory_bot_rails", "~> 6.2.0" # TODO: https://github.com/thoughtbot/factory_bot_rails/pull/432
   gem "ffaker"
   gem "rspec-rails", "~> 6.0.0"
   gem "rack-mini-profiler"

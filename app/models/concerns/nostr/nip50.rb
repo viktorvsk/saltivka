@@ -52,7 +52,7 @@ module Nostr
       end
 
       def self.parse_nip50_query(query)
-        mod, text = query.scan(/\A(?:m:(\w+))?(.*)\Z/).flatten.map(&:to_s).map(&:strip)
+        mod, text = query.scan(/\A(?:m:(\w+))?(.*)\Z/m).flatten.map(&:to_s).map(&:strip)
 
         case mod
         when "plain"

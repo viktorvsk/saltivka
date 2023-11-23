@@ -21,7 +21,7 @@ class CountRequest
     unless RELAY_CONFIG.count_cost_threshold.zero?
       explain = ActiveRecord::Base.connection.execute("EXPLAIN #{union}").first.to_s
       rows = explain[/rows=(\d+)/, 1].to_i
-      cost = explain[/cost=(\d+)/, 1].to_i
+      cost = explain[/cost=\d+\.\d+\.\.(\d+)/, 1].to_i
       should_count_approximate = RELAY_CONFIG.count_cost_threshold.positive? && cost > RELAY_CONFIG.count_cost_threshold
     end
 

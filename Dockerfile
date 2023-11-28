@@ -1,4 +1,4 @@
-FROM ruby:3.2.2-alpine AS Builder
+FROM ruby:3.3.0-preview3-alpine3.18 AS Builder
 
 ENV BUILD_PACKAGES="build-base postgresql-dev shared-mime-info build-base automake libtool libffi-dev gmp-dev openssl-dev pkgconfig autoconf"
 
@@ -29,7 +29,7 @@ ADD . /app
 
 ################################################################################
 
-FROM ruby:3.2.2-alpine
+FROM ruby:3.3.0-preview3-alpine3.18
 
 ENV EFFECTIVE_PACKAGES="bash tzdata postgresql-client libc6-compat"
 

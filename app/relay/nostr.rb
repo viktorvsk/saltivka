@@ -67,7 +67,16 @@ module Nostr
               minLength: 64, # Not part of NIP-11 but it doesn't make sense
               maxLength: 64
             }
+          },
+          until: {
+            type: "integer",
+            minimum: 0
+          },
+          since: {
+            type: "integer",
+            minimum: 0
           }
+
         }
       }
     },
@@ -287,6 +296,14 @@ module Nostr
               type: :string,
               minLength: 64,
               maxLength: 64
+            },
+            until: {
+              type: "integer",
+              minimum: 0
+            },
+            since: {
+              type: "integer",
+              minimum: 0
             }
           }
         }

@@ -132,7 +132,7 @@ https://cdn.jsdelivr.net/npm/autolink-js@1.0.2/autolink-min.min.js
           this.events = await pool.querySync(relays, {...filters, search: this.query})
           console.log(this.events)
           this.isLoading = false;
-          let metadata = await pool.querySync(relays, [{kinds: [0], authors: this.events.map(e => e.pubkey)}]);
+          let metadata = await pool.querySync(relays, {kinds: [0], authors: this.events.map(e => e.pubkey)});
           this.events.map(e => e.metadata = metadata.filter(m => e.pubkey === m.pubkey)[0])
           // pool.close() // TODO: doesn't work
         }
